@@ -1,0 +1,14 @@
+- name: Update all packages via dnf
+  hosts: dnf
+  gather_facts: true
+  serial: 4
+  tasks:
+
+    - name: Upgrade all packages
+      become: true
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+        update_only: true
+      when:
+        - ansible_pkg_mgr in ['dnf', 'dnf5']

@@ -1,0 +1,13 @@
+all:
+  children:
+    coreos:
+      hosts:
+    dnf:
+      children:
+        el9:
+          hosts:
+            10.45.28.235:
+              ansible_ssh_port: 22
+              ansible_user: root
+        fedora:
+          hosts:

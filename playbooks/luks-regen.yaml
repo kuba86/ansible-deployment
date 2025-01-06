@@ -1,0 +1,20 @@
+- name: Clevis luks regen
+  hosts: coreos
+  gather_facts: true
+  serial: 4
+  tasks:
+
+    - name: Clevis | luks regen
+      become: true
+      ansible.builtin.shell: |
+        set -o pipefail
+        set -e
+        
+        luks_drives=$(lsblk --output=PATH,FSTYPE | grep crypto_LUKS | cut -f 1 -d " ")
+        # regenerate tpm2 pcr_banks
+        sudo clevis luks regen -d /dev/sda1 -s 1
+        sudo clevis luks regen -d /dev/sdb1 -s 1
+        sudo clevis luks regen -d /dev/sdc1 -s 1
+        sudo clevis luks regen -d /dev/mmcblk0p4 -s 1
+      register: clevis_output
+      changed_when: "'loginctl-linger-changed' in loginctl_linger_output.stdout"

@@ -1,0 +1,15 @@
+- name: Enable login linger for current user
+  hosts: all
+  gather_facts: false
+  serial: 4
+  tasks:
+
+    - name: Loginctl | enable-linger for core user
+      ansible.builtin.file:
+        path: /var/lib/systemd/linger/core
+        state: file
+        owner: root
+        group: root
+        mode: '644'
+      become: true
+      register: linger_output

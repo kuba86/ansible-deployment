@@ -1,0 +1,77 @@
+- name: Install fish
+  hosts: all
+  gather_facts: true
+  serial: 4
+  tasks:
+
+    - name: Fish | install rpm-ostree
+      become: true
+      ansible.builtin.shell: |
+        rpm-ostree install \
+        --idempotent \
+        --apply-live \
+        --unchanged-exit-77 \
+        --assumeyes \
+        fish
+      register: install_rpm_ostree
+      failed_when: >
+        (install_rpm_ostree.rc == 1) or
+        (install_rpm_ostree.rc == 2) or
+        (install_rpm_ostree.rc == 3) or
+        (install_rpm_ostree.rc == 4) or
+        (install_rpm_ostree.rc == 78)
+      changed_when: >
+        install_rpm_ostree.rc != 77
+      when:
+        - ansible_pkg_mgr in ['atomic_container']
+
+    - name: Fish | install dnf
+      become: true
+      ansible.builtin.dnf:
+        name:
+          - fish
+        state: present
+      when:
+        - ansible_pkg_mgr in ['dnf', 'dnf5']
+
+    - name: Fish | ensures /home/core/.bashrc.d/ directory exists
+      ansible.builtin.file:
+        path: /home/core/.bashrc.d/
+        state: directory
+        owner: core
+        group: core
+        mode: '755'
+
+    - name: Fish | fish.bashrc (autostart)
+      ansible.builtin.copy:
+        content: |
+          if [[ $- == *i* ]]
+          then
+            if [[ $(ps --no-header --pid=$PPID --format=cmd) != "fish" ]]
+            then
+              which fish > /dev/null && exec fish
+            fi
+          fi
+        dest: /home/core/.bashrc.d/fish.bashrc
+        owner: core
+        group: core
+        mode: '644'
+
+    - name: Fish | ensures /home/core/.config/fish/conf.d/ directory exists
+      ansible.builtin.file:
+        path: /home/core/.config/fish/conf.d/
+        state: directory
+        owner: core
+        group: core
+        mode: '755'
+
+    - name: Fish | set theme (ayu Dark)
+      ansible.builtin.copy:
+        content: |
+          if status is-interactive
+            fish_config theme choose "ayu Dark"
+          end
+        dest: /home/core/.config/fish/conf.d/theme.fish
+        owner: core
+        group: core
+        mode: '644'

@@ -1,0 +1,17 @@
+- name: Setup 'core' user
+  hosts: all
+  gather_facts: true
+  serial: 4
+  tasks:
+
+    - name: Add the user 'core'
+      become: true
+      ansible.builtin.user:
+        name: core
+        create_home: true
+        # mkpasswd --method=yescrypt --rounds 7
+        password: ''
+        state: present
+        append: true
+        groups:
+          - wheel

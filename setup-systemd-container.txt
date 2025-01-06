@@ -1,0 +1,20 @@
+dnf upgrade -y && \
+dnf install -y openssh-server python python3-libdnf5 && \
+systemctl daemon-reload && \
+systemctl enable --now sshd && \
+mkdir -p /root/.ssh/authorized_keys.d && \
+touch /root/.ssh/authorized_keys.d/ansible && \
+chmod 600 /root/.ssh/authorized_keys.d/ansible && \
+echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDrCYkPBxz517aBYDNI/VwiyxX10M5cXvt1FbUa04qdr 2024-12-26-ansible" > /root/.ssh/authorized_keys.d/ansible && \
+echo "PasswordAuthentication no" > /etc/ssh/sshd_config.d/ansible.conf && \
+echo "AllowUsers core root" >> /etc/ssh/sshd_config.d/ansible.conf && \
+echo "PermitRootLogin yes" >> /etc/ssh/sshd_config.d/ansible.conf && \
+echo "authorizedkeysfile .ssh/authorized_keys .ssh/authorized_keys.d/ansible" >> /etc/ssh/sshd_config.d/ansible.conf && \
+chmod 600 /etc/ssh/sshd_config.d/ansible.conf && \
+systemctl restart sshd
+
+mkdir -p /home/core/.ssh && \
+touch /home/core/.ssh/authorized_keys && \
+chmod 600 /home/core/.ssh/authorized_keys && \
+chown core:core /home/core/.ssh/authorized_keys && \
+echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDrCYkPBxz517aBYDNI/VwiyxX10M5cXvt1FbUa04qdr 2024-12-26-ansible" > /home/core/.ssh/authorized_keys

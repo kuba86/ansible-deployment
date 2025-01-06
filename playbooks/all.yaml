@@ -1,0 +1,32 @@
+- name: Playbooks | create user core
+  ansible.builtin.import_playbook: user-core.yaml
+
+- name: Playbooks | update ssh authorized keys
+  ansible.builtin.import_playbook: update-ssh-authorized-keys.yaml
+
+- name: Playbooks | update via dnf
+  ansible.builtin.import_playbook: update-via-dnf.yaml
+
+- name: Playbooks | install packages
+  ansible.builtin.import_playbook: install-packages.yaml
+
+- name: Playbooks | enable linger
+  ansible.builtin.import_playbook: enable-linger.yaml
+
+- name: Playbooks | mask-docker-service
+  ansible.builtin.import_playbook: mask-docker-service.yaml
+
+- name: Playbooks | sysctl-inotify
+  ansible.builtin.import_playbook: sysctl-inotify.yaml
+
+- name: Playbooks | install fish shell
+  ansible.builtin.import_playbook: fish.yaml
+
+- name: Playbooks | install scala-cli
+  ansible.builtin.import_playbook: scala-cli.yaml
+
+- name: Playbooks | install incus
+  ansible.builtin.import_playbook: incus.yaml
+
+#- name: Playbooks | install tailscale
+#  ansible.builtin.import_playbook: tailscale.yaml

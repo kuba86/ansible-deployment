@@ -1,0 +1,68 @@
+- name: Install packages
+  hosts: all
+  gather_facts: true
+  serial: 4
+  tasks:
+
+    - name: Install packages | rpm-ostree
+      become: true
+      ansible.builtin.shell: |
+        rpm-ostree install \
+        --idempotent \
+        --allow-inactive \
+        --apply-live \
+        --unchanged-exit-77 \
+        --assumeyes \
+          bat \
+          btop \
+          eza \
+          fd-find \
+          iftop \
+          jq \
+          mkpasswd \
+          ncdu \
+          sysstat \
+          upower \
+          wget
+      register: install_rpm_ostree
+      failed_when: >
+        (install_rpm_ostree.rc == 1) or
+        (install_rpm_ostree.rc == 2) or
+        (install_rpm_ostree.rc == 3) or
+        (install_rpm_ostree.rc == 4) or
+        (install_rpm_ostree.rc == 78)
+      changed_when: >
+        install_rpm_ostree.rc != 77
+      when:
+        - ansible_pkg_mgr in ['atomic_container']
+
+    - name: Install epel-release | dnf
+      become: true
+      ansible.builtin.dnf:
+        name:
+          - epel-release
+        state: present
+      when:
+        - ansible_pkg_mgr in ['dnf', 'dnf5']
+        - 'el9' in group_names
+      register: install_epel_release
+      failed_when: install_epel_release.rc >= 2
+
+    - name: Install packages | dnf
+      become: true
+      ansible.builtin.dnf:
+        name:
+          - bat
+          - btop
+          - eza
+          - fd-find
+          - iftop
+          - jq
+          - mkpasswd
+          - ncdu
+          - sysstat
+          - upower
+          - wget
+        state: present
+      when:
+        - ansible_pkg_mgr in ['dnf', 'dnf5']

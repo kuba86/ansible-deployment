@@ -1,0 +1,79 @@
+- name: Install Scala CLI
+  hosts: all
+  gather_facts: false
+  tasks:
+
+    - name: Scala CLI | Install
+      ansible.builtin.shell: |
+        set -o pipefail
+        set -e
+        
+        if [ -f "$HOME/.profile" ]; then
+          echo ".profile exists"
+          source ~/.profile
+        else
+          echo ".profile does not exist"
+        fi
+        
+        if command -v scala-cli &> /dev/null
+        then
+          echo "scala-cli is installed and available in PATH"
+        else
+          echo "scala-cli is not installed or not in PATH"
+          curl -sSLf https://scala-cli.virtuslab.org/get | sh
+        fi
+      register: install_scalacli_output
+      changed_when: "'scala-cli is not installed or not in PATH' in install_scalacli_output.stdout"
+      become: true
+      become_user: core
+
+    - name: Scala CLI | Validate installation
+      ansible.builtin.shell: |
+        set -o pipefail
+        set -e
+        
+        source ~/.profile
+        scala-cli version
+      register: scala_cli_version
+      failed_when: scala_cli_version.rc != 0
+      changed_when: false
+      become: true
+      become_user: core
+
+    - name: Scala CLI | add to PATH in Fish shell
+      ansible.builtin.copy:
+        content: |
+          fish_add_path --append /home/core/.cache/scalacli/local-repo/bin/scala-cli
+        dest: /home/core/.config/fish/conf.d/scala-cli.fish
+        owner: core
+        group: core
+        mode: '644'
+
+    - name: Scala CLI | setup power mode to true
+      ansible.builtin.shell: |
+        set -o pipefail
+        set -e
+
+        source ~/.profile
+        
+        scala_cli_check_power_mode_cmd="scala-cli config power"
+        scala_cli_power_mode=$($scala_cli_check_power_mode_cmd)
+        
+        if [[ "$scala_cli_power_mode" == "true" ]]; then
+          echo "Scala-Cli power mode was already set correctly"
+        else
+          echo "Scala-Cli power mode set to FALSE, changing to TRUE"
+          scala-cli config power true
+        fi
+
+      register: scala_cli_power_mode
+      failed_when: scala_cli_power_mode.rc != 0
+      changed_when: "'Scala-Cli power mode set to FALSE, changing to TRUE' in scala_cli_power_mode.stdout"
+      become: true
+      become_user: core
+
+    - name: Display Scala CLI version
+      ansible.builtin.debug:
+        msg: "Installed Scala CLI version: {{ scala_cli_version.stdout }}"
+      become: true
+      become_user: core

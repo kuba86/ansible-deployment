@@ -1,0 +1,123 @@
+- name: Install k3s via rpm-ostree
+  hosts: all
+  gather_facts: true
+  serial: 4
+  become: true
+  tasks:
+
+    - name: K3s | add repository
+      ansible.builtin.copy:
+        content: |
+          [rancher-k3s-common-latest]
+          name=Rancher K3s Common (latest)
+          baseurl=https://rpm.rancher.io/k3s/latest/common/coreos/noarch
+          enabled=1
+          gpgcheck=1
+          repo_gpgcheck=0
+          gpgkey=https://rpm.rancher.io/public.key
+        dest: /etc/yum.repos.d/rancher-k3s-common.repo
+        owner: root
+        group: root
+        mode: '644'
+
+    - name: K3s | install
+      ansible.builtin.shell: |
+        rpm-ostree install \
+        --idempotent \
+        --apply-live \
+        --unchanged-exit-77 \
+        --assumeyes \
+        k3s-selinux
+      register: install_rpm_ostree
+      failed_when: >
+        (install_rpm_ostree.rc == 1) or
+        (install_rpm_ostree.rc == 2) or
+        (install_rpm_ostree.rc == 3) or
+        (install_rpm_ostree.rc == 4) or
+        (install_rpm_ostree.rc == 78)
+      changed_when: >
+        install_rpm_ostree.rc != 77
+      when:
+        - ansible_pkg_mgr in ['atomic_container']
+
+    - name: K3s | set vm.overcommit_memory=1
+      ansible.posix.sysctl:
+        name: vm.overcommit_memory
+        value: '1'
+        sysctl_file: /etc/sysctl.d/30-k3s.conf
+        state: present
+
+    - name: K3s | set kernel.panic_on_oops=1
+      ansible.posix.sysctl:
+        name: kernel.panic_on_oops
+        value: '1'
+        sysctl_file: /etc/sysctl.d/30-k3s.conf
+        state: present
+
+    - name: K3s | set kernel.panic=10
+      ansible.posix.sysctl:
+        name: kernel.panic
+        value: '10'
+        sysctl_file: /etc/sysctl.d/30-k3s.conf
+        state: present
+
+    - name: K3s | ensures /etc/rancher/k3s/ directory exists
+      ansible.builtin.file:
+        path: /etc/rancher/k3s/
+        state: directory
+        owner: root
+        group: root
+        mode: '755'
+
+    - name: K3s | bootstrap config.yaml
+      ansible.builtin.copy:
+        content: |
+          # config for k3s
+        dest: /etc/rancher/k3s/installer.sh
+        owner: root
+        group: root
+        mode: '600'
+
+    - name: K3s | installer script
+      ansible.builtin.copy:
+        content: |
+          #!/usr/bin/bash
+
+          TAILSCALE_IP=$(tailscale status --json | jq -r .Self.TailscaleIPs[0])
+          TAILSCALE_SHORT_DOMAIN=$(tailscale status --json | jq -r .Self.HostName)
+          TAILSCALE_FULL_DOMAIN=$(tailscale status --json | jq -r .CertDomains[])
+          TAILSCALE_KEY=$(cat /etc/tailscale/tailscale.key)
+
+          mkdir -p /etc/rancher/k3s
+          mkdir -p /var/k3s/.rancher/k3s
+
+          echo 'bind-address: TAILSCALE_IP
+          node-ip: TAILSCALE_IP
+          advertise-address: TAILSCALE_IP
+          flannel-iface: "tailscale0"
+          vpn-auth: "name=tailscale,joinKey=TAILSCALE_KEY,extraArgs=--advertise-exit-node"
+          kube-cloud-controller-manager-arg: "webhook-bind-address=TAILSCALE_IP"
+          kubelet-arg: "address=TAILSCALE_IP"
+          tls-san:
+            - TAILSCALE_FULL_DOMAIN
+            - TAILSCALE_SHORT_DOMAIN
+          cluster-init: true
+          protect-kernel-defaults: true
+          selinux: true' \
+          | sed "s/TAILSCALE_IP/$TAILSCALE_IP/g" \
+          | sed "s/TAILSCALE_SHORT_DOMAIN/$TAILSCALE_SHORT_DOMAIN/g" \
+          | sed "s/TAILSCALE_FULL_DOMAIN/$TAILSCALE_FULL_DOMAIN/g" \
+          | sed "s/TAILSCALE_KEY/$TAILSCALE_KEY/g" \
+          | tee /etc/rancher/k3s/config.yaml > /dev/null
+
+          curl -sfL https://get.k3s.io \
+          | INSTALL_K3S_CHANNEL=latest \
+          INSTALL_K3S_BIN_DIR=/var/k3s/.rancher/k3s \
+          INSTALL_K3S_EXEC=server \
+          INSTALL_K3S_SKIP_START=false \
+          INSTALL_K3S_SKIP_ENABLE=false \
+          sh -s -
+        dest: /etc/rancher/k3s/installer.sh
+        owner: root
+        group: root
+        mode: '700'

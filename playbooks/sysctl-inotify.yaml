@@ -1,0 +1,27 @@
+- name: Set inotify watches and instances
+  hosts: all
+  gather_facts: true
+  serial: 4
+  tasks:
+
+    - name: Sysctl inotify | set fs.inotify.max_user_watches
+      # max_user_watches limits how many filesystem items can be watched,
+      # in total across all applications (per user)
+      become: true
+      ansible.posix.sysctl:
+        name: fs.inotify.max_user_watches
+        value: '524288'
+        sysctl_file: /etc/sysctl.d/10-inotify.conf
+        state: present
+      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+
+    - name: Sysctl inotify | set fs.inotify.max_user_instances
+      # max_user_instances limits (roughly) how many applications
+      # can watch files (per user)
+      become: true
+      ansible.posix.sysctl:
+        name: fs.inotify.max_user_instances
+        value: '8192'
+        sysctl_file: /etc/sysctl.d/10-inotify.conf
+        state: present
+      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
