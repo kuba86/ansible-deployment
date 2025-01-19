@@ -18,6 +18,8 @@
         if command -v scala-cli &> /dev/null
         then
           echo "scala-cli is installed and available in PATH"
+          echo "scala-cli will be updated to newest version"
+          scala-cli update --force
         else
           echo "scala-cli is not installed or not in PATH"
           curl -sSLf https://scala-cli.virtuslab.org/get | sh
