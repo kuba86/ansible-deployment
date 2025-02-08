@@ -1,0 +1,17 @@
+[Unit]
+Description=ntfy-server-boot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/curl \
+  -u ':tk_23hw9mbg0g8rft812cb3buws2e2ip' \
+  -H "Title: %H started" \
+  -H "Tags: %H" \
+  -d "%H successfully started and is online" \
+  https://ntfy.kuba86.com/servers
+RestartSec=60
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,9 @@
+[Unit]
+Description=ntfy-server-boot timer
+
+[Timer]
+Unit=ntfy-server-boot.service
+OnBootSec=30
+
+[Install]
+WantedBy=timers.target

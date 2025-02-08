@@ -1,0 +1,24 @@
+---
+- name: Install ntfy-server-boot service and timer
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install ntfy-server-boot | Copy ntfy-server-boot.service file
+      copy:
+        src: ../files/ntfy-server-boot.service
+        dest: /etc/systemd/system/ntfy-server-boot.service
+
+    - name: Install ntfy-server-boot | Copy ntfy-server-boot.timer file
+      copy:
+        src: ../files/ntfy-server-boot.timer
+        dest: /etc/systemd/system/ntfy-server-boot.timer
+
+    - name: Install ntfy-server-boot | Reload systemd daemon
+      command: systemctl daemon-reload
+
+    - name: Install ntfy-server-boot | Enable and start ntfy-server-boot.timer
+      systemd:
+        name: ntfy-server-boot.timer
+        enabled: yes
+        state: started

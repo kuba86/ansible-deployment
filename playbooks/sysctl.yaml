@@ -1,0 +1,52 @@
+- name: Set Sysctl config
+  hosts: all
+  gather_facts: true
+  serial: 4
+  tasks:
+
+    - name: Sysctl | set fs.inotify.max_user_watches
+      # max_user_watches limits how many filesystem items can be watched,
+      # in total across all applications (per user)
+      become: true
+      ansible.posix.sysctl:
+        name: fs.inotify.max_user_watches
+        value: '524288'
+        sysctl_file: /etc/sysctl.d/10-common.conf
+        state: present
+      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+
+    - name: Sysctl | set fs.inotify.max_user_instances
+      # max_user_instances limits (roughly) how many applications
+      # can watch files (per user)
+      become: true
+      ansible.posix.sysctl:
+        name: fs.inotify.max_user_instances
+        value: '8192'
+        sysctl_file: /etc/sysctl.d/10-common.conf
+        state: present
+      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+      
+    - name: Sysctl | set net.core.rmem_max=25000000 (25MB)
+      become: true
+      ansible.posix.sysctl:
+        name: net.core.rmem_max
+        value: '25000000'
+        sysctl_file: /etc/sysctl.d/10-common.conf
+        state: present
+      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+    
+    - name: Sysctl | set net.core.wmem_max=25000000 (25MB)
+      become: true
+      ansible.posix.sysctl:
+        name: net.core.wmem_max
+        value: '25000000'
+        sysctl_file: /etc/sysctl.d/10-common.conf
+        state: present
+      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+
+    - name: Sysctl | Remove /etc/sysctl.d/10-inotify.conf if it exists
+      # /etc/sysctl.d/10-inotify.conf is old file, should be removed to avoid conflicts
+      become: true
+      file:
+        path: /etc/sysctl.d/10-common.conf
+        state: absent
