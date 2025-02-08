@@ -48,5 +48,5 @@
       # /etc/sysctl.d/10-inotify.conf is old file, should be removed to avoid conflicts
       become: true
       file:
-        path: /etc/sysctl.d/10-common.conf
+        path: /etc/sysctl.d/10-inotify.conf
         state: absent

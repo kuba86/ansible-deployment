@@ -18,7 +18,6 @@
           eza \
           fd-find \
           iftop \
-          jq \
           mkpasswd \
           ncdu \
           sysstat \
@@ -44,7 +43,7 @@
         state: present
       when:
         - ansible_pkg_mgr in ['dnf', 'dnf5']
-        - 'el9' in group_names
+        - "'el9' in group_names"
       register: install_epel_release
       failed_when: install_epel_release.rc >= 2
 
