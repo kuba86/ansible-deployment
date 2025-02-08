@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 Type=exec
 ExecStart=/usr/bin/curl \
-  -u ':tk_23hw9mbg0g8rft812cb3buws2e2ip' \
+  -u ':{{ ntfy_api_token }}' \
   -H "Title: %H started" \
   -H "Tags: %H" \
   -d "%H successfully started and is online" \
