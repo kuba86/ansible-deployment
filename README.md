@@ -30,3 +30,5 @@ cd $HOME/ansible
 
 # run ansible-navigator
 `ansible-navigator --ee false`
+
+`:run playbooks/all.yaml -i inventories/prod.yaml`

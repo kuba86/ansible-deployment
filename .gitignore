@@ -1,2 +1,5 @@
 /.idea
 *.key
+/.vault_pass
+/playbooks/*-artifact-*.json
+/ansible-navigator.log

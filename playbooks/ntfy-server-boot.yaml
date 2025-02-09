@@ -3,7 +3,7 @@
   become: yes
   serial: 4
   vars_files:
-    - "../vars/{{ inventory_hostname }}.yaml"
+    - "../secrets/{{ inventory_hostname }}.yaml"
   vars:
     ntfy_api_token:
 
