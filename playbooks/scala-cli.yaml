@@ -1,6 +1,11 @@
 - name: Install Scala CLI
   hosts: all
   gather_facts: false
+  serial: 4
+  vars_files:
+    - "../vars/{{ inventory_hostname }}.yaml"
+  vars:
+    main_user: core
   tasks:
 
     - name: Scala CLI | Install
@@ -27,7 +32,7 @@
       register: install_scalacli_output
       changed_when: "'scala-cli is not installed or not in PATH' in install_scalacli_output.stdout"
       become: true
-      become_user: core
+      become_user: "{{ main_user }}"
 
     - name: Scala CLI | Validate installation
       ansible.builtin.shell: |
@@ -40,15 +45,15 @@
       failed_when: scala_cli_version.rc != 0
       changed_when: false
       become: true
-      become_user: core
+      become_user: "{{ main_user }}"
 
     - name: Scala CLI | add to PATH in Fish shell
       ansible.builtin.copy:
         content: |
-          fish_add_path --append /home/core/.cache/scalacli/local-repo/bin/scala-cli
-        dest: /home/core/.config/fish/conf.d/scala-cli.fish
-        owner: core
-        group: core
+          fish_add_path --append /home/{{ main_user }}/.cache/scalacli/local-repo/bin/scala-cli
+        dest: /home/{{ main_user }}/.config/fish/conf.d/scala-cli.fish
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
         mode: '644'
 
     - name: Scala CLI | setup power mode to true
@@ -72,10 +77,10 @@
       failed_when: scala_cli_power_mode.rc != 0
       changed_when: "'Scala-Cli power mode set to FALSE, changing to TRUE' in scala_cli_power_mode.stdout"
       become: true
-      become_user: core
+      become_user: "{{ main_user }}"
 
     - name: Display Scala CLI version
       ansible.builtin.debug:
         msg: "Installed Scala CLI version: {{ scala_cli_version.stdout }}"
       become: true
-      become_user: core
+      become_user: "{{ main_user }}"

@@ -1,22 +1,27 @@
 - name: Update ssh authorized keys
   hosts: all
   gather_facts: false
+  serial: 4
+  vars_files:
+    - "../vars/{{ inventory_hostname }}.yaml"
+  vars:
+    main_user: core
   tasks:
 
     - name: SSH | Create authorized_keys.d directory
       ansible.builtin.file:
-        path: /home/core/.ssh/authorized_keys.d
+        path: /home/{{ main_user }}/.ssh/authorized_keys.d
         state: directory
         mode: '700'
-        owner: core
-        group: core
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
 
     - name: SSH | Update authorized keys
       ansible.builtin.shell: |
         set -o pipefail
         set -e
         
-        authorized_keys_dir=/home/core/.ssh/authorized_keys.d
+        authorized_keys_dir=/home/{{ main_user }}/.ssh/authorized_keys.d
         authorized_keys_file=$authorized_keys_dir/ansible
         
         if [[ -f "$authorized_keys_file" ]]; then
@@ -37,4 +42,4 @@
       register: ssh_update_output
       changed_when: "'Updating...' in ssh_update_output.stdout"
       become: true
-      become_user: core
+      become_user: "{{ main_user }}"

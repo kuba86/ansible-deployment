@@ -2,6 +2,10 @@
   hosts: all
   gather_facts: true
   serial: 4
+  vars_files:
+    - "../vars/{{ inventory_hostname }}.yaml"
+  vars:
+    main_user: core
   tasks:
 
     - name: Fish | install rpm-ostree
@@ -34,12 +38,12 @@
       when:
         - ansible_pkg_mgr in ['dnf', 'dnf5']
 
-    - name: Fish | ensures /home/core/.bashrc.d/ directory exists
+    - name: Fish | ensures /home/{{ main_user }}/.bashrc.d/ directory exists
       ansible.builtin.file:
-        path: /home/core/.bashrc.d/
+        path: /home/{{ main_user }}/.bashrc.d/
         state: directory
-        owner: core
-        group: core
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
         mode: '755'
 
     - name: Fish | fish.bashrc (autostart)
@@ -52,17 +56,17 @@
               which fish > /dev/null && exec fish
             fi
           fi
-        dest: /home/core/.bashrc.d/fish.bashrc
-        owner: core
-        group: core
+        dest: /home/{{ main_user }}/.bashrc.d/fish.bashrc
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
         mode: '644'
 
-    - name: Fish | ensures /home/core/.config/fish/conf.d/ directory exists
+    - name: Fish | ensures /home/{{ main_user }}/.config/fish/conf.d/ directory exists
       ansible.builtin.file:
-        path: /home/core/.config/fish/conf.d/
+        path: /home/{{ main_user }}/.config/fish/conf.d/
         state: directory
-        owner: core
-        group: core
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
         mode: '755'
 
     - name: Fish | set theme (ayu Dark)
@@ -71,7 +75,7 @@
           if status is-interactive
             fish_config theme choose "ayu Dark"
           end
-        dest: /home/core/.config/fish/conf.d/theme.fish
-        owner: core
-        group: core
+        dest: /home/{{ main_user }}/.config/fish/conf.d/theme.fish
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
         mode: '644'

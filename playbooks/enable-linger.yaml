@@ -1,12 +1,16 @@
-- name: Enable login linger for current user
+- name: Enable login linger for a user
   hosts: all
   gather_facts: false
   serial: 4
+  vars_files:
+    - "../vars/{{ inventory_hostname }}.yaml"
+  vars:
+    main_user: core
   tasks:
 
-    - name: Loginctl | enable-linger for core user
+    - name: Loginctl | enable-linger for '{{ main_user }}' user
       ansible.builtin.file:
-        path: /var/lib/systemd/linger/core
+        path: /var/lib/systemd/linger/{{ main_user }}
         state: file
         owner: root
         group: root

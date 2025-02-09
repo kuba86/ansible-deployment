@@ -2,6 +2,10 @@
   hosts: coreos
   gather_facts: true
   serial: 4
+  vars_files:
+    - "../vars/{{ inventory_hostname }}.yaml"
+  vars:
+    main_user: core
   tasks:
 
     - name: Incus | install rpm-ostree
@@ -42,10 +46,10 @@
         name: incus-admin
         state: present
 
-    - name: Incus | user 'core' setup
+    - name: Incus | user '{{ main_user }}' setup
       become: true
       ansible.builtin.user:
-        name: core
+        name: "{{ main_user }}"
         state: present
         append: true
         groups:

@@ -18,6 +18,7 @@
           eza \
           fd-find \
           iftop \
+          jq \
           mkpasswd \
           ncdu \
           sysstat \
