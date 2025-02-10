@@ -3,19 +3,19 @@
   become: yes
   serial: 4
   vars_files:
-    - "../secrets/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
   vars:
     ntfy_api_token:
 
   tasks:
     - name: Install ntfy-server-boot | Copy ntfy-server-boot.service file
       ansible.builtin.template:
-        src: ../files/ntfy-server-boot.service.j2
+        src: ../templates/ntfy-server-boot.service.j2
         dest: /etc/systemd/system/ntfy-server-boot.service
 
     - name: Install ntfy-server-boot | Copy ntfy-server-boot.timer file
       ansible.builtin.template:
-        src: ../files/ntfy-server-boot.timer.j2
+        src: ../templates/ntfy-server-boot.timer.j2
         dest: /etc/systemd/system/ntfy-server-boot.timer
 
     - name: Install ntfy-server-boot | Reload systemd daemon

@@ -3,7 +3,7 @@
   gather_facts: false
   serial: 4
   vars_files:
-    - "../vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
   vars:
     main_user: core
   tasks:

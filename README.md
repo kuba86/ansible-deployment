@@ -31,4 +31,8 @@ cd $HOME/ansible
 # run ansible-navigator
 `ansible-navigator --ee false`
 
+## Examples
 `:run playbooks/all.yaml -i inventories/prod.yaml`
+`:run playbooks/ntfy-server-boot.yaml -i inventories/prod.yaml`
+### specify user and ad-hoc host
+`:run playbooks/ntfy-server-boot.yaml --user=user -i "fedora-kde-xps.tailnet-ba52.ts.net,"`

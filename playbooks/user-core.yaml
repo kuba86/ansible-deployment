@@ -2,6 +2,10 @@
   hosts: all
   gather_facts: true
   serial: 4
+  vars_files:
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+  vars:
+    core_user_pass_hash:
   tasks:
 
     - name: Add the user 'core'
@@ -9,8 +13,8 @@
       ansible.builtin.user:
         name: core
         create_home: true
-        # mkpasswd --method=yescrypt --rounds 7
-        password: ''
+        # time mkpasswd --method=yescrypt --rounds 11 dummy_password
+        password: "{{ core_user_pass_hash }}"
         state: present
         append: true
         groups:
