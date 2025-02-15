@@ -1,6 +1,6 @@
 - name: Install ntfy-server-boot service and timer
   hosts: all
-  become: yes
+  become: true
   serial: 4
   vars_files:
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
