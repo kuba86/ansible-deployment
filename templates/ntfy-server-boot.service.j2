@@ -9,6 +9,7 @@ RemainAfterExit=yes
 ExecStart=/usr/bin/bash -c 'curl \
   --retry 43200 \
   --retry-all-errors \
+  --fail \
   --connect-timeout 5 \
   --max-time 5 \
   --retry-delay 60 \
