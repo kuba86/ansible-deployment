@@ -10,3 +10,8 @@ all:
             pi3.tailnet-ba52.ts.net:
         fedora:
           hosts:
+    desktop:
+      hosts:
+        fedora-kde-xps.tailnet-ba52.ts.net:
+    router:
+      hosts:

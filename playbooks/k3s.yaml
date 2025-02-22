@@ -1,5 +1,5 @@
 - name: Install k3s via rpm-ostree
-  hosts: all
+  hosts: coreos:dnf
   gather_facts: true
   serial: 4
   become: true

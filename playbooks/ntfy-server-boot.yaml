@@ -1,5 +1,5 @@
 - name: Install ntfy-server-boot service and timer
-  hosts: all
+  hosts: coreos:dnf:desktop
   become: true
   serial: 4
   vars_files:

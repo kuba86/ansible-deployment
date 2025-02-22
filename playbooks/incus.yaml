@@ -1,5 +1,5 @@
 - name: Install incus
-  hosts: coreos
+  hosts: coreos:dnf:desktop
   gather_facts: true
   serial: 4
   vars_files:

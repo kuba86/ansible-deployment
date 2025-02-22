@@ -1,5 +1,5 @@
 - name: Install Scala CLI
-  hosts: all
+  hosts: coreos:dnf:desktop
   gather_facts: false
   serial: 4
   vars_files:

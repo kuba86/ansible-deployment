@@ -11,3 +11,8 @@ all:
               ansible_user: root
         fedora:
           hosts:
+    desktop:
+      hosts:
+        fedora-kde-xps.tailnet-ba52.ts.net:
+    router:
+      hosts:

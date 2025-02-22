@@ -1,5 +1,5 @@
 - name: Install packages
-  hosts: all
+  hosts: coreos:dnf:desktop
   gather_facts: true
   serial: 4
   tasks:

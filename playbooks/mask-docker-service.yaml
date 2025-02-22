@@ -1,5 +1,5 @@
 - name: Mask and disable docker service
-  hosts: all
+  hosts: coreos:dnf:desktop
   gather_facts: false
   serial: 4
   tasks:
