@@ -1,1 +1,2 @@
 main_user: "user"
+ansible_user: "user"

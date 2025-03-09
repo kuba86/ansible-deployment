@@ -1,9 +1,9 @@
 - name: Install incus
   hosts: coreos:dnf:desktop
   gather_facts: true
-  serial: 4
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
   vars:
     main_user: core
   tasks:

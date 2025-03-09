@@ -1,7 +1,9 @@
 - name: Mask and disable docker service
   hosts: coreos:dnf:desktop
   gather_facts: false
-  serial: 4
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
   tasks:
 
     - name: Docker | disable and Mask docker.service

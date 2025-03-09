@@ -1,7 +1,6 @@
 - name: Clevis luks regen
   hosts: coreos
   gather_facts: true
-  serial: 4
   tasks:
 
     - name: Clevis | luks regen

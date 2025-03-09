@@ -2,7 +2,7 @@ all:
   children:
     coreos:
       hosts:
-        10.45.28.188
+        vm01.tailnet-ba52.ts.net:
     dnf:
       children:
         el9:

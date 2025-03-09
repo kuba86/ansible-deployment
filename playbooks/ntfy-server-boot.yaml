@@ -1,8 +1,8 @@
 - name: Install ntfy-server-boot service and timer
   hosts: coreos:dnf:desktop
   become: true
-  serial: 4
   vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
   vars:
     ntfy_api_token:

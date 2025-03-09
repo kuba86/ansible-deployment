@@ -1,14 +1,14 @@
 - name: Setup 'core' user
   hosts: coreos:dnf:desktop
   gather_facts: true
-  serial: 4
   vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
   vars:
     core_user_pass_hash:
   tasks:
 
-    - name: Add the user 'core'
+    - name: Add and setup user 'core'
       become: true
       ansible.builtin.user:
         name: core

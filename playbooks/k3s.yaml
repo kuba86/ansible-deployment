@@ -1,7 +1,8 @@
 - name: Install k3s via rpm-ostree
   hosts: coreos:dnf
   gather_facts: true
-  serial: 4
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
   become: true
   tasks:
 

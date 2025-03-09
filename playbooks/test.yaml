@@ -1,7 +1,9 @@
 - name: Test
   hosts: all
-  gather_facts: false
-  serial: 4
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
 #  become: true
 #  vars_prompt:
 #    - name: dir

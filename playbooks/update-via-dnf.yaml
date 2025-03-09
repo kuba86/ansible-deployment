@@ -1,7 +1,9 @@
 - name: Update all packages via dnf
   hosts: dnf
   gather_facts: true
-  serial: 4
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
   tasks:
 
     - name: Upgrade all packages

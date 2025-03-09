@@ -1,7 +1,9 @@
 - name: Set Sysctl config
   hosts: coreos:dnf:desktop
   gather_facts: true
-  serial: 4
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
   tasks:
 
     - name: Sysctl | set fs.inotify.max_user_watches
