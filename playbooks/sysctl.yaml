@@ -43,6 +43,60 @@
         sysctl_file: /etc/sysctl.d/10-common.conf
         state: present
       when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+      
+    - name: Sysctl | set net.ipv4.ip_forward=1
+      become: true
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_file: /etc/sysctl.d/10-common.conf
+        state: present
+      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+      
+    - name: Sysctl | set net.ipv6.conf.all.forwarding=1
+      become: true
+      ansible.posix.sysctl:
+        name: net.ipv6.conf.all.forwarding
+        value: '1'
+        sysctl_file: /etc/sysctl.d/10-common.conf
+        state: present
+      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+      
+    - name: Sysctl | set vm.overcommit_memory=1
+      become: true
+      ansible.posix.sysctl:
+        name: vm.overcommit_memory
+        value: '1'
+        sysctl_file: /etc/sysctl.d/10-common.conf
+        state: present
+      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+      
+    - name: Sysctl | set kernel.panic=10
+      become: true
+      ansible.posix.sysctl:
+        name: kernel.panic
+        value: '10'
+        sysctl_file: /etc/sysctl.d/10-common.conf
+        state: present
+      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+      
+    - name: Sysctl | set kernel.panic_on_oops=1
+      become: true
+      ansible.posix.sysctl:
+        name: kernel.panic_on_oops
+        value: '1'
+        sysctl_file: /etc/sysctl.d/10-common.conf
+        state: present
+      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+      
+#    - name: Sysctl |
+#      become: true
+#      ansible.posix.sysctl:
+#        name:
+#        value: ''
+#        sysctl_file: /etc/sysctl.d/10-common.conf
+#        state: present
+#      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
 
     - name: Sysctl | Remove /etc/sysctl.d/10-inotify.conf if it exists
       # /etc/sysctl.d/10-inotify.conf is old file, should be removed to avoid conflicts

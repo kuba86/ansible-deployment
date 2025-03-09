@@ -11,7 +11,7 @@
     - name: Loginctl | enable-linger for '{{ main_user }}' user
       ansible.builtin.file:
         path: /var/lib/systemd/linger/{{ main_user }}
-        state: file
+        state: touch
         owner: root
         group: root
         mode: '644'

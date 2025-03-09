@@ -2,17 +2,14 @@ all:
   children:
     coreos:
       hosts:
+        10.45.28.188
     dnf:
       children:
         el9:
           hosts:
-            10.45.28.235:
-              ansible_ssh_port: 22
-              ansible_user: root
         fedora:
           hosts:
     desktop:
       hosts:
-        fedora-kde-xps.tailnet-ba52.ts.net:
     router:
       hosts:

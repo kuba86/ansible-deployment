@@ -31,5 +31,5 @@
 - name: Playbooks | install ntfy-server-boot service and timer
   ansible.builtin.import_playbook: ntfy-server-boot.yaml
 
-#- name: Playbooks | install tailscale
-#  ansible.builtin.import_playbook: tailscale.yaml
+- name: Playbooks | install tailscale
+  ansible.builtin.import_playbook: tailscale.yaml

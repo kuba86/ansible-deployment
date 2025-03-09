@@ -93,6 +93,7 @@
         state: started
 
     - name: Incus | init
+      become: true
       ansible.builtin.shell: |
         incus admin init --auto
       register: incus_init

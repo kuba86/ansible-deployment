@@ -44,21 +44,21 @@
       ansible.posix.sysctl:
         name: vm.overcommit_memory
         value: '1'
-        sysctl_file: /etc/sysctl.d/30-k3s.conf
+        sysctl_file: /etc/sysctl.d/10-common.conf
         state: present
 
     - name: K3s | set kernel.panic_on_oops=1
       ansible.posix.sysctl:
         name: kernel.panic_on_oops
         value: '1'
-        sysctl_file: /etc/sysctl.d/30-k3s.conf
+        sysctl_file: /etc/sysctl.d/10-common.conf
         state: present
 
     - name: K3s | set kernel.panic=10
       ansible.posix.sysctl:
         name: kernel.panic
         value: '10'
-        sysctl_file: /etc/sysctl.d/30-k3s.conf
+        sysctl_file: /etc/sysctl.d/10-common.conf
         state: present
 
     - name: K3s | ensures /etc/rancher/k3s/ directory exists
@@ -82,6 +82,8 @@
       ansible.builtin.copy:
         content: |
           #!/usr/bin/bash
+          set -euo pipefail
+          IFS=$'\n\t'
 
           TAILSCALE_IP=$(tailscale status --json | jq -r .Self.TailscaleIPs[0])
           TAILSCALE_SHORT_DOMAIN=$(tailscale status --json | jq -r .Self.HostName)
@@ -91,19 +93,15 @@
           mkdir -p /etc/rancher/k3s
           mkdir -p /var/k3s/.rancher/k3s
 
-          echo 'bind-address: TAILSCALE_IP
+          echo '
+          bind-address: TAILSCALE_IP
           node-ip: TAILSCALE_IP
           advertise-address: TAILSCALE_IP
-          flannel-iface: "tailscale0"
-          vpn-auth: "name=tailscale,joinKey=TAILSCALE_KEY,extraArgs=--advertise-exit-node"
-          kube-cloud-controller-manager-arg: "webhook-bind-address=TAILSCALE_IP"
-          kubelet-arg: "address=TAILSCALE_IP"
-          tls-san:
-            - TAILSCALE_FULL_DOMAIN
-            - TAILSCALE_SHORT_DOMAIN
+          vpn-auth: "name=tailscale,joinKey=TAILSCALE_KEY,extraArgs=--advertise-exit-node --accept-routes"
           cluster-init: true
           protect-kernel-defaults: true
-          selinux: true' \
+          selinux: true
+          ' \
           | sed "s/TAILSCALE_IP/$TAILSCALE_IP/g" \
           | sed "s/TAILSCALE_SHORT_DOMAIN/$TAILSCALE_SHORT_DOMAIN/g" \
           | sed "s/TAILSCALE_FULL_DOMAIN/$TAILSCALE_FULL_DOMAIN/g" \
