@@ -4,6 +4,7 @@ all:
       hosts:
         wyse0[1:3].tailnet-ba52.ts.net:
         vm01.tailnet-ba52.ts.net:
+        nuc01.tailnet-ba52.ts.net:
     dnf:
       children:
         el9:
