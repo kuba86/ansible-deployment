@@ -65,6 +65,7 @@
           - sysstat
           - upower
           - wget
+          - podman
         state: present
       when:
         - ansible_pkg_mgr in ['dnf', 'dnf5']

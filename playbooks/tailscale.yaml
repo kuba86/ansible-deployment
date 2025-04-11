@@ -27,8 +27,8 @@
         owner: root
         group: root
         mode: '644'
-        when:
-          - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+      when:
+        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
 
     - name: Tailscale | install rpm-ostree
       become: true

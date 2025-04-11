@@ -29,6 +29,7 @@
         install_rpm_ostree.rc != 77
       when:
         - ansible_pkg_mgr in ['atomic_container']
+        - '"container" not in ansible_facts["virtualization_tech_guest"]'
 
     - name: Incus | install dnf
       become: true
@@ -40,12 +41,15 @@
       register: install_dnf
       when:
         - ansible_pkg_mgr in ['dnf', 'dnf5']
+        - '"container" not in ansible_facts["virtualization_tech_guest"]'
       
     - name: Incus | Ensure group "incus-admin" exists
       become: true
       ansible.builtin.group:
         name: incus-admin
         state: present
+      when:
+        - '"container" not in ansible_facts["virtualization_tech_guest"]'
 
     - name: Incus | user '{{ main_user }}' setup
       become: true
@@ -55,6 +59,8 @@
         append: true
         groups:
           - incus-admin
+      when:
+        - '"container" not in ansible_facts["virtualization_tech_guest"]'
 
     - name: Incus | ensure root:1000000:1000000000 is in /etc/subuid
       ansible.builtin.lineinfile:
@@ -64,6 +70,8 @@
         state: present
         create: true
       become: true
+      when:
+        - '"container" not in ansible_facts["virtualization_tech_guest"]'
     
     - name: Incus | ensure root:1000000:1000000000 is in /etc/subgid
       ansible.builtin.lineinfile:
@@ -73,6 +81,8 @@
         state: present
         create: true
       become: true
+      when:
+        - '"container" not in ansible_facts["virtualization_tech_guest"]'
       
     - name: Incus | Reboot machine
       become: true
@@ -87,6 +97,8 @@
         name: incus.service
         enabled: true
         state: started
+      when:
+        - '"container" not in ansible_facts["virtualization_tech_guest"]'
         
     - name: Incus | enable and start incus.socket
       become: true
@@ -94,6 +106,8 @@
         name: incus.socket
         enabled: true
         state: started
+      when:
+        - '"container" not in ansible_facts["virtualization_tech_guest"]'
 
     - name: Incus | init
       become: true
@@ -101,3 +115,5 @@
         incus admin init --auto
       register: incus_init
       changed_when: incus_init.rc != 0
+      when:
+        - '"container" not in ansible_facts["virtualization_tech_guest"]'
