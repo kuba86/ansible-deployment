@@ -53,7 +53,6 @@
         value: '1'
         sysctl_file: /etc/sysctl.d/10-common.conf
         state: present
-      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
       
     - name: Sysctl | set net.ipv6.conf.all.forwarding=1
       become: true
@@ -62,7 +61,6 @@
         value: '1'
         sysctl_file: /etc/sysctl.d/10-common.conf
         state: present
-      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
       
     - name: Sysctl | set vm.overcommit_memory=1
       become: true
@@ -90,10 +88,3 @@
         sysctl_file: /etc/sysctl.d/10-common.conf
         state: present
       when: '"container" not in ansible_facts["virtualization_tech_guest"]'
-
-    - name: Sysctl | Remove /etc/sysctl.d/10-inotify.conf if it exists
-      # /etc/sysctl.d/10-inotify.conf is old file, should be removed to avoid conflicts
-      become: true
-      file:
-        path: /etc/sysctl.d/10-inotify.conf
-        state: absent
