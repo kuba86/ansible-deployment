@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=exec
 RemainAfterExit=yes
 ExecStart=/usr/bin/bash -c 'curl \
-  --retry 43200 \
+  --retry 60 \
   --retry-all-errors \
   --fail \
   --connect-timeout 5 \
@@ -20,7 +20,7 @@ ExecStart=/usr/bin/bash -c 'curl \
   https://ntfy.kuba86.com/servers'
 RestartSec=60
 ExecStopPost=/usr/bin/bash -c 'curl \
-  --retry 43200 \
+  --retry 60 \
   --connect-timeout 5 \
   --max-time 5 \
   --retry-delay 60 \
