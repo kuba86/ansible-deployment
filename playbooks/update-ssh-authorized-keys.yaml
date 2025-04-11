@@ -18,8 +18,8 @@
 
     - name: SSH | Update authorized keys
       ansible.builtin.shell: |
-        set -o pipefail
-        set -e
+        set -euo pipefail
+        IFS=$'\n\t'
         
         authorized_keys_dir=/home/{{ main_user }}/.ssh/authorized_keys.d
         authorized_keys_file=$authorized_keys_dir/ansible
@@ -43,3 +43,15 @@
       changed_when: "'Updating...' in ssh_update_output.stdout"
       become: true
       become_user: "{{ main_user }}"
+      
+    - name: SSH | Setup sshd config
+      become: true
+      ansible.builtin.copy:
+        content: |
+          PasswordAuthentication no
+          AllowUsers core user root
+          AuthorizedKeysFile .ssh/authorized_keys.d/ansible
+        dest: /etc/ssh/sshd_config.d/60-common.conf
+        owner: root
+        group: root
+        mode: '644'

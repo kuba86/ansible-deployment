@@ -10,8 +10,7 @@ all:
         el9:
           hosts:
             pi3.tailnet-ba52.ts.net:
-            marek246.mikrus.xyz:
-              ansible_port: 10246
+            marek246.tailnet-ba52.ts.net:
         fedora:
           hosts:
     desktop:
