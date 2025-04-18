@@ -94,8 +94,8 @@ while read -r java_path; do
     fi
 done <<< "$coursier_java_list"
 
-if [ -v JAVA_HOME_TEMURIN_17 ]; then
+if [ -v JAVA_HOME_GRAALVM_17 ]; then
   remove_from_path "$jdk_path"
-  export JAVA_HOME="$JAVA_HOME_TEMURIN_17"
+  export JAVA_HOME="$JAVA_HOME_GRAALVM_17"
   export PATH="${JAVA_HOME}/bin:$PATH"
 fi

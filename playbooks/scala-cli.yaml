@@ -14,17 +14,14 @@
         IFS=$'\n\t'
         
         if [ -f "$HOME/.profile" ]; then
-          echo ".profile exists"
-          source ~/.profile
-        else
-          echo ".profile does not exist"
+          source "$HOME/.profile"
         fi
         
         if command -v scala-cli &> /dev/null
         then
           echo "scala-cli is installed and available in PATH"
-          echo "scala-cli will be updated to newest version"
-          #scala-cli update --force
+          # echo "scala-cli will be updated to newest version"
+          # scala-cli update --force
         else
           echo "scala-cli is not installed or not in PATH"
           curl -sSLf https://scala-cli.virtuslab.org/get | sh
@@ -33,16 +30,13 @@
       changed_when: "'scala-cli is not installed or not in PATH' in install_scalacli_output.stdout"
       become_user: "{{ main_user }}"
 
-    - name: Scala CLI | Validate installation
+    - name: Scala CLI | Validate scala-cli installation
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
         
         if [ -f "$HOME/.profile" ]; then
-          echo ".profile exists"
-          source ~/.profile
-        else
-          echo ".profile does not exist"
+          source "$HOME/.profile"
         fi
         
         scala-cli version
@@ -57,10 +51,7 @@
         IFS=$'\n\t'
         
         if [ -f "$HOME/.profile" ]; then
-          echo ".profile exists"
-          source ~/.profile
-        else
-          echo ".profile does not exist"
+          source "$HOME/.profile"
         fi
         
         scala_cli_power_mode=$(scala-cli config power)
@@ -101,21 +92,43 @@
         IFS=$'\n\t'
         
         if [ -f "$HOME/.profile" ]; then
-          echo ".profile exists"
-          source ~/.profile
-        else
-          echo ".profile does not exist"
+          source "$HOME/.profile"
         fi
 
-        cs version
+        #cs version
       register: cs_version
       failed_when: cs_version.rc != 0
       changed_when: false
       become_user: "{{ main_user }}"
       
+    - name: Scala CLI | copy scala-cli-jvm-setup.scala
+      ansible.builtin.copy:
+        src: ../files/scala-cli-jvm-setup.scala
+        dest: /home/{{ main_user }}/scala-cli-jvm-setup.scala
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '744'
+        
+    - name: Scala CLI | download JDK via scala-cli
+      ansible.builtin.shell: |
+        set -euo pipefail
+        IFS=$'\n\t'
+
+        if [ -f "$HOME/.profile" ]; then
+          source "$HOME/.profile"
+        fi
+
+        scala-cli clean /home/{{ main_user }}
+        /home/{{ main_user }}/scala-cli-jvm-setup.scala
+        scala-cli clean /home/{{ main_user }}
+      register: scala_cli_download_jdk
+      failed_when: scala_cli_download_jdk.rc != 0
+      changed_when: false
+      become_user: "{{ main_user }}"
+      
     - name: Scala CLI | setup JDK env vars
       ansible.builtin.copy:
-        src: ../templates/jvm.bashrc
+        src: ../files/jvm.bashrc
         dest: /home/{{ main_user }}/.bashrc.d/jvm.bashrc
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
