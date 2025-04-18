@@ -89,7 +89,7 @@
       ansible.builtin.reboot:
       when: >
         install_rpm_ostree.changed | default(false) or
-        install_dnf.changed  | default(false)
+        install_dnf.changed | default(false)
 
     - name: Incus | enable and start incus.service
       become: true

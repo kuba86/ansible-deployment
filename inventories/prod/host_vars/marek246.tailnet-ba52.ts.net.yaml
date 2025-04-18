@@ -1,2 +1,2 @@
 main_user: "core"
-ansible_user: "root"
+ansible_user: "core"

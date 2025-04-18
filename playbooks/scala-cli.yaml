@@ -10,8 +10,8 @@
 
     - name: Scala CLI | Install
       ansible.builtin.shell: |
-        set -o pipefail
-        set -e
+        set -euo pipefail
+        IFS=$'\n\t'
         
         if [ -f "$HOME/.profile" ]; then
           echo ".profile exists"
@@ -24,47 +24,61 @@
         then
           echo "scala-cli is installed and available in PATH"
           echo "scala-cli will be updated to newest version"
-          scala-cli update --force
+          #scala-cli update --force
         else
           echo "scala-cli is not installed or not in PATH"
           curl -sSLf https://scala-cli.virtuslab.org/get | sh
         fi
       register: install_scalacli_output
       changed_when: "'scala-cli is not installed or not in PATH' in install_scalacli_output.stdout"
-      become: true
       become_user: "{{ main_user }}"
+      
+#    - name: Scala CLI | add symlink to /home/{{ main_user }}/bin/scala-cli
+#      ansible.builtin.shell: |
+#        set -euo pipefail
+#        IFS=$'\n\t'
+#
+#        if [ -f "/home/{{ main_user }}/bin/scala-cli" ]; then
+#          echo "/home/{{ main_user }}/bin/scala-cli exists."
+#        else
+#          echo "/home/{{ main_user }}/bin/scala-cli does NOT exists, adding symlink..."
+#          ln -s /home/{{ main_user }}/.cache/scalacli/local-repo/bin/scala-cli/scala-cli /home/{{ main_user }}/bin/scala-cli
+#        fi
+#      become_user: "{{ main_user }}"
+#      register: symlink_scalacli_output
+#      changed_when: "'adding symlink...' in symlink_scalacli_output.stdout"
 
     - name: Scala CLI | Validate installation
       ansible.builtin.shell: |
-        set -o pipefail
-        set -e
+        set -euo pipefail
+        IFS=$'\n\t'
         
-        source ~/.profile
+        if [ -f "$HOME/.profile" ]; then
+          echo ".profile exists"
+          source ~/.profile
+        else
+          echo ".profile does not exist"
+        fi
+        
         scala-cli version
       register: scala_cli_version
       failed_when: scala_cli_version.rc != 0
       changed_when: false
-      become: true
       become_user: "{{ main_user }}"
-
-    - name: Scala CLI | add to PATH in Fish shell
-      ansible.builtin.copy:
-        content: |
-          fish_add_path --append /home/{{ main_user }}/.cache/scalacli/local-repo/bin/scala-cli
-        dest: /home/{{ main_user }}/.config/fish/conf.d/scala-cli.fish
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '644'
 
     - name: Scala CLI | setup power mode to true
       ansible.builtin.shell: |
-        set -o pipefail
-        set -e
-
-        source ~/.profile
+        set -euo pipefail
+        IFS=$'\n\t'
         
-        scala_cli_check_power_mode_cmd="scala-cli config power"
-        scala_cli_power_mode=$($scala_cli_check_power_mode_cmd)
+        if [ -f "$HOME/.profile" ]; then
+          echo ".profile exists"
+          source ~/.profile
+        else
+          echo ".profile does not exist"
+        fi
+        
+        scala_cli_power_mode=$(scala-cli config power)
         
         if [[ "$scala_cli_power_mode" == "true" ]]; then
           echo "Scala-Cli power mode was already set correctly"
@@ -72,15 +86,60 @@
           echo "Scala-Cli power mode set to FALSE, changing to TRUE"
           scala-cli config power true
         fi
-
       register: scala_cli_power_mode
       failed_when: scala_cli_power_mode.rc != 0
       changed_when: "'Scala-Cli power mode set to FALSE, changing to TRUE' in scala_cli_power_mode.stdout"
-      become: true
       become_user: "{{ main_user }}"
+      
+    - name: Scala CLI | install coursier
+      ansible.builtin.shell: |
+        set -euo pipefail
+        IFS=$'\n\t'
+        
+        if [ ! -f /home/{{ main_user }}/bin/cs ]; then
+          echo "Installing coursier..."
+          mkdir -p /home/{{ main_user }}/bin
+          chown {{ main_user }}:{{ main_user }} /home/{{ main_user }}/bin
+          curl -fL "https://github.com/coursier/launchers/raw/master/cs-$(uname -m)-pc-linux.gz" | gzip -d > /home/{{ main_user }}/bin/cs && chmod u+x /home/{{ main_user }}/bin/cs
+          chown {{ main_user }}:{{ main_user }} /home/{{ main_user }}/bin/cs
+        else
+          echo "/home/{{ main_user }}/bin/cs already exists."
+        fi
+      register: scala_cli_install_coursier
+      failed_when: scala_cli_install_coursier.rc != 0
+      changed_when: "'Installing coursier...' in scala_cli_install_coursier.stdout"
+      become_user: "{{ main_user }}"
+      
+    - name: Scala CLI | Validate coursier installation
+      ansible.builtin.shell: |
+        set -euo pipefail
+        IFS=$'\n\t'
+        
+        if [ -f "$HOME/.profile" ]; then
+          echo ".profile exists"
+          source ~/.profile
+        else
+          echo ".profile does not exist"
+        fi
 
-    - name: Display Scala CLI version
+        cs version
+      register: cs_version
+      failed_when: cs_version.rc != 0
+      changed_when: false
+      become_user: "{{ main_user }}"
+      
+    - name: Scala CLI | setup JDK env vars
+      ansible.builtin.copy:
+        src: ../templates/jvm.bashrc
+        dest: /home/{{ main_user }}/.bashrc.d/jvm.bashrc
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '644'
+      
+    - name: Scala CLI | Display Scala CLI version
       ansible.builtin.debug:
         msg: "Installed Scala CLI version: {{ scala_cli_version.stdout }}"
-      become: true
-      become_user: "{{ main_user }}"
+        
+    - name: Scala CLI | Display coursier version
+      ansible.builtin.debug:
+        msg: "Installed coursier version: {{ cs_version.stdout }}"

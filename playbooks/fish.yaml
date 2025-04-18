@@ -53,7 +53,7 @@
           then
             if [[ $(ps --no-header --pid=$PPID --format=cmd) != "fish" ]]
             then
-              which fish > /dev/null && exec fish
+              which fish > /dev/null # && exec fish
             fi
           fi
         dest: /home/{{ main_user }}/.bashrc.d/fish.bashrc
