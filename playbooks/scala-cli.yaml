@@ -32,21 +32,6 @@
       register: install_scalacli_output
       changed_when: "'scala-cli is not installed or not in PATH' in install_scalacli_output.stdout"
       become_user: "{{ main_user }}"
-      
-#    - name: Scala CLI | add symlink to /home/{{ main_user }}/bin/scala-cli
-#      ansible.builtin.shell: |
-#        set -euo pipefail
-#        IFS=$'\n\t'
-#
-#        if [ -f "/home/{{ main_user }}/bin/scala-cli" ]; then
-#          echo "/home/{{ main_user }}/bin/scala-cli exists."
-#        else
-#          echo "/home/{{ main_user }}/bin/scala-cli does NOT exists, adding symlink..."
-#          ln -s /home/{{ main_user }}/.cache/scalacli/local-repo/bin/scala-cli/scala-cli /home/{{ main_user }}/bin/scala-cli
-#        fi
-#      become_user: "{{ main_user }}"
-#      register: symlink_scalacli_output
-#      changed_when: "'adding symlink...' in symlink_scalacli_output.stdout"
 
     - name: Scala CLI | Validate installation
       ansible.builtin.shell: |

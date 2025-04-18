@@ -1,17 +1,17 @@
-IFS=$'\n\t'
+set -o pipefail
+
 jdk_path="${HOME}"/.cache/coursier/arc/
 
 # make sure all program used are available
-which fd > /dev/null
-which sort > /dev/null
-which grep > /dev/null
-which awk > /dev/null
+which fd > /dev/null || return 0
+which sort > /dev/null || return 0
+which grep > /dev/null || return 0
+which awk > /dev/null || return 0
 
 remove_from_path() {
   # Ensure exactly one argument (the substring) is provided
   if [ "$#" -ne 1 ] || [ -z "$1" ]; then
-    echo "Usage: remove_from_path <substring_to_remove>" >&2
-    return 1 # Indicate error
+    return 0
   fi
 
   local substring_to_remove="$1"
@@ -49,7 +49,7 @@ remove_from_path() {
   # You can optionally uncomment the line below to see the result immediately
   # echo "New PATH: $PATH"
 
-  return 0 # Indicate success
+  return 0
 }
 
 # Find java executables, sort them
