@@ -2,19 +2,19 @@ all:
   children:
     coreos:
       hosts:
-#        wyse0[1:3].tailnet-ba52.ts.net:
+        wyse0[1:3].tailnet-ba52.ts.net:
 #        vm01.tailnet-ba52.ts.net:
 #        nuc01.tailnet-ba52.ts.net:
     dnf:
       children:
         el9:
           hosts:
-#            pi3.tailnet-ba52.ts.net:
+            pi3.tailnet-ba52.ts.net:
             marek246.tailnet-ba52.ts.net:
         fedora:
           hosts:
     desktop:
       hosts:
-#        fedora-kde-xps.tailnet-ba52.ts.net:
+        fedora-kde-xps.tailnet-ba52.ts.net:
     router:
       hosts:

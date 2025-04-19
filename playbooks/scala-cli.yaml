@@ -76,7 +76,8 @@
           echo "Installing coursier..."
           mkdir -p /home/{{ main_user }}/bin
           chown {{ main_user }}:{{ main_user }} /home/{{ main_user }}/bin
-          curl -fL "https://github.com/coursier/launchers/raw/master/cs-$(uname -m)-pc-linux.gz" | gzip -d > /home/{{ main_user }}/bin/cs && chmod u+x /home/{{ main_user }}/bin/cs
+          curl -fL "https://github.com/coursier/launchers/raw/master/coursier" > /home/{{ main_user }}/bin/cs
+          chmod u+x /home/{{ main_user }}/bin/cs
           chown {{ main_user }}:{{ main_user }} /home/{{ main_user }}/bin/cs
         else
           echo "/home/{{ main_user }}/bin/cs already exists."
@@ -95,7 +96,7 @@
           source "$HOME/.profile"
         fi
 
-        #cs version
+        cs version
       register: cs_version
       failed_when: cs_version.rc != 0
       changed_when: false
