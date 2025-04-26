@@ -56,6 +56,11 @@ create_java_home_vendor_version_env_var() {
   done <<< "$coursier_java_list"
 }
 
-# verify_apps_are_available
-# create_list_of_jdk_paths_env_var
-# create_java_home_vendor_version_env_var
+verify_apps_are_available
+create_list_of_jdk_paths_env_var
+
+if [ "$(uname -m)" = "aarch64" ]; then
+  export JAVA_HOME_GRAALVM_17="${HOME}/.cache/coursier/arc/https/github.com/graalvm/graalvm-ce-builds/releases/download/vm-22.3.3/graalvm-ce-java17-linux-aarch64-22.3.3.tar.gz/graalvm-ce-java17-22.3.3"
+else
+  create_java_home_vendor_version_env_var
+fi

@@ -52,4 +52,4 @@ set_java_home_and_update_path_env_var() {
   fi
 }
 
-# set_java_home_and_update_path_env_var
+set_java_home_and_update_path_env_var

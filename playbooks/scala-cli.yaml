@@ -72,15 +72,19 @@
         set -euo pipefail
         IFS=$'\n\t'
         
-        if [ ! -f /home/{{ main_user }}/bin/cs ]; then
+        user_bin_path="/home/{{ main_user }}/bin"
+        cs_bin_path="$user_bin_path/cs"
+        cs_url="https://github.com/coursier/launchers/raw/master/coursier"
+        
+        if [ ! -f $cs_bin_path ]; then
           echo "Installing coursier..."
-          mkdir -p /home/{{ main_user }}/bin
-          chown {{ main_user }}:{{ main_user }} /home/{{ main_user }}/bin
-          curl -fL "https://github.com/coursier/launchers/raw/master/coursier" > /home/{{ main_user }}/bin/cs
-          chmod u+x /home/{{ main_user }}/bin/cs
-          chown {{ main_user }}:{{ main_user }} /home/{{ main_user }}/bin/cs
+          mkdir -p $user_bin_path
+          chown {{ main_user }}:{{ main_user }} $user_bin_path
+          curl -fL "https://github.com/coursier/launchers/raw/master/coursier" > $cs_bin_path
+          chmod u+x $cs_bin_path
+          chown {{ main_user }}:{{ main_user }} $cs_bin_path
         else
-          echo "/home/{{ main_user }}/bin/cs already exists."
+          echo "$cs_bin_path already exists."
         fi
       register: scala_cli_install_coursier
       failed_when: scala_cli_install_coursier.rc != 0
