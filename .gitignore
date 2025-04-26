@@ -6,3 +6,4 @@
 /ansible-navigator.log
 .bsp
 .scala-build
+/history.txt
