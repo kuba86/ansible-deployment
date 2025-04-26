@@ -1,0 +1,26 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=docker.io/library/caddy:2
+ContainerName=%N
+HostName=%H
+AutoUpdate=registry
+Network=slirp4netns:port_handler=slirp4netns
+Volume=/var/mnt/data1/caddy/etc-caddy:/etc/caddy:z
+Volume=/var/mnt/data1/caddy/config:/config:z
+Volume=/var/mnt/data1/caddy/data:/data:z
+Volume=/var/mnt/data1/caddy/usr-share-caddy:/usr/share/caddy:z
+Volume=/var/mnt/data1/caddy/tls:/certificates:z
+PublishPort=11080:80/tcp
+PublishPort=11443:443/tcp
+PublishPort=11443:443/udp
+PodmanArgs=--memory=500m
+PodmanArgs=--cpus=2
+
+[Service]
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target default.target

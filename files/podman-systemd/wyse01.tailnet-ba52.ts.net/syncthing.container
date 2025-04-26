@@ -1,0 +1,24 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=docker.io/syncthing/syncthing:1
+ContainerName=%N
+HostName=%H
+AutoUpdate=registry
+Volume=/var/mnt/data1/syncthing:/var/syncthing:z
+Volume=/var/mnt/data1/filebrowser:/var/filebrowser:z
+PublishPort=8384:8384/tcp
+PublishPort=22001:22001/tcp
+PublishPort=22001:22001/udp
+PublishPort=21027:21027/udp
+UserNS=keep-id
+PodmanArgs=--memory=4g
+PodmanArgs=--cpus=4
+
+[Service]
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target default.target

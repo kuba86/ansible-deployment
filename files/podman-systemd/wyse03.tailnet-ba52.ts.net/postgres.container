@@ -1,0 +1,19 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=docker.io/library/postgres:17
+ContainerName=%N
+HostName=%H
+AutoUpdate=registry
+Volume=/var/mnt/data2/postgres/data:/var/lib/postgresql:z
+PublishPort=5432:5432
+PodmanArgs=--memory=4g
+PodmanArgs=--cpus=3
+
+[Service]
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target default.target

@@ -1,0 +1,34 @@
+- name: Setup podman systemd quadlet
+  hosts: coreos:dnf:desktop
+  gather_facts: false
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+  vars:
+    main_user: core
+    
+  tasks:
+    
+    - name: Podman Systemd | copy files
+      ansible.builtin.copy:
+        src: "../files/podman-systemd/{{ inventory_hostname }}/"
+        dest: "/home/{{ main_user }}/.config/containers/systemd/"
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '644'
+      register: podman_systemd_copy_files
+        
+    - name: Podman Systemd | reload daemon for 'root'
+      become: true
+      ansible.builtin.command: systemctl daemon-reload
+      when: >
+        podman_systemd_copy_files.changed | default(false)
+      changed_when: >
+        false
+        
+    - name: Podman Systemd | reload daemon for user '{{ main_user }}'
+      ansible.builtin.command: systemctl --user daemon-reload
+      when: >
+        podman_systemd_copy_files.changed | default(false)
+      changed_when: >
+        false

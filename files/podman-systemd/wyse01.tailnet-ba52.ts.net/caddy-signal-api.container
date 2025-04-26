@@ -1,0 +1,21 @@
+[Unit]
+Description=%N
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/library/caddy:2
+ContainerName=%N
+HostName=%H
+AutoUpdate=registry
+Pod=signal-api.pod
+Volume=/var/mnt/data1/caddy-signal-api/Caddyfile:/etc/caddy/Caddyfile:z
+PodmanArgs=--memory=500m
+PodmanArgs=--cpus=2
+
+[Service]
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target default.target

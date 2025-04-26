@@ -1,0 +1,23 @@
+[Unit]
+Description=%N
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=docker.io/bbernhard/signal-cli-rest-api:latest
+ContainerName=%N
+HostName=%H
+Pod=signal-api.pod
+AutoUpdate=registry
+Volume=/home/core/.local/share/signal-api:/home/.local/share/signal-cli:z
+Environment=MODE=native
+Environment=AUTO_RECEIVE_SCHEDULE="39 */2 * * *"
+PodmanArgs=--memory=500m
+PodmanArgs=--cpus=2
+
+[Service]
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target default.target

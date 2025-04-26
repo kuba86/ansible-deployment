@@ -1,0 +1,22 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=lscr.io/linuxserver/piwigo:latest
+ContainerName=%N
+HostName=%H
+AutoUpdate=registry
+Environment=PUID=1000
+Environment=PGID=1000
+PublishPort=6975:80/tcp
+Volume=/var/mnt/data1/piwigo/config:/config:z
+Volume=/var/mnt/data1/piwigo/gallery:/gallery:z
+PodmanArgs=--memory=4g
+PodmanArgs=--cpus=2
+
+[Service]
+Restart=always
+RestartSec=120
+
+[Install]
+#WantedBy=multi-user.target default.target

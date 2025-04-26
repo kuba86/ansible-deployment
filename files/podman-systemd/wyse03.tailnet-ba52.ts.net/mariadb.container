@@ -1,0 +1,20 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=lscr.io/linuxserver/mariadb:latest
+ContainerName=%N
+HostName=%H
+AutoUpdate=registry
+Volume=/var/mnt/data2/mariadb/data:/var/lib/mysql:z
+Volume=/var/mnt/data2/mariadb/config:/config:z
+PublishPort=3306:3306
+PodmanArgs=--memory=4g
+PodmanArgs=--cpus=3
+
+[Service]
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target default.target
