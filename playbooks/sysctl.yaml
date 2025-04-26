@@ -5,86 +5,79 @@
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
   tasks:
-
-    - name: Sysctl | set fs.inotify.max_user_watches
-      # max_user_watches limits how many filesystem items can be watched,
-      # in total across all applications (per user)
+    - name: Sysctl | net forwarding
       become: true
-      ansible.posix.sysctl:
-        name: fs.inotify.max_user_watches
-        value: '524288'
-        sysctl_file: /etc/sysctl.d/10-common.conf
-        state: present
-      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
-
-    - name: Sysctl | set fs.inotify.max_user_instances
-      # max_user_instances limits (roughly) how many applications
-      # can watch files (per user)
-      become: true
-      ansible.posix.sysctl:
-        name: fs.inotify.max_user_instances
-        value: '8192'
-        sysctl_file: /etc/sysctl.d/10-common.conf
-        state: present
-      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
-      
-    - name: Sysctl | set net.core.rmem_max=25000000 (25MB)
-      become: true
-      ansible.posix.sysctl:
-        name: net.core.rmem_max
-        value: '25000000'
-        sysctl_file: /etc/sysctl.d/10-common.conf
-        state: present
-      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+      block:
+        - name: Sysctl | set net.ipv4.ip_forward=1
+          become: true
+          ansible.posix.sysctl:
+            name: net.ipv4.ip_forward
+            value: '1'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
+        
+        - name: Sysctl | set net.ipv6.conf.all.forwarding=1
+          become: true
+          ansible.posix.sysctl:
+            name: net.ipv6.conf.all.forwarding
+            value: '1'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
     
-    - name: Sysctl | set net.core.wmem_max=25000000 (25MB)
-      become: true
-      ansible.posix.sysctl:
-        name: net.core.wmem_max
-        value: '25000000'
-        sysctl_file: /etc/sysctl.d/10-common.conf
-        state: present
+    - name: Sysctl | 'container' NOT in virtualization_tech_guest
       when: '"container" not in ansible_facts["virtualization_tech_guest"]'
-      
-    - name: Sysctl | set net.ipv4.ip_forward=1
       become: true
-      ansible.posix.sysctl:
-        name: net.ipv4.ip_forward
-        value: '1'
-        sysctl_file: /etc/sysctl.d/10-common.conf
-        state: present
-      
-    - name: Sysctl | set net.ipv6.conf.all.forwarding=1
-      become: true
-      ansible.posix.sysctl:
-        name: net.ipv6.conf.all.forwarding
-        value: '1'
-        sysctl_file: /etc/sysctl.d/10-common.conf
-        state: present
-      
-    - name: Sysctl | set vm.overcommit_memory=1
-      become: true
-      ansible.posix.sysctl:
-        name: vm.overcommit_memory
-        value: '1'
-        sysctl_file: /etc/sysctl.d/10-common.conf
-        state: present
-      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
-      
-    - name: Sysctl | set kernel.panic=10
-      become: true
-      ansible.posix.sysctl:
-        name: kernel.panic
-        value: '10'
-        sysctl_file: /etc/sysctl.d/10-common.conf
-        state: present
-      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
-      
-    - name: Sysctl | set kernel.panic_on_oops=1
-      become: true
-      ansible.posix.sysctl:
-        name: kernel.panic_on_oops
-        value: '1'
-        sysctl_file: /etc/sysctl.d/10-common.conf
-        state: present
-      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+      block:
+        - name: Sysctl | set fs.inotify.max_user_watches
+          # max_user_watches limits how many filesystem items can be watched,
+          # in total across all applications (per user)
+          ansible.posix.sysctl:
+            name: fs.inotify.max_user_watches
+            value: '524288'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
+    
+        - name: Sysctl | set fs.inotify.max_user_instances
+          # max_user_instances limits (roughly) how many applications
+          # can watch files (per user)
+          ansible.posix.sysctl:
+            name: fs.inotify.max_user_instances
+            value: '8192'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
+          
+        - name: Sysctl | set net.core.rmem_max=25000000 (25MB)
+          ansible.posix.sysctl:
+            name: net.core.rmem_max
+            value: '25000000'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
+        
+        - name: Sysctl | set net.core.wmem_max=25000000 (25MB)
+          ansible.posix.sysctl:
+            name: net.core.wmem_max
+            value: '25000000'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
+          
+        - name: Sysctl | set vm.overcommit_memory=1
+          ansible.posix.sysctl:
+            name: vm.overcommit_memory
+            value: '1'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
+          
+        - name: Sysctl | set kernel.panic=10
+          ansible.posix.sysctl:
+            name: kernel.panic
+            value: '10'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
+          
+        - name: Sysctl | set kernel.panic_on_oops=1
+          
+          ansible.posix.sysctl:
+            name: kernel.panic_on_oops
+            value: '1'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
