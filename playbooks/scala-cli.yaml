@@ -127,10 +127,24 @@
       changed_when: false
       become_user: "{{ main_user }}"
       
+    - name: Scala CLI | remove old jvm.bashrc
+      ansible.builtin.file:
+        path: /home/{{ main_user }}/.bashrc.d/jvm.bashrc
+        state: absent
+      become_user: "{{ main_user }}"
+      
     - name: Scala CLI | setup JDK env vars
       ansible.builtin.copy:
-        src: ../files/jvm.bashrc
-        dest: /home/{{ main_user }}/.bashrc.d/jvm.bashrc
+        src: ../files/55-jvm.bashrc
+        dest: /home/{{ main_user }}/.bashrc.d/55-jvm.bashrc
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '644'
+        
+    - name: Scala CLI | setup JAVA_HOME and PATH
+      ansible.builtin.copy:
+        src: ../files/56-jvm.bashrc
+        dest: /home/{{ main_user }}/.bashrc.d/56-jvm.bashrc
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: '644'
