@@ -40,7 +40,7 @@
 
     - name: Fish | Configure fish shell for user {{ main_user }}
       block:
-        
+
         - name: Fish | ensures /home/{{ main_user }}/.bashrc.d/ directory exists
           ansible.builtin.file:
             path: /home/{{ main_user }}/.bashrc.d/
@@ -48,7 +48,7 @@
             owner: "{{ main_user }}"
             group: "{{ main_user }}"
             mode: '755'
-    
+
         - name: Fish | fish.bashrc (autostart)
           ansible.builtin.copy:
             content: |
@@ -63,7 +63,7 @@
             owner: "{{ main_user }}"
             group: "{{ main_user }}"
             mode: '644'
-    
+
         - name: Fish | ensures /home/{{ main_user }}/.config/fish/conf.d/ directory exists
           ansible.builtin.file:
             path: /home/{{ main_user }}/.config/fish/conf.d/
@@ -71,7 +71,7 @@
             owner: "{{ main_user }}"
             group: "{{ main_user }}"
             mode: '755'
-    
+
         - name: Fish | set theme (ayu Dark)
           ansible.builtin.copy:
             content: |
@@ -79,6 +79,14 @@
                 fish_config theme choose "ayu Dark"
               end
             dest: /home/{{ main_user }}/.config/fish/conf.d/theme.fish
+            owner: "{{ main_user }}"
+            group: "{{ main_user }}"
+            mode: '644'
+
+        - name: Fish | copy functions
+          ansible.builtin.copy:
+            src: "../files/functions/"
+            dest: "/home/{{ main_user }}/.config/fish/functions/"
             owner: "{{ main_user }}"
             group: "{{ main_user }}"
             mode: '644'
