@@ -6,7 +6,42 @@
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
   tasks:
 
-    - name: Install packages | rpm-ostree
+    - name: Install packages | add Terra repository (disabled for now)
+      become: true
+      ansible.builtin.copy:
+        content: |
+          [terra]
+          name=Terra $releasever
+          #baseurl=https://repos.fyralabs.com/terra$releasever
+          metalink=https://tetsudou.fyralabs.com/metalink?repo=terra$releasever&arch=$basearch
+          metadata_expire=6h
+          type=rpm
+          gpgcheck=1
+          gpgkey=https://repos.fyralabs.com/terra$releasever/key.asc
+          repo_gpgcheck=1
+          enabled=0
+          enabled_metadata=0
+          countme=1
+
+          [terra-source]
+          name=Terra $releasever - Source
+          #baseurl=https://repos.fyralabs.com/terra$releasever-source
+          metalink=https://tetsudou.fyralabs.com/metalink?repo=terra$releasever-source&arch=$basearch
+          metadata_expire=6h
+          type=rpm
+          gpgcheck=1
+          gpgkey=https://repos.fyralabs.com/terra$releasever-source/key.asc
+          repo_gpgcheck=1
+          enabled=0
+          enabled_metadata=0
+        dest: /etc/yum.repos.d/terra.repo
+        owner: root
+        group: root
+        mode: '644'
+      when:
+        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+
+    - name: Install packages | rpm-ostree install
       become: true
       ansible.builtin.shell: |
         rpm-ostree install \
@@ -17,10 +52,8 @@
         --assumeyes \
           bat \
           btop \
-          eza \
           fd-find \
           iftop \
-          jq \
           mkpasswd \
           ncdu \
           sysstat \
@@ -38,6 +71,40 @@
       when:
         - ansible_pkg_mgr in ['atomic_container']
 
+    - name: Install packages | update sudoers secure_path to include /usr/local/bin
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^Defaults\s+secure_path\s*=\s*/sbin:/bin:/usr/sbin:/usr/bin$'
+        line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
+        validate: 'visudo -cf %s'
+      when:
+        - ansible_pkg_mgr in ['dnf', 'dnf5']
+
+    - name: Install packages | eza
+      become: true
+      ansible.builtin.shell: |
+        set -euo pipefail
+        IFS=$'\n\t'
+        
+        global_bin_path="/usr/local/bin"
+        eza_bin_path="$global_bin_path/eza"
+        eza_url="https://github.com/eza-community/eza/releases/download/v0.21.2/eza_$(uname -m)-unknown-linux-gnu.zip"
+        
+        if [ ! -f $eza_bin_path ]; then
+          echo "Installing eza..."
+          curl -fL $eza_url | gzip -d > $eza_bin_path
+          chmod +x $eza_bin_path
+        else
+          echo "$eza_bin_path already exists."
+        fi
+      register: install_eza
+      failed_when: install_eza.rc != 0
+      changed_when: "'Installing eza...' in install_eza.stdout"
+      when:
+        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+
     - name: Install epel-release | dnf
       become: true
       ansible.builtin.dnf:
@@ -50,13 +117,12 @@
       register: install_epel_release
       failed_when: install_epel_release.rc >= 2
 
-    - name: Install packages | dnf
+    - name: Install packages | dnf install
       become: true
       ansible.builtin.dnf:
         name:
           - bat
           - btop
-          - eza
           - fd-find
           - iftop
           - jq
