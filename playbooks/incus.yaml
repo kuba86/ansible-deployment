@@ -7,113 +7,101 @@
   vars:
     main_user: core
   tasks:
+    - name: Incus | Install and setup
+      become: true
+      when:
+        - '"container" not in ansible_facts["virtualization_tech_guest"]'
+      block:
 
-    - name: Incus | install rpm-ostree
-      become: true
-      ansible.builtin.shell: |
-        rpm-ostree install \
-        --idempotent \
-        --apply-live \
-        --unchanged-exit-77 \
-        --assumeyes \
-        incus \
-        incus-agent
-      register: install_rpm_ostree
-      failed_when: >
-        (install_rpm_ostree.rc == 1) or
-        (install_rpm_ostree.rc == 2) or
-        (install_rpm_ostree.rc == 3) or
-        (install_rpm_ostree.rc == 4) or
-        (install_rpm_ostree.rc == 78)
-      changed_when: >
-        install_rpm_ostree.rc != 77
-      when:
-        - ansible_pkg_mgr in ['atomic_container']
-        - '"container" not in ansible_facts["virtualization_tech_guest"]'
-
-    - name: Incus | install dnf
-      become: true
-      ansible.builtin.dnf:
-        name:
-          - incus
-          - incus-agent
-        state: present
-      register: install_dnf
-      when:
-        - ansible_pkg_mgr in ['dnf', 'dnf5']
-        - '"container" not in ansible_facts["virtualization_tech_guest"]'
-      
-    - name: Incus | Ensure group "incus-admin" exists
-      become: true
-      ansible.builtin.group:
-        name: incus-admin
-        state: present
-      when:
-        - '"container" not in ansible_facts["virtualization_tech_guest"]'
-
-    - name: Incus | user '{{ main_user }}' setup
-      become: true
-      ansible.builtin.user:
-        name: "{{ main_user }}"
-        state: present
-        append: true
-        groups:
-          - incus-admin
-      when:
-        - '"container" not in ansible_facts["virtualization_tech_guest"]'
-
-    - name: Incus | ensure root:1000000:1000000000 is in /etc/subuid
-      ansible.builtin.lineinfile:
-        path: /etc/subuid
-        regexp: '^root:|^0:'
-        line: 'root:1000000:1000000000'
-        state: present
-        create: true
-      become: true
-      when:
-        - '"container" not in ansible_facts["virtualization_tech_guest"]'
+        - name: Incus | install rpm-ostree
+          ansible.builtin.shell: |
+            rpm-ostree install \
+            --idempotent \
+            --apply-live \
+            --unchanged-exit-77 \
+            --assumeyes \
+            incus \
+            incus-agent
+          register: install_rpm_ostree
+          failed_when: >
+            (install_rpm_ostree.rc == 1) or
+            (install_rpm_ostree.rc == 2) or
+            (install_rpm_ostree.rc == 3) or
+            (install_rpm_ostree.rc == 4) or
+            (install_rpm_ostree.rc == 78)
+          changed_when: >
+            install_rpm_ostree.rc != 77
+          when:
+            - ansible_pkg_mgr in ['atomic_container']
     
-    - name: Incus | ensure root:1000000:1000000000 is in /etc/subgid
-      ansible.builtin.lineinfile:
-        path: /etc/subgid
-        regexp: '^root:|^0:'
-        line: 'root:1000000:1000000000'
-        state: present
-        create: true
-      become: true
-      when:
-        - '"container" not in ansible_facts["virtualization_tech_guest"]'
-      
-    - name: Incus | Reboot machine
-      become: true
-      ansible.builtin.reboot:
-      when: >
-        install_rpm_ostree.changed | default(false) or
-        install_dnf.changed | default(false)
-
-    - name: Incus | enable and start incus.service
-      become: true
-      ansible.builtin.systemd_service:
-        name: incus.service
-        enabled: true
-        state: started
-      when:
-        - '"container" not in ansible_facts["virtualization_tech_guest"]'
+        - name: Incus | install dnf
+          ansible.builtin.dnf:
+            name:
+              - incus
+              - incus-agent
+            state: present
+          register: install_dnf
+          when:
+            - ansible_pkg_mgr in ['dnf', 'dnf5']
+          
+        - name: Incus | Ensure group "incus-admin" exists
+          ansible.builtin.group:
+            name: incus-admin
+            state: present
+    
+        - name: Incus | user '{{ main_user }}' setup
+          ansible.builtin.user:
+            name: "{{ main_user }}"
+            state: present
+            append: true
+            groups:
+              - incus-admin
+    
+        - name: Incus | ensure root:1000000:1000000000 is in /etc/subuid
+          ansible.builtin.lineinfile:
+            path: /etc/subuid
+            regexp: '^root:|^0:'
+            line: 'root:1000000:1000000000'
+            state: present
+            create: true
         
-    - name: Incus | enable and start incus.socket
-      become: true
-      ansible.builtin.systemd_service:
-        name: incus.socket
-        enabled: true
-        state: started
-      when:
-        - '"container" not in ansible_facts["virtualization_tech_guest"]'
-
-    - name: Incus | init
-      become: true
-      ansible.builtin.shell: |
-        incus admin init --auto
-      register: incus_init
-      changed_when: incus_init.rc != 0
-      when:
-        - '"container" not in ansible_facts["virtualization_tech_guest"]'
+        - name: Incus | ensure root:1000000:1000000000 is in /etc/subgid
+          ansible.builtin.lineinfile:
+            path: /etc/subgid
+            regexp: '^root:|^0:'
+            line: 'root:1000000:1000000000'
+            state: present
+            create: true
+          
+        - name: Incus | Reboot machine
+          ansible.builtin.reboot:
+          when: >
+            install_rpm_ostree.changed | default(false) or
+            install_dnf.changed | default(false)
+    
+        - name: Incus | enable and start incus.service
+          ansible.builtin.systemd_service:
+            name: incus.service
+            enabled: true
+            state: started
+          when: >
+            install_rpm_ostree.changed | default(false) or
+            install_dnf.changed | default(false)
+            
+        - name: Incus | enable and start incus.socket
+          ansible.builtin.systemd_service:
+            name: incus.socket
+            enabled: true
+            state: started
+          when: >
+            install_rpm_ostree.changed | default(false) or
+            install_dnf.changed | default(false)
+    
+        - name: Incus | init
+          ansible.builtin.shell: |
+            incus admin init --auto
+          register: incus_init
+          changed_when: incus_init.rc != 0
+          when: >
+            install_rpm_ostree.changed | default(false) or
+            install_dnf.changed | default(false)
