@@ -11,18 +11,18 @@ ExecStart=/usr/bin/bash -c 'curl \
   --retry-all-errors \
   --fail \
   --connect-timeout 5 \
-  --max-time 5 \
+  --max-time 10 \
   --retry-delay 60 \
   -u ":{{ ntfy_api_token }}" \
   -H "Title: %H started" \
   -H "Tags: %H" \
-  -d "%H successfully started and is online" \
+  -d "%H successfully started and online" \
   https://ntfy.kuba86.com/servers'
 RestartSec=60
 ExecStopPost=/usr/bin/bash -c 'curl \
   --retry 60 \
   --connect-timeout 5 \
-  --max-time 5 \
+  --max-time 10 \
   --retry-delay 60 \
   -u ":{{ ntfy_api_token }}" \
   -H "Title: %H is shutting down" \

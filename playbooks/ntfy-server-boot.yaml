@@ -13,15 +13,32 @@
         src: ../templates/ntfy-server-boot.service.j2
         dest: /etc/systemd/system/ntfy-server-boot.service
         mode: '600'
+      register: ntfy_service
 
     - name: Install ntfy-server-boot | Copy ntfy-server-boot.timer file
       ansible.builtin.template:
         src: ../templates/ntfy-server-boot.timer.j2
         dest: /etc/systemd/system/ntfy-server-boot.timer
         mode: '600'
+      register: ntfy_timer
 
-    - name: Install ntfy-server-boot | Reload systemd daemon
-      command: systemctl daemon-reload
+    - name: Install ntfy-server-boot | reload daemon for 'root'
+      become: true
+      ansible.builtin.command: systemctl daemon-reload
+      when: >
+        ntfy_service.changed | default(false) or
+        ntfy_timer.changed | default(false)
+      changed_when: >
+        false
+    
+    - name: Install ntfy-server-boot | reload daemon for user '{{ main_user }}'
+      become_user: "{{ main_user }}"
+      ansible.builtin.command: systemctl --user daemon-reload
+      when: >
+        ntfy_service.changed | default(false) or
+        ntfy_timer.changed | default(false)
+      changed_when: >
+        false
 
     - name: Install ntfy-server-boot | Enable and start ntfy-server-boot.timer
       systemd:
