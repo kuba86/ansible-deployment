@@ -22,23 +22,13 @@
         mode: '600'
       register: ntfy_timer
 
-    - name: Install ntfy-server-boot | reload daemon for 'root'
-      become: true
-      ansible.builtin.command: systemctl daemon-reload
+    - name: Install ntfy-server-boot | reload daemon for system
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+        scope: system
       when: >
         ntfy_service.changed | default(false) or
         ntfy_timer.changed | default(false)
-      changed_when: >
-        false
-    
-    - name: Install ntfy-server-boot | reload daemon for user '{{ main_user }}'
-      become_user: "{{ main_user }}"
-      ansible.builtin.command: systemctl --user daemon-reload
-      when: >
-        ntfy_service.changed | default(false) or
-        ntfy_timer.changed | default(false)
-      changed_when: >
-        false
 
     - name: Install ntfy-server-boot | Enable and start ntfy-server-boot.timer
       systemd:
