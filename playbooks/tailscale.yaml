@@ -10,122 +10,196 @@
       private: true
 
   tasks:
-
-    - name: Tailscale | add repository
+    - name: Tailscale | repo setup
       become: true
-      ansible.builtin.copy:
-        content: |
-          [tailscale-stable]
-          name=Tailscale stable
-          baseurl=https://pkgs.tailscale.com/stable/fedora/$basearch
-          enabled=1
-          type=rpm
-          repo_gpgcheck=1
-          gpgcheck=1
-          gpgkey=https://pkgs.tailscale.com/stable/fedora/repo.gpg
-        dest: /etc/yum.repos.d/tailscale.repo
-        owner: root
-        group: root
-        mode: '644'
       when:
+        - ansible_distribution in ['Fedora', 'AlmaLinux', 'Rocky']
         - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
-
-    - name: Tailscale | install rpm-ostree
+      block:
+        - name: Tailscale | add repository Fedora
+          register: add_repo_fedora
+          ansible.builtin.copy:
+            content: |
+              [tailscale-stable]
+              name=Tailscale stable
+              baseurl=https://pkgs.tailscale.com/stable/fedora/$basearch
+              enabled=1
+              type=rpm
+              repo_gpgcheck=1
+              gpgcheck=1
+              gpgkey=https://pkgs.tailscale.com/stable/fedora/repo.gpg
+            dest: /etc/yum.repos.d/tailscale.repo
+            owner: root
+            group: root
+            mode: '644'
+          when:
+            - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+            - ansible_distribution in ['Fedora']
+    
+        - name: Tailscale | add repository EL-9
+          register: add_repo_el_9
+          ansible.builtin.copy:
+            content: |
+              [tailscale-stable]
+              name=Tailscale stable
+              baseurl=https://pkgs.tailscale.com/stable/rhel/9/$basearch
+              enabled=1
+              type=rpm
+              repo_gpgcheck=1
+              gpgcheck=1
+              gpgkey=https://pkgs.tailscale.com/stable/rhel/9/repo.gpg
+            dest: /etc/yum.repos.d/tailscale.repo
+            owner: root
+            group: root
+            mode: '644'
+          when:
+            - ansible_pkg_mgr in ['dnf', 'dnf5']
+            - ansible_distribution in ['AlmaLinux', 'Rocky']
+    
+    - name: Tailscale | Install
       become: true
-      ansible.builtin.shell: |
-        rpm-ostree install \
-        --idempotent \
-        --apply-live \
-        --unchanged-exit-77 \
-        --assumeyes \
-        --allow-inactive \
-        tailscale \
-        jq
-      register: install_rpm_ostree
-      failed_when: >
-        (install_rpm_ostree.rc == 1) or
-        (install_rpm_ostree.rc == 2) or
-        (install_rpm_ostree.rc == 3) or
-        (install_rpm_ostree.rc == 4) or
-        (install_rpm_ostree.rc == 78)
-      changed_when: >
-        install_rpm_ostree.rc != 77
-      when:
-        - ansible_pkg_mgr in ['atomic_container']
+      when: >
+        ansible_distribution in ['Fedora', 'AlmaLinux', 'Rocky'] and
+        ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+      block:
+        - name: Tailscale | check if 'tailscale' is in PATH
+          ansible.builtin.script: ../files/tailscale-in-path.sh
+          register: tailscale_in_path
+          failed_when: >
+            (tailscale_in_path.stdout.find('tailscale in path') == -1 and
+            tailscale_in_path.stdout.find('tailscale NOT in path') == -1) or
+            tailscale_in_path.rc != 0
+          changed_when: >
+            tailscale_in_path.stdout.find('tailscale NOT in path') == 0
 
-    - name: Tailscale | install dnf
-      become: true
-      ansible.builtin.dnf:
-        name:
-          - tailscale
-          - jq
-        state: present
-      when:
-        - ansible_pkg_mgr in ['dnf', 'dnf5']
-
-    - name: Tailscale | tailscale-optimizations.service
-      become: true
-      ansible.builtin.copy:
-        content: |
-          [Unit]
-          Description=tailscale-optimizations
-          Wants=network-online.target
-          After=network-online.target
-          
-          [Service]
-          Type=exec
-          ExecStart=/usr/bin/bash -c \
-          "/usr/sbin/ethtool -K \
-          $(/usr/sbin/ip -o route get 8.8.8.8 | cut -f 5 -d ' ') \
-          rx-udp-gro-forwarding on rx-gro-list off"
-          
-          [Install]
-          WantedBy=multi-user.target
-        dest: /etc/systemd/system/tailscale-optimizations.service
-        owner: root
-        group: root
-        mode: '644'
-
-    - name: Tailscale | optimize system
-      become: true
-      ansible.builtin.shell: |
-        set -euo pipefail
-        IFS=$'\n\t'
+        - name: Tailscale | install rpm-ostree
+          ansible.builtin.shell: |
+            rpm-ostree install \
+            --idempotent \
+            --apply-live \
+            --unchanged-exit-77 \
+            --assumeyes \
+            --allow-inactive \
+            tailscale
+          register: install_rpm_ostree
+          failed_when: >
+            (install_rpm_ostree.rc == 1) or
+            (install_rpm_ostree.rc == 2) or
+            (install_rpm_ostree.rc == 3) or
+            (install_rpm_ostree.rc == 4) or
+            (install_rpm_ostree.rc == 78)
+          changed_when: >
+            install_rpm_ostree.rc != 77
+          when:
+            - ansible_pkg_mgr in ['atomic_container']
+            - tailscale_in_path is changed
         
-        NETDEV=$(ip -o route get 8.8.8.8 | cut -f 5 -d " ")
-        ethtool -K $NETDEV rx-udp-gro-forwarding on rx-gro-list off
-      register: tailscale_optimize_system
-      changed_when: tailscale_optimize_system.rc != 0
+        - name: Tailscale | install dnf
+          ansible.builtin.dnf:
+            name:
+              - tailscale
+              - jq
+            state: present
+          register: install_dnf
+          when:
+            - ansible_pkg_mgr in ['dnf', 'dnf5']
+            - tailscale_in_path is changed
 
-    - name: Tailscale | add profile env vars
-      become: true
-      ansible.builtin.copy:
-        content: |
-          export TAILSCALE_IP=$(tailscale status --json | jq -r .Self.TailscaleIPs[0])
-          export TAILSCALE_SHORT_DOMAIN=$(tailscale status --json | jq -r .Self.HostName)
-          export TAILSCALE_FULL_DOMAIN=$(tailscale status --json | jq -r .CertDomains[])
-        dest: /etc/profile.d/10-tailscale.sh
-        owner: root
-        group: root
-        mode: '644'
-
-    - name: Tailscale | systemd reload
+    - name: Tailscale | start and enable 'tailscaled' systemd service
       become: true
       ansible.builtin.systemd_service:
-        daemon_reload: true
-        
-    - name: Tailscale | start tailscale-optimizations.service
-      become: true
-      ansible.builtin.systemd_service:
-        state: started
-        name: tailscale-optimizations.service
-
-    - name: Tailscale | start tailscaled.service
-      become: true
-      ansible.builtin.systemd_service:
-        state: started
         name: tailscaled.service
+        daemon_reload: true
+        enabled: true
+        state: started
+        scope: system
+      register: tailscale_service
+      when: >
+        (ansible_distribution in ['Fedora', 'AlmaLinux', 'Rocky'] and
+        ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5'])
+            
+    - name: Tailscale | optimizations
+      become: true
+      when: >
+        (ansible_distribution in ['Fedora', 'AlmaLinux', 'Rocky'] and
+        ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5'])
+      block:
+        - name: Tailscale | copy tailscale-optimizations.service
+          ansible.builtin.copy:
+            content: |
+              [Unit]
+              Description=tailscale-optimizations
+              Wants=network-online.target
+              After=network-online.target
+              
+              [Service]
+              Type=exec
+              ExecStart=/usr/bin/bash -c \
+              "/usr/sbin/ethtool -K \
+              $(/usr/sbin/ip -o route get 8.8.8.8 | cut -f 5 -d ' ') \
+              rx-udp-gro-forwarding on rx-gro-list off"
+              
+              [Install]
+              WantedBy=multi-user.target
+            dest: /etc/systemd/system/tailscale-optimizations.service
+            owner: root
+            group: root
+            mode: '644'
+          register: tailscale_copy_optimizations_service
 
+        - name: Tailscale | start and enable tailscale-optimizations.service
+          ansible.builtin.systemd_service:
+            daemon_reload: true
+            name: tailscale-optimizations.service
+            state: started
+            enabled: true
+            scope: system
+          register: tailscale_optimizations_service
+          when: tailscale_copy_optimizations_service is changed
+          
+#        - name: Tailscale | debug tailscale_optimizations_service
+#          ansible.builtin.debug:
+#            msg: "{{ tailscale_optimizations_service }}"
+        
+          
+          #        - name: Tailscale | check if 'tailscale' systemd service is started
+#          ansible.builtin.script: ../files/tailscale-is-logged-in.sh
+#          register: tailscale_check_logged_in
+#          failed_when: >
+#            (tailscale_check_logged_in.stdout.find('failed to connect to local tailscaled') == -1 and
+#            tailscale_check_logged_in.stdout.find('connected to tailscaled') == -1) or
+#            tailscale_check_logged_in.rc != 0
+#          changed_when: >
+#            tailscale_check_logged_in.stdout == 'failed to connect to local tailscaled'
+#          when: >
+#            tailscale_in_path is succeeded
+
+#        - name: Tailscale | debug
+#          ansible.builtin.debug:
+#            msg: "{{ tailscale_check_logged_in.stdout.find('failed to connect to local tailscaled') == -1 }}"
+#
+#        - name: Tailscale | debug
+#          ansible.builtin.debug:
+#            msg: "{{ tailscale_check_logged_in.stdout.find('connected to tailscaled') == -1 }}"
+          
+#        - name: Tailscale | debug
+#          ansible.builtin.debug:
+#            msg: "{{ tailscale_check_logged_in }}"
+#
+
+#
+#        - name: Tailscale | add profile env vars
+#          become: true
+#          ansible.builtin.copy:
+#            content: |
+#              export TAILSCALE_IP=$(tailscale status --json | jq -r .Self.TailscaleIPs[0])
+#              export TAILSCALE_SHORT_DOMAIN=$(tailscale status --json | jq -r .Self.HostName)
+#              export TAILSCALE_FULL_DOMAIN=$(tailscale status --json | jq -r .CertDomains[])
+#            dest: /etc/profile.d/10-tailscale.sh
+#            owner: root
+#            group: root
+#            mode: '644'
+#
     # how to make sure this only runs when no exit-node, accept-routes and tags are set?
     # after started run command and verify current settings?
     # maybe run default tailscale setting and then after it is up modify them in idempotent way?
@@ -140,3 +214,11 @@
 #        --advertise-tags 'tag:server,tag:kubernetes'
 #      register: tailscale_up
 #      changed_when: tailscale_up.rc != 0
+
+#        - name: Tailscale | optimize system
+#          ansible.builtin.shell: |
+#            set -euo pipefail
+#            IFS=$'\n\t'
+#
+#            NETDEV=$(ip -o route get 8.8.8.8 | cut -f 5 -d " ")
+#            ethtool -K $NETDEV rx-udp-gro-forwarding on rx-gro-list off
