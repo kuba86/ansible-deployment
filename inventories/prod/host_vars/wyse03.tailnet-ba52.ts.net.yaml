@@ -1,2 +1,3 @@
 main_user: "core"
 ansible_user: "core"
+tailscale_tags: "tag:server,tag:kubernetes"

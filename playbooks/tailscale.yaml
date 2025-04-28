@@ -8,6 +8,8 @@
     - name: tailscale_key
       prompt: Enter the tailscale key
       private: true
+  vars:
+    tailscale_tags: "tag:server"
 
   tasks:
     - name: Tailscale | repo setup
@@ -99,6 +101,7 @@
             name:
               - tailscale
               - jq
+              - ethtool
             state: present
           register: install_dnf
           when:
@@ -156,69 +159,40 @@
             scope: system
           register: tailscale_optimizations_service
           when: tailscale_copy_optimizations_service is changed
-          
-#        - name: Tailscale | debug tailscale_optimizations_service
-#          ansible.builtin.debug:
-#            msg: "{{ tailscale_optimizations_service }}"
+
+        - name: Tailscale | add profile env vars
+          ansible.builtin.copy:
+            content: |
+              export TAILSCALE_IP=$(tailscale status --json | jq -r .Self.TailscaleIPs[0])
+              export TAILSCALE_SHORT_DOMAIN=$(tailscale status --json | jq -r .Self.HostName)
+              export TAILSCALE_FULL_DOMAIN=$(tailscale status --json | jq -r .CertDomains[])
+            dest: /etc/profile.d/10-tailscale.sh
+            owner: root
+            group: root
+            mode: '644'
+            
+        - name: Tailscale | sysctl set net.ipv4.ip_forward=1
+          ansible.posix.sysctl:
+            name: net.ipv4.ip_forward
+            value: '1'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
         
-          
-          #        - name: Tailscale | check if 'tailscale' systemd service is started
-#          ansible.builtin.script: ../files/tailscale-is-logged-in.sh
-#          register: tailscale_check_logged_in
-#          failed_when: >
-#            (tailscale_check_logged_in.stdout.find('failed to connect to local tailscaled') == -1 and
-#            tailscale_check_logged_in.stdout.find('connected to tailscaled') == -1) or
-#            tailscale_check_logged_in.rc != 0
-#          changed_when: >
-#            tailscale_check_logged_in.stdout == 'failed to connect to local tailscaled'
-#          when: >
-#            tailscale_in_path is succeeded
+        - name: Tailscale | sysctl set net.ipv6.conf.all.forwarding=1
+          ansible.posix.sysctl:
+            name: net.ipv6.conf.all.forwarding
+            value: '1'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
 
-#        - name: Tailscale | debug
-#          ansible.builtin.debug:
-#            msg: "{{ tailscale_check_logged_in.stdout.find('failed to connect to local tailscaled') == -1 }}"
-#
-#        - name: Tailscale | debug
-#          ansible.builtin.debug:
-#            msg: "{{ tailscale_check_logged_in.stdout.find('connected to tailscaled') == -1 }}"
-          
-#        - name: Tailscale | debug
-#          ansible.builtin.debug:
-#            msg: "{{ tailscale_check_logged_in }}"
-#
-
-#
-#        - name: Tailscale | add profile env vars
-#          become: true
-#          ansible.builtin.copy:
-#            content: |
-#              export TAILSCALE_IP=$(tailscale status --json | jq -r .Self.TailscaleIPs[0])
-#              export TAILSCALE_SHORT_DOMAIN=$(tailscale status --json | jq -r .Self.HostName)
-#              export TAILSCALE_FULL_DOMAIN=$(tailscale status --json | jq -r .CertDomains[])
-#            dest: /etc/profile.d/10-tailscale.sh
-#            owner: root
-#            group: root
-#            mode: '644'
-#
-    # how to make sure this only runs when no exit-node, accept-routes and tags are set?
-    # after started run command and verify current settings?
-    # maybe run default tailscale setting and then after it is up modify them in idempotent way?
-    # verify with tailscale status --json if running and if correctly logged in.
-#    - name: Tailscale | up
-#      become: true
-#      ansible.builtin.shell: |
-#        tailscale up \
-#        --authkey={{ tailscale_key }} \
-#        --advertise-exit-node \
-#        --accept-routes \
-#        --advertise-tags 'tag:server,tag:kubernetes'
-#      register: tailscale_up
-#      changed_when: tailscale_up.rc != 0
-
-#        - name: Tailscale | optimize system
-#          ansible.builtin.shell: |
-#            set -euo pipefail
-#            IFS=$'\n\t'
-#
-#            NETDEV=$(ip -o route get 8.8.8.8 | cut -f 5 -d " ")
-#            ethtool -K $NETDEV rx-udp-gro-forwarding on rx-gro-list off
+    - name: Tailscale | up
+      become: true
+      ansible.builtin.shell: |
+        tailscale up \
+        --authkey={{ tailscale_key }} \
+        --advertise-exit-node=true \
+        --accept-routes=true \
+        --reset=true \
+        --advertise-tags '{{ tailscale_tags }}'
+      register: tailscale_up
+      ignore_errors: true
