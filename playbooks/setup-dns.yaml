@@ -1,0 +1,38 @@
+- name: Setup DNS
+  hosts: coreos:desktop
+  gather_facts: false
+  become: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+  tasks:
+    
+    - name: Setup DNS | copy conf file
+      ansible.builtin.template:
+        src: "../templates/50-dns.conf"
+        dest: "/etc/systemd/resolved.conf.d/50-dns.conf"
+        owner: "root"
+        group: "root"
+        mode: '644'
+      register: dns_copy_conf
+
+    - name: Setup DNS | restart systemd-resolved.service
+      ansible.builtin.systemd_service:
+        name: systemd-resolved.service
+        state: restarted
+      when: >
+        dns_copy_conf.changed | default(false)
+
+    - name: Setup DNS | run resolvectl
+      ansible.builtin.shell: |
+        resolvectl
+      register: dns_resolvectl
+      failed_when: dns_resolvectl.rc != 0
+      changed_when: false
+
+    - name: Setup DNS | Display 'resolvectl' output
+      ansible.builtin.debug:
+        msg: "{{ dns_resolvectl.stdout }}"
