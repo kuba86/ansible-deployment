@@ -36,3 +36,6 @@ cd $HOME/ansible
 `:run playbooks/ntfy-server-boot.yaml -i inventories/prod/hosts.yaml`
 ### specify user and ad-hoc host
 `:run playbooks/ntfy-server-boot.yaml --user=user -i "fedora-kde-xps.tailnet-ba52.ts.net,"`
+
+# Copy fish functions
+`cp ../fish-functions/functions/*.fish files/functions/`
