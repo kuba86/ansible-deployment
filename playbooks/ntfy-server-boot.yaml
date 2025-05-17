@@ -10,14 +10,14 @@
   tasks:
     - name: Install ntfy-server-boot | Copy ntfy-server-boot.service file
       ansible.builtin.template:
-        src: ../templates/ntfy-server-boot.service.j2
+        src: ../templates/ntfy-server-boot.service
         dest: /etc/systemd/system/ntfy-server-boot.service
         mode: '600'
       register: ntfy_service
 
     - name: Install ntfy-server-boot | Copy ntfy-server-boot.timer file
       ansible.builtin.template:
-        src: ../templates/ntfy-server-boot.timer.j2
+        src: ../templates/ntfy-server-boot.timer
         dest: /etc/systemd/system/ntfy-server-boot.timer
         mode: '600'
       register: ntfy_timer
