@@ -4,6 +4,7 @@
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
   vars:
     main_user: core
   tasks:
@@ -68,7 +69,7 @@
           -H "Title: Lets Encrypt | Caddy setup certs" \
           -H "Tags: lets-encrypt" \
           -d "Starting to copy Lets Encrypt certificates and restarting Caddy" \
-          https://ntfy.kuba86.com/servers
+          {{ ntfy_server }}
         
         function copy_certs() {
           read -ra domain_array <<< "$domains"
