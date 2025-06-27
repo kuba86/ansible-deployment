@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# File to save URLs
+URL_FILE="$HOME/opened_urls.txt"
+
+# Create the file if it doesn't exist
+touch "$URL_FILE"
+
+# Append the URL with timestamp
+echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$URL_FILE"

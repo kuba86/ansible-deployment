@@ -47,7 +47,6 @@
         rpm-ostree install \
         --idempotent \
         --allow-inactive \
-        --apply-live \
         --unchanged-exit-77 \
         --assumeyes \
           bat \
@@ -58,7 +57,8 @@
           ncdu \
           sysstat \
           upower \
-          wget
+          wget \
+          unzip
       register: install_rpm_ostree
       failed_when: >
         (install_rpm_ostree.rc == 1) or
@@ -70,6 +70,13 @@
         install_rpm_ostree.rc != 77
       when:
         - ansible_pkg_mgr in ['atomic_container']
+
+    - name: Install packages | reboot server after rpm-ostree install
+      become: true
+      ansible.builtin.reboot:
+      when:
+        - ansible_pkg_mgr in ['atomic_container']
+        - install_rpm_ostree.changed | default(false)
 
     - name: Install packages | update sudoers secure_path to include /usr/local/bin
       become: true
@@ -132,6 +139,7 @@
           - upower
           - wget
           - podman
+          - unzip
         state: present
       when:
         - ansible_pkg_mgr in ['dnf', 'dnf5']
