@@ -13,7 +13,6 @@
       ansible.builtin.shell: |
         rpm-ostree install \
         --idempotent \
-        --apply-live \
         --unchanged-exit-77 \
         --assumeyes \
         fish
