@@ -1,5 +1,6 @@
 [Unit]
 Description=%N
+After=network-online.target
 
 [Container]
 Image=lscr.io/linuxserver/mariadb:latest
@@ -10,7 +11,7 @@ Volume=/var/mnt/data2/mariadb/data:/var/lib/mysql:z
 Volume=/var/mnt/data2/mariadb/config:/config:z
 PublishPort=3306:3306
 PodmanArgs=--memory=4g
-PodmanArgs=--cpus=3
+PodmanArgs=--cpus=2
 
 [Service]
 Restart=always

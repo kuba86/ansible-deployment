@@ -1,15 +1,18 @@
 [Unit]
 Description=%N
+After=network-online.target
 
 [Container]
 Image=docker.io/library/postgres:17
 ContainerName=%N
 HostName=%H
 AutoUpdate=registry
-Volume=/var/mnt/data2/postgres/data:/var/lib/postgresql:z
+Volume=/var/mnt/data2/postgres/data:/var/lib/postgresql/data:z
 PublishPort=5432:5432
 PodmanArgs=--memory=4g
-PodmanArgs=--cpus=3
+PodmanArgs=--cpus=2
+UserNS=keep-id
+Environment=POSTGRES_PASSWORD=
 
 [Service]
 Restart=always
