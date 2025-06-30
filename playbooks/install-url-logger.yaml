@@ -1,0 +1,30 @@
+- name: Install url-logger
+  hosts: coreos:dnf
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+  vars:
+    main_user: core
+  tasks:
+
+    - name: Install url-logger | setup url-logger
+      ansible.builtin.copy:
+        src: ../files/url-logger
+        dest: /usr/local/bin/url-logger
+        owner: "root"
+        group: "root"
+        mode: '755'
+      become: true
+      when:
+        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+        
+    - name: Install url-logger | setup url-logger as a browser
+      ansible.builtin.copy:
+        src: ../files/url-logger-browser.bashrc
+        dest: /home/{{ main_user }}/.bashrc.d/url-logger-browser.bashrc
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '644'
+      when:
+        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']

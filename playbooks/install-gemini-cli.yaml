@@ -8,38 +8,6 @@
     main_user: core
   tasks:
 
-    - name: Install Gemini CLI | install 'fnm' and NodeJS
-      ansible.builtin.shell: |
-        set -euo pipefail
-        IFS=$'\n\t'
-        
-        curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
-        /home/{{ main_user }}/.local/share/fnm/fnm install 22
-      when:
-        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
-      register: node_install_output
-      changed_when: "'warning: Version already installed at' not in node_install_output.stderr"
-      
-    - name: Install Gemini CLI | setup fish shell
-      ansible.builtin.template:
-        src: ../templates/fnm.fish
-        dest: /home/{{ main_user }}/.config/fish/conf.d/fnm.fish
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '644'
-      when:
-        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
-        
-    - name: Install Gemini CLI | setup bash shell
-      ansible.builtin.template:
-        src: ../templates/fnm.bashrc
-        dest: /home/{{ main_user }}/.bashrc.d/fnm.bashrc
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '644'
-      when:
-        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
-
     - name: Install Gemini CLI | install Gemini CLI
       ansible.builtin.shell: |
         set -euo pipefail
@@ -48,26 +16,3 @@
         npm install -g @google/gemini-cli
       when:
         - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
-
-    - name: Install Gemini CLI | setup url-logger
-      ansible.builtin.copy:
-        src: ../files/url-logger
-        dest: /usr/local/bin/url-logger
-        owner: "root"
-        group: "root"
-        mode: '755'
-      become: true
-      when:
-        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
-        - "'desktop' not in group_names"
-        
-    - name: Install Gemini CLI | setup url-logger as a browser
-      ansible.builtin.copy:
-        src: ../files/url-logger-browser.bashrc
-        dest: /home/{{ main_user }}/.bashrc.d/url-logger-browser.bashrc
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '644'
-      when:
-        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
-        - "'desktop' not in group_names"
