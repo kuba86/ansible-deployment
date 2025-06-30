@@ -4,6 +4,7 @@
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
   vars:
     main_user: core
   tasks:
@@ -14,5 +15,6 @@
         IFS=$'\n\t'
 
         npm install -g @google/gemini-cli
+      become: true
       when:
         - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']

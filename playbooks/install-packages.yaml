@@ -58,7 +58,8 @@
           sysstat \
           upower \
           wget \
-          unzip
+          unzip \
+          nodejs
       register: install_rpm_ostree
       failed_when: >
         (install_rpm_ostree.rc == 1) or
@@ -140,6 +141,7 @@
           - wget
           - podman
           - unzip
+          - nodejs
         state: present
       when:
         - ansible_pkg_mgr in ['dnf', 'dnf5']
