@@ -7,11 +7,12 @@ Image=lscr.io/linuxserver/mariadb:latest
 ContainerName=%N
 HostName=%H
 AutoUpdate=registry
-Volume=/var/mnt/data2/mariadb/data:/var/lib/mysql:z
 Volume=/var/mnt/data2/mariadb/config:/config:z
 PublishPort=3306:3306
 PodmanArgs=--memory=4g
 PodmanArgs=--cpus=2
+UserNS=keep-id
+Environment=MYSQL_ROOT_PASSWORD=
 
 [Service]
 Restart=always
