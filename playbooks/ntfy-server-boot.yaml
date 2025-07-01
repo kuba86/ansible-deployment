@@ -7,6 +7,7 @@
     - "../inventories/prod/secret_vars/all.yaml"
   vars:
     ntfy_api_token:
+    main_user: core
 
   tasks:
     - name: Install ntfy-server-boot | Copy ntfy-server-boot.service file
@@ -36,3 +37,10 @@
         name: ntfy-server-boot.timer
         enabled: yes
         state: started
+        
+    - name: Install ntfy-server-boot | Copy ntfy.fish file
+      ansible.builtin.copy:
+        src: ../files/ntfy.fish
+        dest: /home/{{ main_user }}/ntfy.fish
+        mode: '700'
+      register: ntfy_fish_file
