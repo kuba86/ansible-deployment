@@ -42,7 +42,7 @@
                 --dns=cloudflare \
                 --domains="$domain" \
                 --domains="*.$domain" \
-                renew --no-random-sleep
+                renew
           done
         }
         
