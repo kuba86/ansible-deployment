@@ -8,3 +8,4 @@
 .scala-build
 /history.txt
 /files/functions/*.fish
+/files/hosts/**/Caddyfile

@@ -4,6 +4,7 @@
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
   vars:
     main_user: core
     
@@ -11,7 +12,7 @@
     
     - name: Podman Systemd | copy files
       ansible.builtin.copy:
-        src: "../files/podman-systemd/{{ inventory_hostname }}/"
+        src: "../files/hosts/{{ inventory_hostname }}/podman-systemd"
         dest: "/home/{{ main_user }}/.config/containers/systemd/"
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
