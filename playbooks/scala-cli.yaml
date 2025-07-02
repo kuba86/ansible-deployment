@@ -13,19 +13,24 @@
         set -euo pipefail
         IFS=$'\n\t'
         
-        if [ -f "$HOME/.profile" ]; then
-          source "$HOME/.profile"
-        fi
+        scala_cli_url="https://github.com/Virtuslab/scala-cli/releases/latest/download/scala-cli-$(uname -m)-pc-linux.gz"
         
-        if command -v scala-cli &> /dev/null
+        if realpath $(which scala-cli) &> /dev/null
         then
           echo "scala-cli is installed and available in PATH"
-          # echo "scala-cli will be updated to newest version"
-          # scala-cli update --force
+          scala_cli_path="$(realpath $(which scala-cli))"
+          curl -fL $scala_cli_url | gzip -d > scala-cli
+          chmod +x scala-cli
+          mv scala-cli $scala_cli_path
         else
           echo "scala-cli is not installed or not in PATH"
-          curl -sSLf https://scala-cli.virtuslab.org/get | sh
+          curl -fL $scala_cli_url | gzip -d > scala-cli
+          chmod +x scala-cli
+          mkdir -p /home/{{ main_user }}/.local/bin
+          mv scala-cli /home/{{ main_user }}/.local/bin/scala-cli
         fi
+        
+        echo "scala-cli installed in $(realpath $(which scala-cli))"
       register: install_scalacli_output
       changed_when: "'scala-cli is not installed or not in PATH' in install_scalacli_output.stdout"
       become_user: "{{ main_user }}"
@@ -34,10 +39,6 @@
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
-        
-        if [ -f "$HOME/.profile" ]; then
-          source "$HOME/.profile"
-        fi
         
         scala-cli version
       register: scala_cli_version
@@ -49,10 +50,6 @@
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
-        
-        if [ -f "$HOME/.profile" ]; then
-          source "$HOME/.profile"
-        fi
         
         scala_cli_power_mode=$(scala-cli config power)
         
@@ -84,7 +81,10 @@
           chmod u+x $cs_bin_path
           chown {{ main_user }}:{{ main_user }} $cs_bin_path
         else
-          echo "$cs_bin_path already exists."
+          echo "$cs_bin_path already exists, updating..."
+          curl -fL "https://github.com/coursier/launchers/raw/master/coursier" > $cs_bin_path
+          chmod u+x $cs_bin_path
+          chown {{ main_user }}:{{ main_user }} $cs_bin_path
         fi
       register: scala_cli_install_coursier
       failed_when: scala_cli_install_coursier.rc != 0
@@ -96,10 +96,6 @@
         set -euo pipefail
         IFS=$'\n\t'
         
-        if [ -f "$HOME/.profile" ]; then
-          source "$HOME/.profile"
-        fi
-
         cs version
       register: cs_version
       failed_when: cs_version.rc != 0
@@ -130,13 +126,7 @@
       failed_when: scala_cli_download_jdk.rc != 0
       changed_when: false
       become_user: "{{ main_user }}"
-      
-    - name: Scala CLI | remove old jvm.bashrc
-      ansible.builtin.file:
-        path: /home/{{ main_user }}/.bashrc.d/jvm.bashrc
-        state: absent
-      become_user: "{{ main_user }}"
-      
+
     - name: Scala CLI | setup JDK env vars
       ansible.builtin.copy:
         src: ../files/55-jvm.bashrc
@@ -149,6 +139,14 @@
       ansible.builtin.copy:
         src: ../files/56-jvm.bashrc
         dest: /home/{{ main_user }}/.bashrc.d/56-jvm.bashrc
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '644'
+        
+    - name: Scala CLI | setup fish shell completions
+      ansible.builtin.copy:
+        src: ../files/scala-cli-completions.fish
+        dest: /home/{{ main_user }}/.config/fish/conf.d/scala-cli-completions.fish
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: '644'
