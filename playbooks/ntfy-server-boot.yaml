@@ -42,5 +42,7 @@
       ansible.builtin.copy:
         src: ../files/ntfy.fish
         dest: /home/{{ main_user }}/ntfy.fish
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
         mode: '700'
       register: ntfy_fish_file
