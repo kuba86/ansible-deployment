@@ -15,7 +15,8 @@ Volume=/var/mnt/data1/syncthing/Kuba-media-other-current:/srv/Kuba-media-other-c
 Volume=/var/mnt/data1/syncthing/Mariusz-Testy:/srv/Mariusz-Testy:ro,z
 Volume=/var/mnt/data1/filebrowser/srv:/srv:rw,z
 Volume=/var/mnt/data1/filebrowser/database.db:/database.db:rw,z
-Volume=/var/mnt/data1/filebrowser/.filebrowser.json:/.filebrowser.json:rw,z
+Volume=/var/mnt/data1/filebrowser/.filebrowser.json:/config/settings.json:rw,z
+UserNS=keep-id
 PodmanArgs=--memory=1g
 PodmanArgs=--cpus=2
 
