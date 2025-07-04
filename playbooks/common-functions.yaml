@@ -1,0 +1,18 @@
+- name: Install common functions
+  hosts: coreos:dnf:desktop
+  gather_facts: false
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+  tasks:
+      
+    - name: common functions | copy functions
+      ansible.builtin.copy:
+        src: ../files/bin/random-delay-seconds.bash
+        dest: /home/{{ main_user }}/.local/bin/random-delay-seconds.bash
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '755'
