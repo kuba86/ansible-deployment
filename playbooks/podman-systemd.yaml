@@ -11,30 +11,30 @@
   
   tasks:
     
-    - name: Podman Systemd | sync files
+    - name: Podman Systemd | sync user files
       ansible.posix.synchronize:
-        src: "../files/hosts/{{ inventory_hostname }}/podman-systemd/"
+        src: "../files/hosts/{{ inventory_hostname }}/podman-systemd-user/"
         dest: "/home/{{ main_user }}/.config/containers/systemd/"
         delete: yes
-      register: podman_systemd_sync_files
+      register: podman_systemd_sync_user_files
       
     - name: Podman Systemd | shows what was changed
       ansible.builtin.debug:
-        msg: "{{ podman_systemd_sync_files.stdout_lines }}"
+        msg: "{{ podman_systemd_sync_user_files.stdout_lines }}"
       when: >
-        podman_systemd_sync_files.changed | default(false)
+        podman_systemd_sync_user_files.changed | default(false)
       
     - name: Podman Systemd | reload daemon for 'root'
       become: true
       ansible.builtin.command: systemctl daemon-reload
       when: >
-        podman_systemd_sync_files.changed | default(false)
+        podman_systemd_sync_user_files.changed | default(false)
       changed_when: >
         false
       
     - name: Podman Systemd | reload daemon for user '{{ main_user }}'
       ansible.builtin.command: systemctl --user daemon-reload
       when: >
-        podman_systemd_sync_files.changed | default(false)
+        podman_systemd_sync_user_files.changed | default(false)
       changed_when: >
         false
