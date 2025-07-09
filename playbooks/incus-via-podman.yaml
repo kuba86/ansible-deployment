@@ -16,13 +16,18 @@
 
         - name: Incus | install rpm-ostree
           ansible.builtin.shell: |
-            rpm-ostree install \
-            --idempotent \
-            --apply-live \
-            --unchanged-exit-77 \
-            --assumeyes \
-            incus \
-            incus-agent
+            podman run -d \
+              --name incus \
+              --cgroups=no-conmon \
+              --cgroupns=host \
+              --security-opt unmask=/sys/fs/cgroup \
+              --privileged \
+              --network host \
+              --pid=host \
+              --volume /dev:/dev \
+              --volume /var/lib/incus:/var/lib/incus \
+              --volume /lib/modules:/lib/modules:ro \
+              ghcr.io/cmspam/incus-docker:latest
           args:
             executable: /usr/bin/bash
           register: install_rpm_ostree
@@ -87,18 +92,12 @@
             name: incus.service
             enabled: true
             state: started
-          when: >
-            install_rpm_ostree.changed | default(false) or
-            install_dnf.changed | default(false)
             
         - name: Incus | enable and start incus.socket
           ansible.builtin.systemd_service:
             name: incus.socket
             enabled: true
             state: started
-          when: >
-            install_rpm_ostree.changed | default(false) or
-            install_dnf.changed | default(false)
     
         - name: Incus | init
           ansible.builtin.shell: |
@@ -107,6 +106,3 @@
             executable: /usr/bin/bash
           register: incus_init
           changed_when: incus_init.rc != 0
-          when: >
-            install_rpm_ostree.changed | default(false) or
-            install_dnf.changed | default(false)

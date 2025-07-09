@@ -47,6 +47,8 @@
         }
         
         renew
+      args:
+        executable: /usr/bin/bash
       register: lets_encrypt_renew_output
       changed_when: "'Server responded with a certificate.' in lets_encrypt_renew_output.stderr"
       
@@ -89,6 +91,8 @@
         
         echo "------ Restarting Caddy Server -------"
         podman exec caddy caddy reload --force --config /etc/caddy/Caddyfile
+      args:
+        executable: /usr/bin/bash
       register: lets_encrypt_copy_caddy_and_router_output
       when: >
         lets_encrypt_renew_output.changed | default(false)

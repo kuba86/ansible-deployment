@@ -17,6 +17,8 @@
         --unchanged-exit-77 \
         --assumeyes \
         fish
+      args:
+        executable: /usr/bin/bash
       register: install_rpm_ostree
       failed_when: >
         (install_rpm_ostree.rc == 1) or

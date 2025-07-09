@@ -32,6 +32,8 @@
         fi
         
         echo "scala-cli installed in $(realpath $(which scala-cli))"
+      args:
+        executable: /usr/bin/bash
       register: install_scalacli_output
       changed_when: "'scala-cli is not installed or not in PATH' in install_scalacli_output.stdout"
       become_user: "{{ main_user }}"
@@ -42,6 +44,8 @@
         IFS=$'\n\t'
         
         scala-cli version
+      args:
+        executable: /usr/bin/bash
       register: scala_cli_version
       failed_when: scala_cli_version.rc != 0
       changed_when: false
@@ -60,6 +64,8 @@
           echo "Scala-Cli power mode set to FALSE, changing to TRUE"
           scala-cli config power true
         fi
+      args:
+        executable: /usr/bin/bash
       register: scala_cli_power_mode
       failed_when: scala_cli_power_mode.rc != 0
       changed_when: "'Scala-Cli power mode set to FALSE, changing to TRUE' in scala_cli_power_mode.stdout"
@@ -87,6 +93,8 @@
           chmod u+x $cs_bin_path
           chown {{ main_user }}:{{ main_user }} $cs_bin_path
         fi
+      args:
+        executable: /usr/bin/bash
       register: scala_cli_install_coursier
       failed_when: scala_cli_install_coursier.rc != 0
       changed_when: "'Installing coursier...' in scala_cli_install_coursier.stdout"
@@ -98,6 +106,8 @@
         IFS=$'\n\t'
         
         cs version
+      args:
+        executable: /usr/bin/bash
       register: cs_version
       failed_when: cs_version.rc != 0
       changed_when: false
@@ -123,6 +133,8 @@
         scala-cli clean /home/{{ main_user }}
         /home/{{ main_user }}/scala-cli-jvm-setup.scala
         scala-cli clean /home/{{ main_user }}
+      args:
+        executable: /usr/bin/bash
       register: scala_cli_download_jdk
       failed_when: scala_cli_download_jdk.rc != 0
       changed_when: false

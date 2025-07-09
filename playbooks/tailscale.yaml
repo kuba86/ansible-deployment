@@ -84,6 +84,8 @@
             --assumeyes \
             --allow-inactive \
             tailscale
+          args:
+            executable: /usr/bin/bash
           register: install_rpm_ostree
           failed_when: >
             (install_rpm_ostree.rc == 1) or
@@ -195,5 +197,7 @@
         --accept-routes=true \
         --reset=true \
         --advertise-tags '{{ tailscale_tags }}'
+      args:
+        executable: /usr/bin/bash
       register: tailscale_up
       ignore_errors: true

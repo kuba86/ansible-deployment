@@ -29,6 +29,8 @@
     - name: Setup DNS | run resolvectl
       ansible.builtin.shell: |
         resolvectl
+      args:
+        executable: /usr/bin/bash
       register: dns_resolvectl
       failed_when: dns_resolvectl.rc != 0
       changed_when: false

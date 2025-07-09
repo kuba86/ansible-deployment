@@ -21,6 +21,8 @@
     - name: Test | become
       ansible.builtin.shell: |
         echo $(whoami)
+      args:
+        executable: /usr/bin/bash
       register: test
 
     - name: Debug
@@ -31,6 +33,8 @@
       become: true
       ansible.builtin.shell: |
         echo $(whoami)
+      args:
+        executable: /usr/bin/bash
       register: test
 
     - name: Debug

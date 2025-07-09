@@ -15,5 +15,7 @@
         sudo clevis luks regen -d /dev/sdb1 -s 1
         sudo clevis luks regen -d /dev/sdc1 -s 1
         sudo clevis luks regen -d /dev/mmcblk0p4 -s 1
+      args:
+        executable: /usr/bin/bash
       register: clevis_output
       changed_when: "'loginctl-linger-changed' in loginctl_linger_output.stdout"

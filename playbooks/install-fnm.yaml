@@ -16,6 +16,8 @@
 
         curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
         /home/{{ main_user }}/.local/share/fnm/fnm install 22
+      args:
+        executable: /usr/bin/bash
       when:
         - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
       register: node_install_output

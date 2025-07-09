@@ -40,6 +40,8 @@
           curl -sSLf https://kuba86.com/ssh.txt > "$authorized_keys_file"
           chmod 600 "$authorized_keys_file"
         fi
+      args:
+        executable: /usr/bin/bash
       register: ssh_update_output
       changed_when: "'Updating...' in ssh_update_output.stdout"
       become: true

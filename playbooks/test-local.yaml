@@ -32,6 +32,8 @@
     - name: Execute the copied file
       ansible.builtin.shell: |
         /tmp/scala-test.scala kuba 38
+      args:
+        executable: /usr/bin/bash
       register: scala_test_output
 
     - name: Debug
