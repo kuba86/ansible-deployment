@@ -1,0 +1,48 @@
+[Unit]
+Description=MinIO Node %H.tailnet-ba52.ts.net
+After=podman-user-wait-network-online.service
+Wants=podman-user-wait-network-online.service
+
+[Container]
+Image=quay.io/minio/minio:latest
+ContainerName=%N
+HostName=%H.tailnet-ba52.ts.net
+AutoUpdate=registry
+Exec=server --console-address ":9001" http://wyse0{1...2}.tailnet-ba52.ts.net:9000/data{1...2}
+PublishPort=9000:9000
+PublishPort=9001:9001
+Environment=MINIO_ROOT_USER=%N
+Environment=MINIO_ROOT_PASSWORD=llUHJNgTIgOyUsBOge5hXjON3BjqQLyl
+Environment=MINIO_SERVER_URL=http://%H.tailnet-ba52.ts.net:9000
+# 4TB SSD
+Volume=/mnt/data1/minio:/data1:Z
+# 1TB SSD
+Volume=/mnt/data2/minio:/data2:Z
+AddHost=wyse01.tailnet-ba52.ts.net:100.99.35.69
+AddHost=wyse02.tailnet-ba52.ts.net:100.72.209.100
+AddHost=wyse03.tailnet-ba52.ts.net:100.75.236.60
+HealthCmd=curl -f http://localhost:9000/minio/health/live || exit 1
+HealthInterval=30s
+HealthTimeout=20s
+HealthRetries=3
+UserNS=keep-id
+PodmanArgs=--memory=5g
+PodmanArgs=--cpus=3
+Network=host
+
+[Service]
+# Let systemd restart this service always
+Restart=always
+RestartSec=30
+# Specifies the maximum file descriptor number that can be opened by this process
+LimitNOFILE=1048576
+# Specifies the maximum number of threads this process can create
+TasksMax=infinity
+# Disable timeout logic and wait until process is stopped
+TimeoutSec=infinity
+# Disable killing of MinIO by the kernel's OOM killer
+OOMScoreAdjust=-1000
+SendSIGKILL=no
+
+[Install]
+WantedBy=multi-user.target

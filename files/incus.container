@@ -1,0 +1,24 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=ghcr.io/cmspam/incus-docker:latest
+ContainerName=%N
+HostName=%H
+AutoUpdate=registry
+Network=host
+CgroupsMode=no-conmon
+Volume=/dev:/dev:z
+Volume=/var/lib/incus:/var/lib/incus:z
+Volume=/lib/modules:/lib/modules:ro:z
+PodmanArgs=--cgroupns=host
+PodmanArgs=--security-opt unmask=/sys/fs/cgroup
+PodmanArgs=--privileged
+PodmanArgs=--pid=host
+
+[Service]
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target default.target

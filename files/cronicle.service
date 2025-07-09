@@ -1,0 +1,11 @@
+[Unit]
+Description=Node Cronicle
+After=network-online.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/bash -c '/opt/cronicle/bin/control.sh start'
+ExecStop=/usr/bin/bash -c '/opt/cronicle/bin/control.sh stop'
+
+[Install]
+WantedBy=multi-user.target

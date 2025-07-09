@@ -7,29 +7,34 @@
     - "../inventories/prod/secret_vars/all.yaml"
   vars:
     main_user: core
-    
+    ansible_shell_executable: /bin/sh
+  
   tasks:
     
-    - name: Podman Systemd | copy files
-      ansible.builtin.copy:
-        src: "../files/hosts/{{ inventory_hostname }}/podman-systemd"
+    - name: Podman Systemd | sync files
+      ansible.posix.synchronize:
+        src: "../files/hosts/{{ inventory_hostname }}/podman-systemd/"
         dest: "/home/{{ main_user }}/.config/containers/systemd/"
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '644'
-      register: podman_systemd_copy_files
-        
+        delete: yes
+      register: podman_systemd_sync_files
+      
+    - name: Podman Systemd | shows what was changed
+      ansible.builtin.debug:
+        msg: "{{ podman_systemd_sync_files.stdout_lines }}"
+      when: >
+        podman_systemd_sync_files.changed | default(false)
+      
     - name: Podman Systemd | reload daemon for 'root'
       become: true
       ansible.builtin.command: systemctl daemon-reload
       when: >
-        podman_systemd_copy_files.changed | default(false)
+        podman_systemd_sync_files.changed | default(false)
       changed_when: >
         false
-        
+      
     - name: Podman Systemd | reload daemon for user '{{ main_user }}'
       ansible.builtin.command: systemctl --user daemon-reload
       when: >
-        podman_systemd_copy_files.changed | default(false)
+        podman_systemd_sync_files.changed | default(false)
       changed_when: >
         false
