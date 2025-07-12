@@ -8,11 +8,17 @@ Image=quay.io/minio/minio:latest
 ContainerName=%N
 HostName=%H.tailnet-ba52.ts.net
 AutoUpdate=registry
-Exec=server --console-address ":9001" http://wyse0{1...2}.tailnet-ba52.ts.net:9000/data{1...2}
+Exec=server \
+--console-address ":9001" \
+http://wyse0{1...2}.tailnet-ba52.ts.net:9000/data{1...2} \
+--ftp="address=:9002" \
+--ftp="passive-port-range=30000-31000"
 PublishPort=9000:9000
 PublishPort=9001:9001
-Environment=MINIO_ROOT_USER=%N
-Environment=MINIO_ROOT_PASSWORD=llUHJNgTIgOyUsBOge5hXjON3BjqQLyl
+PublishPort=9002:9002
+PublishPort=30000-31000:30000-31000
+Environment=MINIO_ROOT_USER={{ minio_root_user }}
+Environment=MINIO_ROOT_PASSWORD={{ minio_root_password }}
 Environment=MINIO_SERVER_URL=http://%H.tailnet-ba52.ts.net:9000
 # 4TB SSD
 Volume=/mnt/data/minio:/data1:Z
