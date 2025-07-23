@@ -1,0 +1,14 @@
+[Unit]
+Description=AdGuard Home CLI Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/adguard-cli start --no-fork --log-to-file
+ExecReload=/usr/local/bin/adguard-cli restart
+ExecStop=/usr/local/bin/adguard-cli stop
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
