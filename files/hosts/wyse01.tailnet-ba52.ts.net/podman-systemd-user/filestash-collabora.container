@@ -1,0 +1,21 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=docker.io/collabora/code:24.04.10.2.1
+ContainerName=%N
+AutoUpdate=registry
+Pod=filestash.pod
+Environment=extra_params=--o:ssl.enable=false
+Environment=aliasgroup1="https://.*:443
+UserNS=keep-id
+PodmanArgs=--memory=2g
+PodmanArgs=--cpus=2
+Exec=/bin/bash -c '/start-collabora-online.sh'
+
+[Service]
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target default.target
