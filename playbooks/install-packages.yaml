@@ -60,7 +60,8 @@
           upower \
           wget \
           unzip \
-          nodejs
+          nodejs \
+          binutils
       args:
         executable: /usr/bin/bash
       register: install_rpm_ostree
@@ -147,6 +148,7 @@
           - podman
           - unzip
           - nodejs
+          - binutils
         state: present
       when:
         - ansible_pkg_mgr in ['dnf', 'dnf5']

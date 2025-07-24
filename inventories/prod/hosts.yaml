@@ -10,7 +10,7 @@ all:
       children:
         el9:
           hosts:
-            pi3.tailnet-ba52.ts.net:
+#            pi3.tailnet-ba52.ts.net:
             marek246.tailnet-ba52.ts.net:
         fedora:
           hosts:
