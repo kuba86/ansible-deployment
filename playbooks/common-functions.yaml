@@ -7,12 +7,34 @@
     - "../inventories/prod/secret_vars/all.yaml"
   vars:
     main_user: core
+    server_healthcheck_ping:
+    server_healthcheck_website:
   tasks:
       
-    - name: common functions | copy functions
+    - name: common functions | copy functions random delay
       ansible.builtin.copy:
         src: ../files/bin/random-delay-seconds.bash
         dest: /home/{{ main_user }}/.local/bin/random-delay-seconds.bash
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: '755'
+        
+    - name: common functions | copy functions health checks
+      ansible.builtin.template:
+        src: ../files/bin/server-healthcheck-ping.bash
+        dest: /home/{{ main_user }}/.local/bin/server-healthcheck-ping.bash
+        comment_start_string: "# BEGIN_OF_FILE"
+        comment_end_string: "# END_OF_FILE"
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '700'
+    
+    - name: common functions | copy functions health checks
+      ansible.builtin.template:
+        src: ../files/bin/server-healthcheck-website.bash
+        dest: /home/{{ main_user }}/.local/bin/server-healthcheck-website.bash
+        comment_start_string: "# BEGIN_OF_FILE"
+        comment_end_string: "# END_OF_FILE"
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '700'
