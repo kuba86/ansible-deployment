@@ -12,7 +12,7 @@ podman run \
     fedora-dev
 ```
 
-# First run inside container
+# First run inside a container
 ```shell
 sudo dnf -y update; \
 pip list --format=json --outdated | jq '.[].name' | xargs pip install --upgrade --no-warn-script-location; \

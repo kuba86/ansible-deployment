@@ -1,7 +1,5 @@
 [Unit]
 Description=MinIO Node %H.tailnet-ba52.ts.net
-After=podman-user-wait-network-online.service
-Wants=podman-user-wait-network-online.service
 
 [Container]
 Image=quay.io/minio/minio:latest
@@ -51,4 +49,4 @@ OOMScoreAdjust=-1000
 SendSIGKILL=no
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.target default.target

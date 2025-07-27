@@ -1,7 +1,5 @@
 [Unit]
 Description=%N
-After=network-online.target
-Wants=network-online.target
 
 [Container]
 Image=docker.io/library/caddy:2
