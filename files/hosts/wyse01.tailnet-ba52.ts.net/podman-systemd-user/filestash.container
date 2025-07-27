@@ -4,8 +4,8 @@ Description=%N
 [Container]
 Image=docker.io/machines/filestash:latest
 ContainerName=%N
+HostName=%H
 AutoUpdate=registry
-Pod=filestash.pod
 Volume=/var/mnt/data1/syncthing/Kuba-media-videos:/srv/Kuba-media-videos:ro,z
 Volume=/var/mnt/data1/syncthing/Kuba-media-download:/srv/Kuba-media-download:ro,z
 Volume=/var/mnt/data1/syncthing/Kuba-media-other-videos:/srv/Kuba-media-other-videos:ro,z
@@ -14,6 +14,7 @@ Volume=/var/mnt/data1/syncthing/Kuba-media-other-current:/srv/Kuba-media-other-c
 Volume=/var/mnt/data1/syncthing/Mariusz-Testy:/srv/Mariusz-Testy:ro,z
 Volume=/var/mnt/data1/filestash/state:/app/data/state:z
 UserNS=keep-id
+PublishPort=8334:8334/tcp
 PodmanArgs=--memory=2g
 PodmanArgs=--cpus=2
 
