@@ -6,6 +6,7 @@ Image=docker.io/machines/filestash:latest
 ContainerName=%N
 HostName=%H
 AutoUpdate=registry
+Volume=/var/mnt/data1/filebrowser/srv:/srv:rw,z
 Volume=/var/mnt/data1/syncthing/Kuba-media-videos:/srv/Kuba-media-videos:ro,z
 Volume=/var/mnt/data1/syncthing/Kuba-media-download:/srv/Kuba-media-download:ro,z
 Volume=/var/mnt/data1/syncthing/Kuba-media-other-videos:/srv/Kuba-media-other-videos:ro,z
