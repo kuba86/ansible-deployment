@@ -39,3 +39,10 @@ cd $HOME/ansible
 
 # Copy fish functions
 `cp ../fish-functions/functions/*.fish files/functions/`
+
+# encrypt Caddyfile 
+```
+ansible-vault encrypt \
+files/hosts/wyse01.tailnet-ba52.ts.net/caddy/etc-config/Caddyfile \
+--output files/hosts/wyse01.tailnet-ba52.ts.net/caddy/etc-config/Caddyfile.encrypted
+```

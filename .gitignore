@@ -8,4 +8,5 @@
 .scala-build
 /history.txt
 /files/functions/*.fish
-/files/hosts/**/Caddyfile
+/files/hosts/**/Caddyfile*
+!/files/hosts/**/*.encrypted
