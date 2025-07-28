@@ -1,0 +1,32 @@
+- name: Install cryptpad
+  hosts: wyse01.tailnet-ba52.ts.net
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+  tasks:
+    
+    - name: Install cryptpad | config.js
+      ansible.builtin.template:
+        src: ../files/hosts/wyse01.tailnet-ba52.ts.net/cryptpad/config.js
+        dest: /var/mnt/data1/cryptpad/config.js
+        comment_start_string: "# BEGIN_OF_FILE"
+        comment_end_string: "# END_OF_FILE"
+        owner: "528288"
+        group: "528288"
+        mode: '644'
+      become: true
+      
+    - name: Install cryptpad | application_config.js
+      ansible.builtin.template:
+        src: ../files/hosts/wyse01.tailnet-ba52.ts.net/cryptpad/customize/application_config.js
+        dest: /var/mnt/data1/cryptpad/customize/application_config.js
+        comment_start_string: "# BEGIN_OF_FILE"
+        comment_end_string: "# END_OF_FILE"
+        owner: "528288"
+        group: "528288"
+        mode: '644'
+      become: true
