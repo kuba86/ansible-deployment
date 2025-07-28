@@ -1,0 +1,32 @@
+- name: setup caddy
+  hosts: wyse01.tailnet-ba52.ts.net
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+  tasks:
+    
+    - name: setup caddy | Caddyfile
+      ansible.builtin.copy:
+        src: ../files/hosts/wyse01.tailnet-ba52.ts.net/caddy/etc-config/Caddyfile
+        dest: /var/mnt/data1/caddy/etc-caddy/Caddyfile
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '644'
+      become: true
+      register: update_caddyfile
+    
+    - name: setup caddy | fmt & reload
+      ansible.builtin.shell: |
+        set -euo pipefail
+        IFS=$'\n\t'
+        
+        podman exec caddy caddy fmt --overwrite /etc/caddy/Caddyfile;
+        podman exec caddy caddy reload --force --config /etc/caddy/Caddyfile;
+      args:
+        executable: /usr/bin/bash
+      when: >
+        update_caddyfile.changed | default(false)
