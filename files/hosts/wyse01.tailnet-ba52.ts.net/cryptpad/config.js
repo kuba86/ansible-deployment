@@ -187,7 +187,6 @@ module.exports = {
      *  defaults to 90 days if nothing is provided
      */
     //inactiveTime: 90, // days
-    inactiveTime: false,
 
     /*  CryptPad archives some data instead of deleting it outright.
      *  This archived data still takes up space and so you'll probably still want to
@@ -203,7 +202,6 @@ module.exports = {
      *  defaults to 15 days if nothing is provided
      */
     //archiveRetentionTime: 15,
-    archiveRetentionTime: 30,
 
     /*  It's possible to configure your instance to remove data
      *  stored on behalf of inactive accounts. Set 'accountRetentionTime'
@@ -222,8 +220,6 @@ module.exports = {
      *  do so manually using `scripts/evict-inactive.js`.
      */
     //disableIntegratedEviction: true,
-    disableIntegratedEviction: true,
-
 
     /*  Max Upload Size (bytes)
      *  this sets the maximum size of any one file uploaded to the server.
@@ -231,7 +227,7 @@ module.exports = {
      *  defaults to 20MB if no value is provided
      */
     //maxUploadSize: 20 * 1024 * 1024,
-    maxUploadSize: 1024 * 1024 * 1024, // 1GB
+    maxUploadSize: 20 * 1024 * 1024, // 20MB
 
     /*  Users with premium accounts (those with a plan included in their customLimit)
      *  can benefit from an increased upload size limit. By default they are restricted to the same
@@ -239,6 +235,7 @@ module.exports = {
      *
      */
     //premiumUploadSize: 100 * 1024 * 1024,
+    premiumUploadSize: 10240 * 1024 * 1024, // 10GB
 
     /* =====================
      *   DATABASE VOLUMES
