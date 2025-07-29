@@ -22,8 +22,8 @@
       ansible.builtin.template:
         src: ../files/hosts/wyse01.tailnet-ba52.ts.net/cryptpad/config.js
         dest: /var/mnt/data1/cryptpad/config.js
-        comment_start_string: "# BEGIN_OF_FILE"
-        comment_end_string: "# END_OF_FILE"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
         owner: "528288"
         group: "528288"
         mode: '644'
@@ -34,8 +34,8 @@
       ansible.builtin.template:
         src: ../files/hosts/wyse01.tailnet-ba52.ts.net/cryptpad/customize/application_config.js
         dest: /var/mnt/data1/cryptpad/customize/application_config.js
-        comment_start_string: "# BEGIN_OF_FILE"
-        comment_end_string: "# END_OF_FILE"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
         owner: "528288"
         group: "528288"
         mode: '644'

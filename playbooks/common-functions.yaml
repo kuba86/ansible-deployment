@@ -23,8 +23,8 @@
       ansible.builtin.template:
         src: ../files/bin/server-healthcheck-ping.bash
         dest: /home/{{ main_user }}/.local/bin/server-healthcheck-ping.bash
-        comment_start_string: "# BEGIN_OF_FILE"
-        comment_end_string: "# END_OF_FILE"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: '700'
@@ -33,8 +33,8 @@
       ansible.builtin.template:
         src: ../files/bin/server-healthcheck-website.bash
         dest: /home/{{ main_user }}/.local/bin/server-healthcheck-website.bash
-        comment_start_string: "# BEGIN_OF_FILE"
-        comment_end_string: "# END_OF_FILE"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: '700'
