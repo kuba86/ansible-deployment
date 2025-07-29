@@ -49,6 +49,6 @@
         state: restarted
         scope: user
       when:
+        - cryptpad_container_output.changed
         - cryptpad_config_js_output.changed
         - cryptpad_application_config_js_output.changed
-        - cryptpad_container_output.changed
