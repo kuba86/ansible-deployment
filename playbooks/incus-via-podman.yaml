@@ -14,95 +14,114 @@
         - '"container" not in ansible_facts["virtualization_tech_guest"]'
       block:
 
-        - name: Incus | install rpm-ostree
-          ansible.builtin.shell: |
-            podman run -d \
-              --name incus \
-              --cgroups=no-conmon \
-              --cgroupns=host \
-              --security-opt unmask=/sys/fs/cgroup \
-              --privileged \
-              --network host \
-              --pid=host \
-              --volume /dev:/dev \
-              --volume /var/lib/incus:/var/lib/incus \
-              --volume /lib/modules:/lib/modules:ro \
-              ghcr.io/cmspam/incus-docker:latest
-          args:
-            executable: /usr/bin/bash
-          register: install_rpm_ostree
-          failed_when: >
-            (install_rpm_ostree.rc == 1) or
-            (install_rpm_ostree.rc == 2) or
-            (install_rpm_ostree.rc == 3) or
-            (install_rpm_ostree.rc == 4) or
-            (install_rpm_ostree.rc == 78)
-          changed_when: >
-            install_rpm_ostree.rc != 77
-          when:
-            - ansible_pkg_mgr in ['atomic_container']
-    
-        - name: Incus | install dnf
-          ansible.builtin.dnf:
-            name:
-              - incus
-              - incus-agent
-            state: present
-          register: install_dnf
-          when:
-            - ansible_pkg_mgr in ['dnf', 'dnf5']
-          
-        - name: Incus | Ensure group "incus-admin" exists
-          ansible.builtin.group:
-            name: incus-admin
-            state: present
-    
-        - name: Incus | user '{{ main_user }}' setup
-          ansible.builtin.user:
-            name: "{{ main_user }}"
-            state: present
-            append: true
-            groups:
-              - incus-admin
-    
-        - name: Incus | ensure root:1000000:1000000000 is in /etc/subuid
-          ansible.builtin.lineinfile:
-            path: /etc/subuid
-            regexp: '^root:|^0:'
-            line: 'root:1000000:1000000000'
-            state: present
-            create: true
-        
-        - name: Incus | ensure root:1000000:1000000000 is in /etc/subgid
-          ansible.builtin.lineinfile:
-            path: /etc/subgid
-            regexp: '^root:|^0:'
-            line: 'root:1000000:1000000000'
-            state: present
-            create: true
-          
-        - name: Incus | Reboot machine
-          ansible.builtin.reboot:
+        - name: Incus | install incus.container (root)
+          ansible.builtin.copy:
+            src: "../files/incus/incus.container"
+            dest: "/etc/containers/systemd/incus.container"
+            owner: "{{ main_user }}"
+            group: "{{ main_user }}"
+            mode: '644'
+          become: true
+          register: incus_container_service
+
+        - name: Incus | reload Systemd daemon for 'root'
+          become: true
+          ansible.builtin.command: systemctl daemon-reload
           when: >
-            install_rpm_ostree.changed | default(false) or
-            install_dnf.changed | default(false)
-    
-        - name: Incus | enable and start incus.service
+            incus_container_service.changed | default(false)
+          changed_when: >
+            false
+            
+        - name: Incus | restart incus.service if changed
           ansible.builtin.systemd_service:
             name: incus.service
-            enabled: true
             state: started
+          when: >
+            incus_container_service.changed | default(false)
             
-        - name: Incus | enable and start incus.socket
-          ansible.builtin.systemd_service:
-            name: incus.socket
-            enabled: true
-            state: started
-    
-        - name: Incus | init
+        - name: Incus | install incus binary and add to path
+          become: true
           ansible.builtin.shell: |
-            incus admin init --auto
+            set -euo pipefail
+            IFS=$'\n\t'
+            
+            incus_version="6.14.0"
+            global_bin_path="/usr/local/bin"
+            incus_bin_path="$global_bin_path/incus"
+            incus_agent_bin_path="$global_bin_path/incus-agent"
+            incus_url="https://github.com/lxc/incus/releases/download/v$incus_version/bin.linux.incus.$(uname -m)"
+            incus_agent_url="https://github.com/lxc/incus/releases/download/v$incus_version/bin.linux.incus-agent.$(uname -m)"
+            
+            needs_install=false
+            
+            if [ ! -f $incus_bin_path ]; then
+              echo "incus not found, will install..."
+              needs_install=true
+            else
+              # Check if the installed version matches the desired version
+              if $incus_bin_path --version | grep -q "${incus_version%.*}"; then
+                echo "incus $incus_version is already installed."
+              else
+                echo "incus is installed, but the version doesn't match $incus_version, will reinstall..."
+                needs_install=true
+              fi
+            fi
+            
+            if [ "$needs_install" = true ]; then
+              echo "Installing incus..."
+              curl -fL $incus_url > $incus_bin_path
+              curl -fL $incus_agent_url > $incus_agent_bin_path
+              chmod +x $incus_bin_path
+              chmod +x $incus_agent_bin_path
+            fi
           args:
             executable: /usr/bin/bash
+          register: install_incus
+          failed_when: install_incus.rc != 0
+          changed_when: "'Installing incus...' in install_incus.stdout"
+          when:
+            - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+            
+        - name: Incus | start incus.service
+          ansible.builtin.systemd_service:
+            name: incus.service
+            state: started
+          
+        - name: Incus | init
+          ansible.builtin.shell: |
+            incus admin init \
+              --auto \
+              --network-address={{ inventory_hostname }} \
+              --network-port=13512
+          args:
+            executable: /usr/bin/bash
+          become: true
           register: incus_init
           changed_when: incus_init.rc != 0
+          
+        - name: Incus | add trust certificate
+          block:
+            - name: Incus | Copy incus-ui.crt
+              ansible.builtin.copy:
+                src: "../files/incus/incus-ui.crt"
+                dest: "/root/incus-ui.crt"
+                owner: root
+                group: root
+                mode: '0600'
+              become: true
+            
+            - name: Incus | Import incus-ui.crt trust certificate
+              ansible.builtin.shell: |
+                incus config trust add-certificate /root/incus-ui.crt
+              become: true
+              register: incus_add_certificate_result
+              changed_when: "'Certificate added' in incus_add_certificate_result.stdout"
+              failed_when: >
+                "Error: Certificate already in trust store" not in incus_add_certificate_result.stderr and
+                incus_add_certificate_result.rc != 0
+            
+            - name: Incus | Remove incus-ui.crt file
+              ansible.builtin.file:
+                path: "/root/incus-ui.crt"
+                state: absent
+              become: true
