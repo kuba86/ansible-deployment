@@ -7,38 +7,58 @@
     - "../inventories/prod/secret_vars/all.yaml"
   vars:
     main_user: core
+    ansible_shell_executable: /bin/sh
   tasks:
+    
+    - name: Fish | install fish shell
+      block:
 
-    - name: Fish | install rpm-ostree
-      become: true
-      ansible.builtin.shell: |
-        rpm-ostree install \
-        --idempotent \
-        --unchanged-exit-77 \
-        --assumeyes \
-        fish
-      args:
-        executable: /usr/bin/bash
-      register: install_rpm_ostree
-      failed_when: >
-        (install_rpm_ostree.rc == 1) or
-        (install_rpm_ostree.rc == 2) or
-        (install_rpm_ostree.rc == 3) or
-        (install_rpm_ostree.rc == 4) or
-        (install_rpm_ostree.rc == 78)
-      changed_when: >
-        install_rpm_ostree.rc != 77
-      when:
-        - ansible_pkg_mgr in ['atomic_container']
+        - name: Fish | check if fish is installed
+          ansible.builtin.shell: |
+            set -euo pipefail
+            IFS=$'\n\t'
 
-    - name: Fish | install dnf
-      become: true
-      ansible.builtin.dnf:
-        name:
-          - fish
-        state: present
-      when:
-        - ansible_pkg_mgr in ['dnf', 'dnf5']
+            echo "running as $(ps -p $$ -o comm=)"
+            
+            which fish
+          register: check_if_fish_is_installed
+          changed_when: false
+          failed_when: check_if_fish_is_installed.rc >= 2
+          args:
+            executable: /usr/bin/bash
+    
+        - name: Fish | install via rpm-ostree
+          become: true
+          ansible.builtin.shell: |
+            rpm-ostree install \
+            --idempotent \
+            --unchanged-exit-77 \
+            --assumeyes \
+            fish
+          args:
+            executable: /usr/bin/bash
+          register: install_rpm_ostree
+          failed_when: >
+            (install_rpm_ostree.rc == 1) or
+            (install_rpm_ostree.rc == 2) or
+            (install_rpm_ostree.rc == 3) or
+            (install_rpm_ostree.rc == 4) or
+            (install_rpm_ostree.rc == 78)
+          changed_when: >
+            install_rpm_ostree.rc != 77
+          when: >
+            ansible_pkg_mgr in ['atomic_container'] and
+            check_if_fish_is_installed.rc == 1
+    
+        - name: Fish | install via dnf
+          become: true
+          ansible.builtin.dnf:
+            name:
+              - fish
+            state: present
+          when: >
+            ansible_pkg_mgr in ['dnf', 'dnf5'] and
+            check_if_fish_is_installed.rc == 1
 
     - name: Fish | Configure fish shell for user {{ main_user }}
       block:
@@ -85,10 +105,8 @@
             group: "{{ main_user }}"
             mode: '644'
 
-        - name: Fish | copy functions
-          ansible.builtin.copy:
+        - name: Fish | rsync functions
+          ansible.posix.synchronize:
             src: "../files/functions/"
             dest: "/home/{{ main_user }}/.config/fish/functions/"
-            owner: "{{ main_user }}"
-            group: "{{ main_user }}"
-            mode: '644'
+            delete: yes
