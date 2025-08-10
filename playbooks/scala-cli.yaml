@@ -27,8 +27,8 @@
           echo "scala-cli is not installed or not in PATH"
           curl -fL $scala_cli_url | gzip -d > scala-cli
           chmod +x scala-cli
-          mkdir -p /home/{{ main_user }}/.local/bin
-          mv scala-cli /home/{{ main_user }}/.local/bin/scala-cli
+          mkdir -p /home/{{ main_user }}/bin
+          mv scala-cli /home/{{ main_user }}/bin/scala-cli
         fi
         
         echo "scala-cli installed in $(realpath $(which scala-cli))"
@@ -115,7 +115,7 @@
       
     - name: Scala CLI | copy scala-cli-jvm-setup.scala
       ansible.builtin.copy:
-        src: ../files/scala-cli-jvm-setup.scala
+        src: ../files/scala-cli/scala-cli-jvm-setup.scala
         dest: /home/{{ main_user }}/scala-cli-jvm-setup.scala
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
@@ -142,23 +142,15 @@
 
     - name: Scala CLI | setup JDK env vars
       ansible.builtin.copy:
-        src: ../files/55-jvm.bashrc
+        src: ../files/scala-cli/55-jvm.bashrc
         dest: /home/{{ main_user }}/.bashrc.d/55-jvm.bashrc
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '644'
-        
-    - name: Scala CLI | setup JAVA_HOME and PATH
-      ansible.builtin.copy:
-        src: ../files/56-jvm.bashrc
-        dest: /home/{{ main_user }}/.bashrc.d/56-jvm.bashrc
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: '644'
         
     - name: Scala CLI | setup fish shell completions
       ansible.builtin.copy:
-        src: ../files/scala-cli-completions.fish
+        src: ../files/scala-cli/scala-cli-completions.fish
         dest: /home/{{ main_user }}/.config/fish/conf.d/scala-cli-completions.fish
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
