@@ -7,7 +7,7 @@ if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
     export PATH="$HOME/.local/bin:$PATH"
 fi
 
-random-delay-seconds.bash 0 2
+random-delay-seconds.bash 0 1
 
 # List of hosts to ping
 HOSTS=(
@@ -57,6 +57,7 @@ send_notification() {
         "$ntfy_command" \
         --title "Server healthcheck FAILED" \
         --tags "servers,healthcheck" \
+        --topic "servers" \
         --server_url "{{ ntfy_server }}" \
         --message "$message" \
         --priority "high" \
