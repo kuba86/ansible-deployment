@@ -12,6 +12,7 @@ PodmanArgs=--memory=4g
 PodmanArgs=--cpus=2
 UserNS=keep-id
 Environment=MYSQL_ROOT_PASSWORD=
+NoNewPrivileges=true
 
 [Service]
 Restart=always

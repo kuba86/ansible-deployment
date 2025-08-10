@@ -12,6 +12,7 @@ Environment=MODE=native
 Environment=AUTO_RECEIVE_SCHEDULE="39 */2 * * *"
 PodmanArgs=--memory=500m
 PodmanArgs=--cpus=2
+NoNewPrivileges=true
 
 [Service]
 Restart=always

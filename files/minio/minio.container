@@ -24,7 +24,6 @@ Volume=/mnt/data1/minio:/data1:Z
 Volume=/mnt/data2/minio:/data2:Z
 AddHost=wyse01.tailnet-ba52.ts.net:100.99.35.69
 AddHost=wyse02.tailnet-ba52.ts.net:100.72.209.100
-AddHost=wyse03.tailnet-ba52.ts.net:100.75.236.60
 HealthCmd=curl -f http://localhost:9000/minio/health/live || exit 1
 HealthInterval=30s
 HealthTimeout=20s
@@ -33,6 +32,7 @@ UserNS=keep-id
 PodmanArgs=--memory=5g
 PodmanArgs=--cpus=3
 Network=host
+NoNewPrivileges=true
 
 [Service]
 # Let systemd restart this service always

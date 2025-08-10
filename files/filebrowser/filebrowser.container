@@ -2,10 +2,11 @@
 Description=%N
 
 [Container]
-Image=docker.io/machines/filestash:latest
+Image=docker.io/filebrowser/filebrowser:v2
 ContainerName=%N
 HostName=%H
 AutoUpdate=registry
+PublishPort=5804:5804/tcp
 Volume=/var/mnt/data1/filebrowser/srv:/srv:rw,z
 Volume=/var/mnt/data1/syncthing/Kuba-media-videos:/srv/Kuba-media-videos:ro,z
 Volume=/var/mnt/data1/syncthing/Kuba-media-download:/srv/Kuba-media-download:ro,z
@@ -13,11 +14,12 @@ Volume=/var/mnt/data1/syncthing/Kuba-media-other-videos:/srv/Kuba-media-other-vi
 Volume=/var/mnt/data1/syncthing/Kuba-media-other-photos:/srv/Kuba-media-other-photos:ro,z
 Volume=/var/mnt/data1/syncthing/Kuba-media-other-current:/srv/Kuba-media-other-current:ro,z
 Volume=/var/mnt/data1/syncthing/Mariusz-Testy:/srv/Mariusz-Testy:ro,z
-Volume=/var/mnt/data1/filestash/state:/app/data/state:z
+Volume=/var/mnt/data1/filebrowser/database.db:/database.db:rw,z
+Volume=/var/mnt/data1/filebrowser/.filebrowser.json:/config/settings.json:rw,z
 UserNS=keep-id
-PublishPort=8334:8334/tcp
-PodmanArgs=--memory=2g
+PodmanArgs=--memory=1g
 PodmanArgs=--cpus=2
+NoNewPrivileges=true
 
 [Service]
 Restart=always

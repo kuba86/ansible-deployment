@@ -22,6 +22,7 @@ PublishPort=3003:3003
 UserNS=keep-id
 PodmanArgs=--memory=2g
 PodmanArgs=--cpus=2
+NoNewPrivileges=true
 
 [Service]
 Restart=always

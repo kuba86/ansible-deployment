@@ -27,6 +27,7 @@ Exec=sftpgo \
       --directory=/home/sftpgo/files \
       --password-file=/home/sftpgo/sftpgo-password.txt \
       --username=F3C5HrhtwC
+NoNewPrivileges=true
 
 [Service]
 Restart=always

@@ -13,6 +13,7 @@ Volume=/var/mnt/data1/piwigo/config:/config:z
 Volume=/var/mnt/data1/piwigo/gallery:/gallery:z
 PodmanArgs=--memory=4g
 PodmanArgs=--cpus=2
+NoNewPrivileges=true
 
 [Service]
 Restart=always
