@@ -1,0 +1,54 @@
+- name: Install Syncthing
+  hosts: coreos:dnf:desktop
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+  
+  tasks:
+    - name: Install Syncthing | User Service (Non-virtualized environment)
+      block:
+        - name: Install Syncthing | Systemd Podman Quadlet (User Service)
+          ansible.builtin.template:
+            src: "../files/syncthing/syncthing.container"
+            dest: "/home/{{ main_user }}/.config/containers/systemd/"
+            comment_start_string: "# BEGIN_OF_COMMENT"
+            comment_end_string: "# END_OF_COMMENT"
+            owner: "{{ main_user }}"
+            group: "{{ main_user }}"
+            mode: '600'
+          register: syncthing_systemd_podman_quadlet_output
+
+        - name: Install Syncthing | restart syncthing.service (User Service)
+          ansible.builtin.systemd:
+            daemon_reload: true
+            name: syncthing.service
+            state: restarted
+            scope: user
+          when: syncthing_systemd_podman_quadlet_output.changed
+      when: ansible_facts["virtualization_tech_guest"] == []
+
+    - name: Install Syncthing | System Service (Container environment)
+      block:
+        - name: Install Syncthing | Systemd Podman Quadlet (System Service)
+          ansible.builtin.template:
+            src: "../files/syncthing/syncthing.container"
+            dest: "/etc/containers/systemd/"
+            comment_start_string: "# BEGIN_OF_COMMENT"
+            comment_end_string: "# END_OF_COMMENT"
+            owner: root
+            group: root
+            mode: '644'
+          register: syncthing_systemd_podman_quadlet_output
+
+        - name: Install Syncthing | restart syncthing.service (System Service)
+          ansible.builtin.systemd:
+            daemon_reload: true
+            name: syncthing.service
+            state: restarted
+            scope: system
+          when: syncthing_systemd_podman_quadlet_output.changed
+      when: '"container" in ansible_facts["virtualization_tech_guest"]'

@@ -6,14 +6,13 @@ Image=docker.io/syncthing/syncthing:1
 ContainerName=%N
 HostName=%H
 AutoUpdate=registry
-Volume=/var/mnt/data/syncthing:/var/syncthing:z
+{{ syncthing_volumes }}
 PublishPort=8384:8384/tcp
-PublishPort=22003:22003/tcp
-PublishPort=22003:22003/udp
+{{ syncthing_ports }}
 PublishPort=21027:21027/udp
 UserNS=keep-id
-PodmanArgs=--memory=4g
-PodmanArgs=--cpus=4
+PodmanArgs=--memory={{ syncthing_memory }}
+PodmanArgs=--cpus={{ syncthing_cpu }}
 
 [Service]
 Restart=always
