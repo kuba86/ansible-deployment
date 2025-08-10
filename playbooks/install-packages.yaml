@@ -132,7 +132,96 @@
       changed_when: "'Installing eza...' in install_eza.stdout"
       when:
         - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
-
+    
+    - name: Install packages | has
+      become: true
+      ansible.builtin.shell: |
+        set -euo pipefail
+        IFS=$'\n\t'
+        
+        bin_path="/usr/local/bin/has"
+        url="https://git.io/_has"
+        tmp="$(mktemp)"
+        cleanup() { rm -f "$tmp"; }
+        trap cleanup EXIT
+        
+        old_sha=""
+        if [ -f "$bin_path" ]; then
+          old_sha="$(sha256sum "$bin_path" | awk '{print $1}')"
+        fi
+        
+        curl -fsSL "$url" -o "$tmp"
+        chmod +x "$tmp"
+        new_sha="$(sha256sum "$tmp" | awk '{print $1}')"
+        
+        if [ "$old_sha" != "$new_sha" ]; then
+          install -m 0755 "$tmp" "$bin_path"
+          echo "Installed/updated has"
+        else
+          echo "has already up to date"
+        fi
+      args:
+        executable: /usr/bin/bash
+      register: install_has
+      failed_when: install_has.rc != 0
+      changed_when: "'Installed/updated has' in install_has.stdout"
+      when:
+        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+    
+    - name: Install packages | dysk
+      become: true
+      ansible.builtin.shell: |
+        set -euo pipefail
+        IFS=$'\n\t'
+        
+        dysk_version="2.10.1"
+        global_bin_path="/usr/local/bin"
+        dysk_bin_path="$global_bin_path/dysk"
+        dysk_url="https://github.com/Canop/dysk/releases/download/v${dysk_version}/dysk_${dysk_version}.zip"
+        
+        needs_install=false
+        
+        if [ ! -f "$dysk_bin_path" ]; then
+          echo "dysk not found, will install..."
+          needs_install=true
+        else
+          if "$dysk_bin_path" --version 2>/dev/null | grep -q "$dysk_version"; then
+            echo "dysk $dysk_version is already installed."
+          else
+            echo "dysk is installed, but the version doesn't match $dysk_version, will reinstall..."
+            needs_install=true
+          fi
+        fi
+        
+        if [ "$needs_install" = true ]; then
+          echo "Installing dysk..."
+          tmpdir="$(mktemp -d)"
+          cleanup() { rm -rf "$tmpdir"; }
+          trap cleanup EXIT
+        
+          curl -fsSL "$dysk_url" -o "$tmpdir/dysk.zip"
+          unzip -q "$tmpdir/dysk.zip" -d "$tmpdir"
+        
+          found="$(find "$tmpdir" -type f -name 'dysk' -perm -u+x | head -n1 || true)"
+          if [ -z "$found" ]; then
+            found="$(find "$tmpdir" -type f -name 'dysk*' -perm -u+x | head -n1 || true)"
+          fi
+        
+          if [ -z "$found" ]; then
+            echo "Failed to locate dysk binary in archive"
+            exit 1
+          fi
+        
+          install -m 0755 "$found" "$dysk_bin_path"
+        fi
+      args:
+        executable: /usr/bin/bash
+      register: install_dysk
+      failed_when: install_dysk.rc != 0
+      changed_when: "'Installing dysk...' in install_dysk.stdout"
+      when:
+        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+    
     - name: Install epel-release | dnf
       become: true
       ansible.builtin.dnf:
