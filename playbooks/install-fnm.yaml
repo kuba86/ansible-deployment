@@ -25,7 +25,7 @@
       
     - name: Install fnm CLI | setup fish shell
       ansible.builtin.template:
-        src: ../templates/fnm.fish
+        src: ../files/fmn/fnm.fish
         dest: /home/{{ main_user }}/.config/fish/conf.d/fnm.fish
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
@@ -35,7 +35,7 @@
     
     - name: Install fnm CLI | setup bash shell
       ansible.builtin.template:
-        src: ../templates/fnm.bashrc
+        src: ../files/fnm/fnm.bashrc
         dest: /home/{{ main_user }}/.bashrc.d/fnm.bashrc
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
