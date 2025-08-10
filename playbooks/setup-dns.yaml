@@ -12,7 +12,7 @@
     
     - name: Setup DNS | copy conf file
       ansible.builtin.template:
-        src: "../templates/50-dns.conf"
+        src: "../files/dns/50-dns.conf"
         dest: "/etc/systemd/resolved.conf.d/50-dns.conf"
         owner: "root"
         group: "root"
