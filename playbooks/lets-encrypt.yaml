@@ -64,18 +64,14 @@
         export lets_encrypt_path="{{ lets_encrypt_path }}"
         export caddy_path="{{ caddy_path }}"
         
-        curl \
-          --retry 10 \
-          --retry-all-errors \
-          --fail \
-          --connect-timeout 5 \
-          --max-time 10 \
-          --retry-delay 10 \
-          -u ":{{ ntfy_api_token }}" \
-          -H "Title: Lets Encrypt | Caddy setup certs" \
-          -H "Tags: lets-encrypt" \
-          -d "Starting to copy Lets Encrypt certificates and restarting Caddy" \
-          {{ ntfy_server }}
+        ntfy.fish \
+          --title "Lets Encrypt | Caddy setup certs" \
+          --tags "lets-encrypt" \
+          --topic "servers" \
+          --server_url "{{ ntfy_server }}" \
+          --message "Starting to copy Lets Encrypt certificates and restarting Caddy" \
+          --priority "high" \
+          --apikey "{{ ntfy_api_token }}"
         
         function copy_certs() {
           read -ra domain_array <<< "$domains"

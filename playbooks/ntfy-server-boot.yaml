@@ -41,7 +41,7 @@
     - name: Install ntfy-server-boot | Copy ntfy.fish file
       ansible.builtin.copy:
         src: ../files/ntfy-server-boot/ntfy.fish
-        dest: /home/{{ main_user }}/ntfy.fish
+        dest: /home/{{ main_user }}/.local/bin/ntfy.fish
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: '700'

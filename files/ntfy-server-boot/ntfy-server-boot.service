@@ -17,7 +17,7 @@ ExecStart=/usr/bin/bash -c 'curl \
   -H "Title: %H started" \
   -H "Tags: %H" \
   -d "%H successfully started and online" \
-  {{ ntfy_server }}'
+  {{ ntfy_server }}/servers'
 RestartSec=60
 ExecStopPost=/usr/bin/bash -c 'curl \
   --retry 60 \
@@ -28,7 +28,7 @@ ExecStopPost=/usr/bin/bash -c 'curl \
   -H "Title: %H is shutting down" \
   -H "Tags: %H" \
   -d "%H is shutting down" \
-  {{ ntfy_server }}'
+  {{ ntfy_server }}/servers'
 
 [Install]
 WantedBy=default.target

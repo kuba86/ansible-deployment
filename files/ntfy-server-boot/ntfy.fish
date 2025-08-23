@@ -24,15 +24,15 @@ if not set -ql _flag_message
 end
 
 curl \
---retry 5 \
---connect-timeout 5 \
---max-time 5 \
---retry-delay 5 \
---retry-all-errors \
---fail \
--H "Authorization: Basic $encoded_auth_token" \
--H "Title: $_flag_title" \
--H "Tags: $_flag_tags" \
--H "Priority: $_flag_priority" \
--d "$_flag_message" \
-"$_flag_server_url$_flag_topic"
+  --retry 5 \
+  --connect-timeout 5 \
+  --max-time 5 \
+  --retry-delay 5 \
+  --retry-all-errors \
+  --fail \
+  -H "Authorization: Basic $encoded_auth_token" \
+  -H "Title: $_flag_title" \
+  -H "Tags: $_flag_tags" \
+  -H "Priority: $_flag_priority" \
+  -d "$_flag_message" \
+  "$_flag_server_url$_flag_topic"
