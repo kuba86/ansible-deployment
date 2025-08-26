@@ -14,3 +14,6 @@ all:
     desktop:
       hosts:
         fedora-kde-xps.tailnet-ba52.ts.net:
+    test:
+      hosts:
+        192.168.8.168:

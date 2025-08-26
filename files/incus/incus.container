@@ -8,8 +8,8 @@ HostName=%H
 AutoUpdate=registry
 Network=host
 CgroupsMode=no-conmon
-Volume=/dev:/dev
 Volume=/var/lib/incus:/var/lib/incus
+Volume=/dev:/dev
 Volume=/lib/modules:/lib/modules:ro
 PodmanArgs=--cgroupns=host
 PodmanArgs=--security-opt unmask=/sys/fs/cgroup

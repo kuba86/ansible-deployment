@@ -1,5 +1,5 @@
 - name: Install incus
-  hosts: coreos:dnf:desktop
+  hosts: coreos
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
@@ -13,13 +13,26 @@
       when:
         - '"container" not in ansible_facts["virtualization_tech_guest"]'
       block:
-
+# cleanup
+# sudo systemctl stop incus.service
+# sudo btrfs property set /var/lib/incus/storage-pools/*/images/* ro false
+# sudo rm -rf /var/lib/incus /var/lib/lxc /var/lib/lxcfs /var/lib/lxd
+# sudo ip link delete incusbr0 type bridge
+#
+        - name: Incus | create directory for incus storage
+          ansible.builtin.file:
+            path: /var/lib/incus
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+          
         - name: Incus | install incus.container (root)
           ansible.builtin.copy:
             src: "../files/incus/incus.container"
             dest: "/etc/containers/systemd/incus.container"
-            owner: "{{ main_user }}"
-            group: "{{ main_user }}"
+            owner: "root"
+            group: "root"
             mode: '644'
           become: true
           register: incus_container_service
@@ -39,13 +52,18 @@
           when: >
             incus_container_service.changed | default(false)
             
+        - name: Incus | start incus.service
+          ansible.builtin.systemd_service:
+            name: incus.service
+            state: started
+            
         - name: Incus | install incus binary and add to path
           become: true
           ansible.builtin.shell: |
             set -euo pipefail
             IFS=$'\n\t'
             
-            incus_version="6.14.0"
+            incus_version="6.15.0"
             global_bin_path="/usr/local/bin"
             incus_bin_path="$global_bin_path/incus"
             incus_agent_bin_path="$global_bin_path/incus-agent"
@@ -81,17 +99,19 @@
           changed_when: "'Installing incus...' in install_incus.stdout"
           when:
             - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
-            
-        - name: Incus | start incus.service
-          ansible.builtin.systemd_service:
-            name: incus.service
-            state: started
           
         - name: Incus | init
           ansible.builtin.shell: |
+            set -euo pipefail
+            IFS=$'\n\t'
+            
+            if [[ -z "${TAILSCALE_IP:-}" ]]; then
+              echo "Error: TAILSCALE_IP environment variable is not set" >&2
+              exit 1
+            fi
             incus admin init \
               --auto \
-              --network-address={{ inventory_hostname }} \
+              --network-address=$TAILSCALE_IP \
               --network-port=13512
           args:
             executable: /usr/bin/bash
@@ -100,6 +120,7 @@
           changed_when: incus_init.rc != 0
           
         - name: Incus | add trust certificate
+          become: true
           block:
             - name: Incus | Copy incus-ui.crt
               ansible.builtin.copy:
@@ -108,12 +129,10 @@
                 owner: root
                 group: root
                 mode: '0600'
-              become: true
             
             - name: Incus | Import incus-ui.crt trust certificate
               ansible.builtin.shell: |
                 incus config trust add-certificate /root/incus-ui.crt
-              become: true
               register: incus_add_certificate_result
               changed_when: "'Certificate added' in incus_add_certificate_result.stdout"
               failed_when: >
@@ -124,4 +143,3 @@
               ansible.builtin.file:
                 path: "/root/incus-ui.crt"
                 state: absent
-              become: true

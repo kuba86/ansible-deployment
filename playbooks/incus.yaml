@@ -1,0 +1,103 @@
+- name: Install incus
+  hosts: test
+  gather_facts: true
+#  vars_files:
+#    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+#    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+#    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+  tasks:
+    - name: Incus | Install and setup
+      become: true
+      when:
+        - '"container" not in ansible_facts["virtualization_tech_guest"]'
+      block:
+
+        - name: Incus | install rpm-ostree
+          ansible.builtin.shell: |
+            set -euo pipefail
+            IFS=$'\n\t'
+            
+            if command -v incus >/dev/null 2>&1; then
+              echo "incus found in PATH, skipping install."
+              exit 77
+            fi
+            
+            rpm-ostree install \
+              --idempotent \
+              --apply-live \
+              --unchanged-exit-77 \
+              --assumeyes \
+              incus \
+              incus-agent
+          args:
+            executable: /usr/bin/bash
+          register: install_rpm_ostree
+          failed_when: >
+            (install_rpm_ostree.rc == 1) or
+            (install_rpm_ostree.rc == 2) or
+            (install_rpm_ostree.rc == 3) or
+            (install_rpm_ostree.rc == 4) or
+            (install_rpm_ostree.rc == 78)
+          changed_when: >
+            install_rpm_ostree.rc != 77
+          when:
+            - ansible_pkg_mgr in ['atomic_container']
+    
+        - name: Incus | install dnf
+          ansible.builtin.dnf:
+            name:
+              - incus
+              - incus-agent
+            state: present
+          register: install_dnf
+          when:
+            - ansible_pkg_mgr in ['dnf', 'dnf5']
+    
+        - name: Incus | ensure root:1000000:1000000000 is in /etc/subuid
+          ansible.builtin.lineinfile:
+            path: /etc/subuid
+            regexp: '^root:|^0:'
+            line: 'root:1000000:1000000000'
+            state: present
+            create: true
+        
+        - name: Incus | ensure root:1000000:1000000000 is in /etc/subgid
+          ansible.builtin.lineinfile:
+            path: /etc/subgid
+            regexp: '^root:|^0:'
+            line: 'root:1000000:1000000000'
+            state: present
+            create: true
+    
+        - name: Incus | enable and start incus.service
+          ansible.builtin.systemd_service:
+            name: incus.service
+            enabled: true
+            state: started
+            
+        - name: Incus | enable and start incus.socket
+          ansible.builtin.systemd_service:
+            name: incus.socket
+            enabled: true
+            state: started
+    
+        - name: Incus | init
+          ansible.builtin.shell: |
+            set -euo pipefail
+            IFS=$'\n\t'
+            
+            incus admin init --auto
+          args:
+            executable: /usr/bin/bash
+          register: incus_init
+          changed_when: incus_init.rc != 0
+          
+        - name: Incus | add {{ main_user }} to group incus-admin
+          ansible.builtin.copy:
+            src: "../files/incus/99-incus-admin.conf"
+            dest: "/etc/sysusers.d/99-incus-admin.conf"
+            owner: root
+            group: root
+            mode: '0644'
