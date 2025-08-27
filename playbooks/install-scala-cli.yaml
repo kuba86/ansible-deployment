@@ -71,48 +71,6 @@
       changed_when: "'Scala-Cli power mode set to FALSE, changing to TRUE' in scala_cli_power_mode.stdout"
       become_user: "{{ main_user }}"
       
-    - name: Scala CLI | install coursier
-      ansible.builtin.shell: |
-        set -euo pipefail
-        IFS=$'\n\t'
-        
-        user_bin_path="/home/{{ main_user }}/bin"
-        cs_bin_path="$user_bin_path/cs"
-        cs_url="https://github.com/coursier/launchers/raw/master/coursier"
-        
-        if [ ! -f $cs_bin_path ]; then
-          echo "Installing coursier..."
-          mkdir -p $user_bin_path
-          chown {{ main_user }}:{{ main_user }} $user_bin_path
-          curl -fL "https://github.com/coursier/launchers/raw/master/coursier" > $cs_bin_path
-          chmod u+x $cs_bin_path
-          chown {{ main_user }}:{{ main_user }} $cs_bin_path
-        else
-          echo "$cs_bin_path already exists, updating..."
-          curl -fL "https://github.com/coursier/launchers/raw/master/coursier" > $cs_bin_path
-          chmod u+x $cs_bin_path
-          chown {{ main_user }}:{{ main_user }} $cs_bin_path
-        fi
-      args:
-        executable: /usr/bin/bash
-      register: scala_cli_install_coursier
-      failed_when: scala_cli_install_coursier.rc != 0
-      changed_when: "'Installing coursier...' in scala_cli_install_coursier.stdout"
-      become_user: "{{ main_user }}"
-      
-    - name: Scala CLI | Validate coursier installation
-      ansible.builtin.shell: |
-        set -euo pipefail
-        IFS=$'\n\t'
-        
-        cs version
-      args:
-        executable: /usr/bin/bash
-      register: cs_version
-      failed_when: cs_version.rc != 0
-      changed_when: false
-      become_user: "{{ main_user }}"
-      
     - name: Scala CLI | copy scala-cli-jvm-setup.scala
       ansible.builtin.copy:
         src: ../files/scala-cli/scala-cli-jvm-setup.scala
@@ -155,6 +113,48 @@
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: '644'
+        
+    - name: Scala CLI | install coursier
+      ansible.builtin.shell: |
+        set -euo pipefail
+        IFS=$'\n\t'
+        
+        user_bin_path="/home/{{ main_user }}/bin"
+        cs_bin_path="$user_bin_path/cs"
+        cs_url="https://github.com/coursier/launchers/raw/master/coursier"
+        
+        if [ ! -f $cs_bin_path ]; then
+          echo "Installing coursier..."
+          mkdir -p $user_bin_path
+          chown {{ main_user }}:{{ main_user }} $user_bin_path
+          curl -fL "https://github.com/coursier/launchers/raw/master/coursier" > $cs_bin_path
+          chmod u+x $cs_bin_path
+          chown {{ main_user }}:{{ main_user }} $cs_bin_path
+        else
+          echo "$cs_bin_path already exists, updating..."
+          curl -fL "https://github.com/coursier/launchers/raw/master/coursier" > $cs_bin_path
+          chmod u+x $cs_bin_path
+          chown {{ main_user }}:{{ main_user }} $cs_bin_path
+        fi
+      args:
+        executable: /usr/bin/bash
+      register: scala_cli_install_coursier
+      failed_when: scala_cli_install_coursier.rc != 0
+      changed_when: "'Installing coursier...' in scala_cli_install_coursier.stdout"
+      become_user: "{{ main_user }}"
+    
+    - name: Scala CLI | Validate coursier installation
+      ansible.builtin.shell: |
+        set -euo pipefail
+        IFS=$'\n\t'
+        
+        cs version
+      args:
+        executable: /usr/bin/bash
+      register: cs_version
+      failed_when: cs_version.rc != 0
+      changed_when: false
+      become_user: "{{ main_user }}"
       
     - name: Scala CLI | Display Scala CLI version
       ansible.builtin.debug:
