@@ -10,6 +10,7 @@
     main_user: core
 
   tasks:
+
     - name: Install ntfy-server-boot | Copy ntfy-server-boot.service file
       ansible.builtin.template:
         src: ../files/ntfy-server-boot/ntfy-server-boot.service
@@ -37,6 +38,14 @@
         name: ntfy-server-boot.timer
         enabled: yes
         state: started
+        
+    - name: Install ntfy-server-boot | ensures /home/{{ main_user }}/.local/bin directory exists
+      ansible.builtin.file:
+        path: /home/{{ main_user }}/.local/bin
+        state: directory
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '755'
         
     - name: Install ntfy-server-boot | Copy ntfy.fish file
       ansible.builtin.copy:
