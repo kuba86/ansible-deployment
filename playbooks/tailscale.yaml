@@ -2,6 +2,8 @@
   hosts: coreos:dnf:desktop
   gather_facts: true
   vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
   vars:
     tailscale_key: ""
@@ -25,7 +27,7 @@
           when:
             - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
             - ansible_distribution in ['Fedora']
-    
+
         - name: Tailscale | add repository EL-9
           register: add_repo_el_9
           ansible.builtin.copy:
@@ -37,21 +39,21 @@
           when:
             - ansible_pkg_mgr in ['dnf', 'dnf5']
             - ansible_distribution in ['AlmaLinux', 'Rocky']
-        
+
         - name: Tailscale | sysctl set net.ipv4.ip_forward=1
           ansible.posix.sysctl:
             name: net.ipv4.ip_forward
             value: '1'
             sysctl_file: /etc/sysctl.d/10-common.conf
             state: present
-        
+
         - name: Tailscale | sysctl set net.ipv6.conf.all.forwarding=1
           ansible.posix.sysctl:
             name: net.ipv6.conf.all.forwarding
             value: '1'
             sysctl_file: /etc/sysctl.d/10-common.conf
             state: present
-    
+
     - name: Tailscale | Install
       become: true
       when: >
@@ -72,12 +74,12 @@
           ansible.builtin.shell: |
             set -euo pipefail
             IFS=$'\n\t'
-            
+
             if command -v tailscale >/dev/null 2>&1; then
               echo "tailscale found in PATH, skipping install."
               exit 77
             fi
-            
+
             rpm-ostree install \
               --idempotent \
               --apply-live \
@@ -99,7 +101,7 @@
           when:
             - ansible_pkg_mgr in ['atomic_container']
             - tailscale_in_path is changed
-        
+
         - name: Tailscale | install dnf
           ansible.builtin.dnf:
             name:
@@ -124,7 +126,7 @@
       when: >
         (ansible_distribution in ['Fedora', 'AlmaLinux', 'Rocky'] and
         ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5'])
-            
+
     - name: Tailscale | optimizations
       become: true
       when: >
@@ -161,11 +163,23 @@
     - name: Tailscale | up
       become: true
       ansible.builtin.shell: |
+        set -euo pipefail
+        IFS=$'\n\t'
+        
+        tailnet_dns_suffix="$(tailscale status --json | jq -r .MagicDNSSuffix)"
+        
+        if [[ "$tailnet_dns_suffix" == "{{ tailscale_tailnet_dns_suffix }}" ]]; then
+          echo "tailscale is already up."
+          exit 0
+        fi
+        
+        echo "tailscale needs to be up."
         tailscale up \
-        --authkey={{ tailscale_key }} \
-        --advertise-exit-node=true \
-        --accept-routes=true \
-        --advertise-tags '{{ tailscale_tags }}'
+          --authkey={{ tailscale_key }} \
+          --advertise-exit-node=true \
+          --accept-routes=true \
+          --advertise-tags '{{ tailscale_tags }}'
       args:
         executable: /usr/bin/bash
       register: tailscale_up
+      changed_when: "'tailscale needs to be up.' in tailscale_up.stdout"

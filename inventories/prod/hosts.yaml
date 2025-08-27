@@ -3,6 +3,7 @@ all:
     coreos:
       hosts:
         wyse0[1:3].tailnet-ba52.ts.net:
+        nuc02.tailnet-ba52.ts.net:
         fedora-kde-xps.tailnet-ba52.ts.net:
     dnf:
       children:

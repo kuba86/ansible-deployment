@@ -1,5 +1,5 @@
 - name: Install url-logger
-  hosts: coreos:dnf
+  hosts: coreos:dnf:!desktop
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
