@@ -2,18 +2,13 @@
   hosts: coreos:dnf:desktop
   gather_facts: true
   vars_files:
-    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
-    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
-  vars_prompt:
-    - name: tailscale_key
-      prompt: Enter the tailscale key
-      private: true
   vars:
+    tailscale_key: ""
     tailscale_tags: "tag:server"
 
   tasks:
-    - name: Tailscale | repo setup
+    - name: Tailscale | pre-setup
       become: true
       when:
         - ansible_distribution in ['Fedora', 'AlmaLinux', 'Rocky']
@@ -22,15 +17,7 @@
         - name: Tailscale | add repository Fedora
           register: add_repo_fedora
           ansible.builtin.copy:
-            content: |
-              [tailscale-stable]
-              name=Tailscale stable
-              baseurl=https://pkgs.tailscale.com/stable/fedora/$basearch
-              enabled=1
-              type=rpm
-              repo_gpgcheck=1
-              gpgcheck=1
-              gpgkey=https://pkgs.tailscale.com/stable/fedora/repo.gpg
+            src: ../files/tailscale/tailscale-fedora.repo
             dest: /etc/yum.repos.d/tailscale.repo
             owner: root
             group: root
@@ -42,15 +29,7 @@
         - name: Tailscale | add repository EL-9
           register: add_repo_el_9
           ansible.builtin.copy:
-            content: |
-              [tailscale-stable]
-              name=Tailscale stable
-              baseurl=https://pkgs.tailscale.com/stable/rhel/9/$basearch
-              enabled=1
-              type=rpm
-              repo_gpgcheck=1
-              gpgcheck=1
-              gpgkey=https://pkgs.tailscale.com/stable/rhel/9/repo.gpg
+            src: ../files/tailscale/tailscale-rhel.repo
             dest: /etc/yum.repos.d/tailscale.repo
             owner: root
             group: root
@@ -58,6 +37,20 @@
           when:
             - ansible_pkg_mgr in ['dnf', 'dnf5']
             - ansible_distribution in ['AlmaLinux', 'Rocky']
+        
+        - name: Tailscale | sysctl set net.ipv4.ip_forward=1
+          ansible.posix.sysctl:
+            name: net.ipv4.ip_forward
+            value: '1'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
+        
+        - name: Tailscale | sysctl set net.ipv6.conf.all.forwarding=1
+          ansible.posix.sysctl:
+            name: net.ipv6.conf.all.forwarding
+            value: '1'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
     
     - name: Tailscale | Install
       become: true
@@ -66,7 +59,7 @@
         ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
       block:
         - name: Tailscale | check if 'tailscale' is in PATH
-          ansible.builtin.script: ../files/tailscale-in-path.sh
+          ansible.builtin.script: ../files/tailscale/tailscale-in-path.sh
           register: tailscale_in_path
           failed_when: >
             (tailscale_in_path.stdout.find('tailscale in path') == -1 and
@@ -77,13 +70,21 @@
 
         - name: Tailscale | install rpm-ostree
           ansible.builtin.shell: |
+            set -euo pipefail
+            IFS=$'\n\t'
+            
+            if command -v tailscale >/dev/null 2>&1; then
+              echo "tailscale found in PATH, skipping install."
+              exit 77
+            fi
+            
             rpm-ostree install \
-            --idempotent \
-            --apply-live \
-            --unchanged-exit-77 \
-            --assumeyes \
-            --allow-inactive \
-            tailscale
+              --idempotent \
+              --apply-live \
+              --unchanged-exit-77 \
+              --assumeyes \
+              --allow-inactive \
+              tailscale
           args:
             executable: /usr/bin/bash
           register: install_rpm_ostree
@@ -132,21 +133,7 @@
       block:
         - name: Tailscale | copy tailscale-optimizations.service
           ansible.builtin.copy:
-            content: |
-              [Unit]
-              Description=tailscale-optimizations
-              Wants=network-online.target
-              After=network-online.target
-              
-              [Service]
-              Type=exec
-              ExecStart=/usr/bin/bash -c \
-              "/usr/sbin/ethtool -K \
-              $(/usr/sbin/ip -o route get 8.8.8.8 | cut -f 5 -d ' ') \
-              rx-udp-gro-forwarding on rx-gro-list off"
-              
-              [Install]
-              WantedBy=multi-user.target default.target
+            src: ../files/tailscale/tailscale-optimizations.service
             dest: /etc/systemd/system/tailscale-optimizations.service
             owner: root
             group: root
@@ -165,28 +152,11 @@
 
         - name: Tailscale | add profile env vars
           ansible.builtin.copy:
-            content: |
-              export TAILSCALE_IP=$(tailscale status --json | jq -r .Self.TailscaleIPs[0])
-              export TAILSCALE_SHORT_DOMAIN=$(tailscale status --json | jq -r .Self.HostName)
-              export TAILSCALE_FULL_DOMAIN=$(tailscale status --json | jq -r .CertDomains[])
+            src: ../files/tailscale/10-tailscale.sh
             dest: /etc/profile.d/10-tailscale.sh
             owner: root
             group: root
             mode: '644'
-            
-        - name: Tailscale | sysctl set net.ipv4.ip_forward=1
-          ansible.posix.sysctl:
-            name: net.ipv4.ip_forward
-            value: '1'
-            sysctl_file: /etc/sysctl.d/10-common.conf
-            state: present
-        
-        - name: Tailscale | sysctl set net.ipv6.conf.all.forwarding=1
-          ansible.posix.sysctl:
-            name: net.ipv6.conf.all.forwarding
-            value: '1'
-            sysctl_file: /etc/sysctl.d/10-common.conf
-            state: present
 
     - name: Tailscale | up
       become: true
@@ -195,9 +165,7 @@
         --authkey={{ tailscale_key }} \
         --advertise-exit-node=true \
         --accept-routes=true \
-        --reset=true \
         --advertise-tags '{{ tailscale_tags }}'
       args:
         executable: /usr/bin/bash
       register: tailscale_up
-      ignore_errors: true
