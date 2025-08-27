@@ -10,6 +10,14 @@
     main_user: core
   tasks:
     
+    - name: Setup DNS | ensures /etc/systemd/resolved.conf.d directory exists
+      ansible.builtin.file:
+        path: /etc/systemd/resolved.conf.d
+        state: directory
+        owner: "root"
+        group: "root"
+        mode: '755'
+    
     - name: Setup DNS | copy conf file
       ansible.builtin.template:
         src: "../files/dns/50-dns.conf"
