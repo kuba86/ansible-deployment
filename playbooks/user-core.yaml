@@ -17,6 +17,3 @@
         # time mkpasswd --method=yescrypt --rounds 11 dummy_password
         password: "{{ core_user_pass_hash }}"
         state: present
-        append: true
-        groups:
-          - wheel
