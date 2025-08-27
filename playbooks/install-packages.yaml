@@ -42,46 +42,35 @@
       when:
         - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
 
-    - name: Install packages | rpm-ostree install
-      become: true
-      ansible.builtin.shell: |
-        rpm-ostree install \
-        --idempotent \
-        --allow-inactive \
-        --unchanged-exit-77 \
-        --assumeyes \
-          bat \
-          btop \
-          fd-find \
-          iftop \
-          mkpasswd \
-          ncdu \
-          sysstat \
-          upower \
-          wget \
-          unzip \
-          nodejs \
-          binutils
-      args:
-        executable: /usr/bin/bash
-      register: install_rpm_ostree
-      failed_when: >
-        (install_rpm_ostree.rc == 1) or
-        (install_rpm_ostree.rc == 2) or
-        (install_rpm_ostree.rc == 3) or
-        (install_rpm_ostree.rc == 4) or
-        (install_rpm_ostree.rc == 78)
-      changed_when: >
-        install_rpm_ostree.rc != 77
-      when:
-        - ansible_pkg_mgr in ['atomic_container']
+#    - name: Install packages | rpm-ostree install
+#      become: true
+#      ansible.builtin.shell: |
+#        rpm-ostree install \
+#        --idempotent \
+#        --allow-inactive \
+#        --unchanged-exit-77 \
+#        --assumeyes \
+#          package_name
+#      args:
+#        executable: /usr/bin/bash
+#      register: install_rpm_ostree
+#      failed_when: >
+#        (install_rpm_ostree.rc == 1) or
+#        (install_rpm_ostree.rc == 2) or
+#        (install_rpm_ostree.rc == 3) or
+#        (install_rpm_ostree.rc == 4) or
+#        (install_rpm_ostree.rc == 78)
+#      changed_when: >
+#        install_rpm_ostree.rc != 77
+#      when:
+#        - ansible_pkg_mgr in ['atomic_container']
 
-    - name: Install packages | reboot server after rpm-ostree install
-      become: true
-      ansible.builtin.reboot:
-      when:
-        - ansible_pkg_mgr in ['atomic_container']
-        - install_rpm_ostree.changed | default(false)
+#    - name: Install packages | reboot server after rpm-ostree install
+#      become: true
+#      ansible.builtin.reboot:
+#      when:
+#        - ansible_pkg_mgr in ['atomic_container']
+#        - install_rpm_ostree.changed | default(false)
 
     - name: Install packages | update sudoers secure_path to include /usr/local/bin
       become: true
@@ -239,19 +228,25 @@
       ansible.builtin.dnf:
         name:
           - bat
+          - below
+          - binutils
           - btop
+          - compsize
           - fd-find
+          - fish
           - iftop
           - jq
           - mkpasswd
           - ncdu
+          - smartmontools
+          - sysbench
           - sysstat
-          - upower
-          - wget
-          - podman
           - unzip
+          - upower
+          - podman
           - nodejs
-          - binutils
+          - wget
+          - zip
         state: present
       when:
         - ansible_pkg_mgr in ['dnf', 'dnf5']
