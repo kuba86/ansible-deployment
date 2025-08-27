@@ -10,6 +10,14 @@
     server_healthcheck_ping:
     server_healthcheck_website:
   tasks:
+    
+    - name: common functions | ensures /home/{{ main_user }}/.local/bin directory exists
+      ansible.builtin.file:
+        path: /home/{{ main_user }}/.local/bin
+        state: directory
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '755'
       
     - name: common functions | copy functions random delay
       ansible.builtin.copy:
