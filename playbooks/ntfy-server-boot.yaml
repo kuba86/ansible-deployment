@@ -15,14 +15,14 @@
       ansible.builtin.template:
         src: ../files/ntfy-server-boot/ntfy-server-boot.service
         dest: /etc/systemd/system/ntfy-server-boot.service
-        mode: '600'
+        mode: '640'
       register: ntfy_service
 
     - name: Install ntfy-server-boot | Copy ntfy-server-boot.timer file
       ansible.builtin.template:
         src: ../files/ntfy-server-boot/ntfy-server-boot.timer
         dest: /etc/systemd/system/ntfy-server-boot.timer
-        mode: '600'
+        mode: '640'
       register: ntfy_timer
 
     - name: Install ntfy-server-boot | reload daemon for system
