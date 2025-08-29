@@ -1,5 +1,5 @@
 - name: Install incus
-  hosts: fedora-kde-xps.tailnet-ba52.ts.net
+  hosts: coreos:!nuc02.tailnet-ba52.ts.net
   become: true
   gather_facts: true
   vars_files:

@@ -1,5 +1,5 @@
 - name: Install incus
-  hosts: wyse01.tailnet-ba52.ts.net:wyse02.tailnet-ba52.ts.net
+  hosts: coreos
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
