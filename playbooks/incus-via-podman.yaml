@@ -1,5 +1,5 @@
 - name: Install incus
-  hosts: coreos
+  hosts: wyse01.tailnet-ba52.ts.net:wyse02.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
@@ -13,12 +13,7 @@
       when:
         - '"container" not in ansible_facts["virtualization_tech_guest"]'
       block:
-# cleanup
-# sudo systemctl stop incus.service
-# sudo btrfs property set /var/lib/incus/storage-pools/*/images/* ro false
-# sudo rm -rf /var/lib/incus /var/lib/lxc /var/lib/lxcfs /var/lib/lxd
-# sudo ip link delete incusbr0 type bridge
-#
+
         - name: Incus | create directory for incus storage
           ansible.builtin.file:
             path: /var/lib/incus
@@ -36,26 +31,14 @@
             mode: '644'
           become: true
           register: incus_container_service
-
-        - name: Incus | reload Systemd daemon for 'root'
-          become: true
-          ansible.builtin.command: systemctl daemon-reload
-          when: >
-            incus_container_service.changed | default(false)
-          changed_when: >
-            false
             
-        - name: Incus | restart incus.service if changed
+        - name: Incus | reload and restart incus.service if changed
           ansible.builtin.systemd_service:
             name: incus.service
-            state: started
+            state: restarted
+            daemon_reload: true
           when: >
             incus_container_service.changed | default(false)
-            
-        - name: Incus | start incus.service
-          ansible.builtin.systemd_service:
-            name: incus.service
-            state: started
             
         - name: Incus | install incus binary and add to path
           become: true
@@ -99,47 +82,3 @@
           changed_when: "'Installing incus...' in install_incus.stdout"
           when:
             - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
-          
-        - name: Incus | init
-          ansible.builtin.shell: |
-            set -euo pipefail
-            IFS=$'\n\t'
-            
-            if [[ -z "${TAILSCALE_IP:-}" ]]; then
-              echo "Error: TAILSCALE_IP environment variable is not set" >&2
-              exit 1
-            fi
-            incus admin init \
-              --auto \
-              --network-address=$TAILSCALE_IP \
-              --network-port=13512
-          args:
-            executable: /usr/bin/bash
-          become: true
-          register: incus_init
-          changed_when: incus_init.rc != 0
-          
-        - name: Incus | add trust certificate
-          become: true
-          block:
-            - name: Incus | Copy incus-ui.crt
-              ansible.builtin.copy:
-                src: "../files/incus/incus-ui.crt"
-                dest: "/root/incus-ui.crt"
-                owner: root
-                group: root
-                mode: '0600'
-            
-            - name: Incus | Import incus-ui.crt trust certificate
-              ansible.builtin.shell: |
-                incus config trust add-certificate /root/incus-ui.crt
-              register: incus_add_certificate_result
-              changed_when: "'Certificate added' in incus_add_certificate_result.stdout"
-              failed_when: >
-                "Error: Certificate already in trust store" not in incus_add_certificate_result.stderr and
-                incus_add_certificate_result.rc != 0
-            
-            - name: Incus | Remove incus-ui.crt file
-              ansible.builtin.file:
-                path: "/root/incus-ui.crt"
-                state: absent

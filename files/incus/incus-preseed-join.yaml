@@ -1,0 +1,6 @@
+config:
+  core.https_address: {{ inventory_hostname }}:13512
+cluster:
+  server_address: {{ inventory_hostname }}:13512
+  enabled: true
+  cluster_token: {{ incus_cluster_token }}

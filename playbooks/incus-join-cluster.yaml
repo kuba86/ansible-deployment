@@ -1,0 +1,63 @@
+- name: Install incus
+  hosts: fedora-kde-xps.tailnet-ba52.ts.net
+  become: true
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+    incus_cluster_token: AAAAAA
+  tasks:
+    - name: Incus | copy preseed file
+      ansible.builtin.template:
+        src: "../files/incus/incus-preseed-join.yaml"
+        dest: "/var/tmp/incus-preseed-join.yaml"
+        mode: '0600'
+      register: incus_preseed
+    
+    - name: Incus | create directory for incus storage
+      ansible.builtin.file:
+        path: /var/lib/incus
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+    
+    - name: Incus | reload and restart incus.service
+      ansible.builtin.systemd_service:
+        name: incus.service
+        state: restarted
+        daemon_reload: true
+    
+    - name: Incus | ensure incus.service is started and enabled
+      ansible.builtin.systemd_service:
+        name: incus.service
+        state: started
+        enabled: true
+        daemon_reload: true
+    
+    - name: Incus | wait for incus daemon socket
+      ansible.builtin.wait_for:
+        path: /var/lib/incus/unix.socket
+        state: present
+        timeout: 90
+        sleep: 2
+    
+    - name: Incus | install join cluster
+      ansible.builtin.shell: |
+        set -euo pipefail
+        IFS=$'\n\t'
+        
+        incus admin init --preseed < /var/tmp/incus-preseed-join.yaml
+      args:
+        executable: /usr/bin/bash
+      register: incus_join_cluster
+      when:
+        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+
+    - name: Incus | remove preseed file
+      ansible.builtin.file:
+        path: "/var/tmp/incus-preseed-join.yaml"
+        state: absent

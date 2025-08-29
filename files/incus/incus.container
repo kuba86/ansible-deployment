@@ -11,6 +11,7 @@ CgroupsMode=no-conmon
 Volume=/var/lib/incus:/var/lib/incus
 Volume=/dev:/dev
 Volume=/lib/modules:/lib/modules:ro
+Volume=/sys/kernel/security:/sys/kernel/security
 PodmanArgs=--cgroupns=host
 PodmanArgs=--security-opt unmask=/sys/fs/cgroup
 PodmanArgs=--privileged
