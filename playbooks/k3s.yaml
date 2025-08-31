@@ -16,7 +16,6 @@
           baseurl=https://rpm.rancher.io/k3s/latest/common/coreos/noarch
           enabled=1
           gpgcheck=1
-          repo_gpgcheck=0
           gpgkey=https://rpm.rancher.io/public.key
         dest: /etc/yum.repos.d/rancher-k3s-common.repo
         owner: root
