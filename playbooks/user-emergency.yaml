@@ -1,28 +1,40 @@
-- name: Update ssh authorized keys
+- name: Setup 'emergency' user
   hosts: coreos:dnf:desktop
-  gather_facts: false
+  gather_facts: true
+  become: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
   vars:
-    main_user: core
+    core_user_pass_hash:
   tasks:
 
+    - name: Add and setup user 'emergency'
+      become: true
+      ansible.builtin.user:
+        name: emergency
+        create_home: true
+        # time mkpasswd --method=yescrypt --rounds 11 dummy_password
+        # using 'core' as the password should be the same
+        password: "{{ core_user_pass_hash }}"
+        shell: /usr/bin/fish
+        state: present
+    
     - name: SSH | Create authorized_keys.d directory
       ansible.builtin.file:
-        path: /home/{{ main_user }}/.ssh/authorized_keys.d
+        path: /home/emergency/.ssh/authorized_keys.d
         state: directory
         mode: '700'
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-
+        owner: "emergency"
+        group: "emergency"
+    
     - name: SSH | Update authorized keys
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
         
-        authorized_keys_dir=/home/{{ main_user }}/.ssh/authorized_keys.d
+        authorized_keys_dir=/home/emergency/.ssh/authorized_keys.d
         authorized_keys_file=$authorized_keys_dir/ansible
         
         if [[ -f "$authorized_keys_file" ]]; then
@@ -34,7 +46,7 @@
             echo "The files are different. Updating..."
             curl -sSLf https://kuba86.com/ssh.txt > "$authorized_keys_file"
           fi
-
+        
         else
           echo "$authorized_keys_file DOES NOT EXISTS. Updating..."
           curl -sSLf https://kuba86.com/ssh.txt > "$authorized_keys_file"
@@ -44,17 +56,4 @@
         executable: /usr/bin/bash
       register: ssh_update_output
       changed_when: "'Updating...' in ssh_update_output.stdout"
-      become: true
-      become_user: "{{ main_user }}"
-      
-    - name: SSH | Setup sshd config
-      become: true
-      ansible.builtin.copy:
-        content: |
-          PasswordAuthentication no
-          AllowUsers core user root ssh-via emergency
-          AuthorizedKeysFile .ssh/authorized_keys.d/ansible
-        dest: /etc/ssh/sshd_config.d/60-common.conf
-        owner: root
-        group: root
-        mode: '600'
+      become_user: "emergency"
