@@ -1,0 +1,11 @@
+- name: temp playbook
+  hosts: nuc02.tailnet-ba52.ts.net:fedora-kde-xps.tailnet-ba52.ts.net:marek246.tailnet-ba52.ts.net
+  gather_facts: true
+  become: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+  tasks:
