@@ -28,9 +28,6 @@
 - name: Playbooks | install ntfy-server-boot service and timer
   ansible.builtin.import_playbook: ntfy-server-boot.yaml
 
-#- name: Playbooks | install incus
-#  ansible.builtin.import_playbook: incus.yaml # should this be via podman or native???
-
 - name: Playbooks | update via dnf
   ansible.builtin.import_playbook: update-via-dnf.yaml
 
@@ -45,3 +42,48 @@
 
 - name: Playbooks | setup path
   ansible.builtin.import_playbook: setup-path.yaml
+
+- name: Playbooks | Setup Podman
+  ansible.builtin.import_playbook: setup-podman.yaml
+
+- name: Playbooks | Install Incus
+  ansible.builtin.import_playbook: incus-via-podman.yaml
+
+- name: Playbooks | Install Syncthing
+  ansible.builtin.import_playbook: install-syncthing.yaml
+
+- name: Playbooks | Setup Caddy
+  ansible.builtin.import_playbook: setup-caddy.yaml
+
+- name: Playbooks | Install Minio
+  ansible.builtin.import_playbook:
+
+- name: Playbooks | Install MariaDB
+  ansible.builtin.import_playbook:
+
+- name: Playbooks | Install PostgresDB
+  ansible.builtin.import_playbook:
+
+- name: Playbooks | Install CryptPad
+  ansible.builtin.import_playbook:
+
+- name: Playbooks | Install FileBrowser
+  ansible.builtin.import_playbook:
+
+- name: Playbooks | Install FileStash
+  ansible.builtin.import_playbook:
+
+- name: Playbooks | Install SftpGo
+  ansible.builtin.import_playbook:
+
+- name: Playbooks | Install Gemini CLI #TODO: convert to podman
+  ansible.builtin.import_playbook: install-gemini-cli.yaml
+
+- name: Playbooks | Install Let's Encrypt
+  ansible.builtin.import_playbook:
+
+- name: Playbooks | Install Cronicle #TODO: convert to podman
+  ansible.builtin.import_playbook:
+
+- name: Playbooks | Install ntfy
+  ansible.builtin.import_playbook:
