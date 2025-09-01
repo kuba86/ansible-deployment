@@ -17,7 +17,7 @@
           enabled=1
           gpgcheck=1
           gpgkey=https://rpm.rancher.io/public.key
-        dest: /etc/yum.repos.d/rancher-k3s-common.repo
+        dest: /etc/yum.repos.d/k3s.repo
         owner: root
         group: root
         mode: '644'
