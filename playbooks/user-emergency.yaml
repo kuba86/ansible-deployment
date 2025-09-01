@@ -1,5 +1,5 @@
 - name: Setup 'emergency' user
-  hosts: coreos:dnf:desktop
+  hosts: coreos:dnf:desktop:!wyse02.tailnet-ba52.ts.net:!wyse03.tailnet-ba52.ts.net
   gather_facts: true
   become: true
   vars_files:
@@ -10,7 +10,7 @@
     core_user_pass_hash:
   tasks:
 
-    - name: Add and setup user 'emergency'
+    - name: Emergency user | Add and setup user 'emergency'
       become: true
       ansible.builtin.user:
         name: emergency
@@ -21,7 +21,7 @@
         shell: /usr/bin/fish
         state: present
     
-    - name: SSH | Create authorized_keys.d directory
+    - name: Emergency user | Create authorized_keys.d directory
       ansible.builtin.file:
         path: /home/emergency/.ssh/authorized_keys.d
         state: directory
@@ -29,7 +29,7 @@
         owner: "emergency"
         group: "emergency"
     
-    - name: SSH | Update authorized keys
+    - name: Emergency user | Update authorized keys
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
@@ -57,3 +57,20 @@
       register: ssh_update_output
       changed_when: "'Updating...' in ssh_update_output.stdout"
       become_user: "emergency"
+    
+    - name: Emergency user | Setup sshd config
+      become: true
+      ansible.builtin.copy:
+        content: |
+          PasswordAuthentication no
+          AllowUsers core user root emergency
+          AuthorizedKeysFile .ssh/authorized_keys.d/ansible
+        dest: /etc/ssh/sshd_config.d/60-common.conf
+        owner: root
+        group: root
+        mode: '600'
+        
+    - name: Emergency user | restart sshd.service
+      ansible.builtin.systemd_service:
+        name: sshd.service
+        state: restarted

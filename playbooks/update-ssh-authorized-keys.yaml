@@ -52,7 +52,7 @@
       ansible.builtin.copy:
         content: |
           PasswordAuthentication no
-          AllowUsers core user root ssh-via emergency
+          AllowUsers core user root emergency
           AuthorizedKeysFile .ssh/authorized_keys.d/ansible
         dest: /etc/ssh/sshd_config.d/60-common.conf
         owner: root
