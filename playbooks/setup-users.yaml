@@ -1,0 +1,34 @@
+- name: Setup users
+  hosts: coreos:dnf:desktop:!wyse02.tailnet-ba52.ts.net:!wyse03.tailnet-ba52.ts.net
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  tasks:
+
+    - name: Setup users | loop over users
+      include_tasks: setup-users-tasks.yaml
+      loop:
+        - core
+        - emergency
+      loop_control:
+        loop_var: setup_user
+    
+    - name: Setup users | Setup sshd config
+      ansible.builtin.copy:
+        content: |
+          PasswordAuthentication no
+          AllowUsers core user root emergency
+          AuthorizedKeysFile .ssh/authorized_keys.d/ansible
+        dest: /etc/ssh/sshd_config.d/60-common.conf
+        owner: "root"
+        group: "root"
+        mode: '600'
+      become: true
+      
+    - name: Setup users | restart sshd.service
+      ansible.builtin.systemd_service:
+        name: sshd.service
+        state: restarted
+      become: true

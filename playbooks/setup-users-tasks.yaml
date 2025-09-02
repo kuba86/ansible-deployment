@@ -1,0 +1,52 @@
+- name: Setup users | Add and setup user '{{ setup_user }}'
+  ansible.builtin.user:
+    name: "{{ setup_user }}"
+    create_home: true
+    # time mkpasswd --method=yescrypt --rounds 11 dummy_password
+    password: "{{ core_user_pass_hash }}"
+    shell: "{{ user_shells[setup_user] }}"
+    state: present
+  become: true
+  vars:
+    user_shells:
+      core: /bin/bash
+      emergency: /usr/bin/fish
+
+- name: Setup users | Create authorized_keys.d directory for '{{ setup_user }}'
+  ansible.builtin.file:
+    path: "/home/{{ setup_user }}/.ssh/authorized_keys.d"
+    state: directory
+    mode: '700'
+    owner: "{{ setup_user }}"
+    group: "{{ setup_user }}"
+  become: true
+
+- name: Setup users | Update authorized keys for '{{ setup_user }}'
+  ansible.builtin.shell: |
+    set -euo pipefail
+    IFS=$'\n\t'
+    
+    authorized_keys_dir=/home/{{ setup_user }}/.ssh/authorized_keys.d
+    authorized_keys_file=$authorized_keys_dir/ansible
+    
+    if [[ -f "$authorized_keys_file" ]]; then
+      echo "$authorized_keys_file EXISTS"
+    
+      if cmp -s "$authorized_keys_file" <(curl -sSLf https://kuba86.com/ssh.txt); then
+        echo "The files are identical."
+      else
+        echo "The files are different. Updating..."
+        curl -sSLf https://kuba86.com/ssh.txt > "$authorized_keys_file"
+      fi
+    
+    else
+      echo "$authorized_keys_file DOES NOT EXISTS. Updating..."
+      curl -sSLf https://kuba86.com/ssh.txt > "$authorized_keys_file"
+      chmod 600 "$authorized_keys_file"
+    fi
+  args:
+    executable: /usr/bin/bash
+  register: ssh_update_output
+  changed_when: "'Updating...' in ssh_update_output.stdout"
+  become: true
+  become_user: "{{ setup_user }}"
