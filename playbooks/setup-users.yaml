@@ -1,5 +1,5 @@
 - name: Setup users
-  hosts: coreos:dnf:desktop:!wyse02.tailnet-ba52.ts.net:!wyse03.tailnet-ba52.ts.net
+  hosts: coreos:dnf:desktop
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
