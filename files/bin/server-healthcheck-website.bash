@@ -20,7 +20,7 @@ FAILED_CHECKS=()
 # Function to check a website and verify if it returns 2xx status code
 check_website() {
     local website=$1
-    local max_retries=3
+    local max_retries=5
     local attempt=1
 
     echo "Checking $website..."

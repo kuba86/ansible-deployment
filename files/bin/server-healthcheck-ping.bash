@@ -20,7 +20,7 @@ FAILED_PINGS=()
 # Function to ping a host and check if it fails
 ping_host() {
     local host=$1
-    local max_retries=3
+    local max_retries=5
     local attempt=1
 
     echo "Pinging $host..."
