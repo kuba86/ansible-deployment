@@ -101,6 +101,7 @@ main() {
         local notification_message="Website check failures detected for the following websites: $failed_list"
         echo "Sending notification: $notification_message"
         send_notification "$notification_message"
+        exit 1
     fi
 }
 

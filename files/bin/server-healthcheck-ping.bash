@@ -100,6 +100,7 @@ main() {
         local notification_message="Ping failures detected for the following hosts: $failed_list"
         echo "Sending notification: $notification_message"
         send_notification "$notification_message"
+        exit 1
     fi
 }
 
