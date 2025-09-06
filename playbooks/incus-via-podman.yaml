@@ -16,7 +16,7 @@
 
         - name: Incus | create directory for incus storage
           ansible.builtin.file:
-            path: /var/lib/incus
+            path: /var/mnt/ssd1-internal/incus
             state: directory
             owner: root
             group: root
