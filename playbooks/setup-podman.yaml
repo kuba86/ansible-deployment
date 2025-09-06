@@ -9,7 +9,7 @@
     main_user: core
   tasks:
     
-    - name: Podman setup | check system if unused (root)
+    - name: Podman setup | check the system if unused (root)
       ansible.builtin.script: "../files/podman/check-if-unused.sh"
       args:
         executable: /usr/bin/bash
@@ -19,7 +19,7 @@
         - "'podman is unused, ok to reset' in check_if_unused_root.stdout"
       failed_when: check_if_unused_root.rc >= 1
       
-    - name: Podman setup | check system if unused ({{ main_user }})
+    - name: Podman setup | check the system if unused ({{ main_user }})
       ansible.builtin.script: "../files/podman/check-if-unused.sh"
       args:
         executable: /usr/bin/bash
@@ -66,3 +66,18 @@
         - '"container" not in ansible_facts["virtualization_tech_guest"]'
         - check_if_unused_user.changed | default(false)
         - copy_storage_conf.changed | default(false)
+    
+    - name: Podman setup | enable podman-auto-update.timer (root)
+      systemd:
+        name: podman-auto-update.timer
+        enabled: yes
+        state: started
+        scope: system
+      become: true
+    
+    - name: Podman setup | enable podman-auto-update.timer ({{ main_user }})
+      systemd:
+        name: podman-auto-update.timer
+        enabled: yes
+        state: started
+        scope: user
