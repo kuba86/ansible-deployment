@@ -50,3 +50,13 @@
   changed_when: "'Updating...' in ssh_update_output.stdout"
   become: true
   become_user: "{{ setup_user }}"
+  
+- name: Setup users | enable-linger for '{{ main_user }}'
+  ansible.builtin.copy:
+    content: ""
+    dest: /var/lib/systemd/linger/{{ main_user }}
+    owner: "root"
+    group: "root"
+    mode: '644'
+  become: true
+  register: linger_output
