@@ -21,12 +21,22 @@
             group: "{{ main_user }}"
             mode: '600'
           register: syncthing_systemd_podman_quadlet_output
+          
+        - name: Install Syncthing | ensures /var/mnt/data/syncthing directory exists
+          ansible.builtin.file:
+            path: /var/mnt/data/syncthing
+            state: directory
+            owner: "{{ main_user }}"
+            group: "{{ main_user }}"
+            mode: '755'
+          become: true
 
         - name: Install Syncthing | restart syncthing.service (User Service)
           ansible.builtin.systemd:
             daemon_reload: true
             name: syncthing.service
             state: restarted
+            enabled: true
             scope: user
           when: syncthing_systemd_podman_quadlet_output.changed
       when: ansible_facts["virtualization_tech_guest"] == []
@@ -39,16 +49,28 @@
             dest: "/etc/containers/systemd/"
             comment_start_string: "# BEGIN_OF_COMMENT"
             comment_end_string: "# END_OF_COMMENT"
-            owner: root
-            group: root
+            owner: "root"
+            group: "root"
             mode: '644'
+          become: true
           register: syncthing_systemd_podman_quadlet_output
+          
+        - name: Install Syncthing | ensures /var/mnt/data/syncthing directory exists
+          ansible.builtin.file:
+            path: /var/mnt/data/syncthing
+            state: directory
+            owner: "root"
+            group: "root"
+            mode: '755'
+          become: true
 
         - name: Install Syncthing | restart syncthing.service (System Service)
           ansible.builtin.systemd:
             daemon_reload: true
             name: syncthing.service
             state: restarted
+            enabled: true
             scope: system
+          become: true
           when: syncthing_systemd_podman_quadlet_output.changed
       when: '"container" in ansible_facts["virtualization_tech_guest"]'
