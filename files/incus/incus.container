@@ -8,7 +8,7 @@ HostName=%H
 AutoUpdate=registry
 Network=host
 CgroupsMode=no-conmon
-Volume=/var/mnt/ssd1-internal/incus:/var/lib/incus
+Volume=/var/lib/incus:/var/lib/incus
 Volume=/dev:/dev
 Volume=/lib/modules:/lib/modules:ro
 PodmanArgs=--cgroupns=host
