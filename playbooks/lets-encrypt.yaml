@@ -51,50 +51,70 @@
         executable: /usr/bin/bash
       register: lets_encrypt_renew_output
       changed_when: "'Server responded with a certificate.' in lets_encrypt_renew_output.stderr"
-      
-    - name: Lets Encrypt | show output
-      ansible.builtin.debug:
-        var: lets_encrypt_renew_output.stderr
     
     - name: Lets Encrypt | Caddy setup certs
       ansible.builtin.shell: |
+        #! /usr/bin/env bash
+        
         set -euo pipefail
         
         export domains="{{ lets_encrypt_domains }}"
         export lets_encrypt_path="{{ lets_encrypt_path }}"
         export caddy_path="{{ caddy_path }}"
         
-        ntfy.fish \
-          --title "Lets Encrypt | Caddy setup certs" \
-          --tags "lets-encrypt" \
-          --topic "servers" \
-          --server_url "{{ ntfy_server }}" \
-          --message "Starting to copy Lets Encrypt certificates and restarting Caddy" \
-          --priority "high" \
-          --apikey "{{ ntfy_api_token }}"
+        read -ra domain_array <<< "$domains"
         
-        function copy_certs() {
-          read -ra domain_array <<< "$domains"
+        counter=0
         
+        function check_certs() {
           for domain in "${domain_array[@]}"; do
-            echo "------ $domain -------"
-            cp $lets_encrypt_path/.lego/certificates/$domain.crt $caddy_path/tls/live/$domain.crt
-            cp $lets_encrypt_path/.lego/certificates/$domain.key $caddy_path/tls/live/$domain.key
+            local source_crt="$lets_encrypt_path/.lego/certificates/$domain.crt"
+            local dest_crt="$caddy_path/tls/live/$domain.crt"
+        
+            local source_key="$lets_encrypt_path/.lego/certificates/$domain.key"
+            local dest_key="$caddy_path/tls/live/$domain.key"
+        
+            # Ensure source files exist before trying to compare
+            if [[ ! -f "$source_crt" || ! -f "$source_key" ]]; then
+              echo "ERROR: Source certificate or key for $domain not found. Skipping."
+              continue
+            fi
+        
+            if ! cmp --silent "$source_crt" "$dest_crt" || ! cmp --silent "$source_key" "$dest_key"; then
+              echo "Cert or key for $domain has changed. Incrementing counter."
+              ((counter++))
+            fi
           done
         }
         
-        copy_certs
+        function copy_certs() {
+          for domain in "${domain_array[@]}"; do
+            echo "------ $domain -------"
+            cp "$lets_encrypt_path/.lego/certificates/$domain.crt" "$caddy_path/tls/live/$domain.crt"
+            cp "$lets_encrypt_path/.lego/certificates/$domain.key" "$caddy_path/tls/live/$domain.key"
+          done
+        }
         
-        echo "------ Restarting Caddy Server -------"
-        podman exec caddy caddy reload --force --config /etc/caddy/Caddyfile
+        check_certs
+        
+        if [ $counter -gt 0 ]; then
+          ntfy.fish \
+            --title "Lets Encrypt | Caddy setup certs" \
+            --tags "lets-encrypt" \
+            --topic "servers" \
+            --server_url "{{ ntfy_server }}" \
+            --message "Starting to copy Lets Encrypt certificates and restarting Caddy" \
+            --priority "high" \
+            --apikey "{{ ntfy_api_token }}"
+        
+          copy_certs
+        
+          echo "------ Restarting Caddy Server -------"
+          podman exec caddy caddy reload --force --config /etc/caddy/Caddyfile
+        else
+          echo "No certs changed"
+        fi
       args:
         executable: /usr/bin/bash
-      register: lets_encrypt_copy_caddy_and_router_output
-      when: >
-        lets_encrypt_renew_output.changed | default(false)
-
-    - name: Lets Encrypt | show output
-      ansible.builtin.debug:
-        var: lets_encrypt_copy_caddy_and_router_output.stderr
-      when: >
-        lets_encrypt_renew_output.changed | default(false)
+      register: lets_encrypt_cert_setup_output
+      changed_when: "'Restarting Caddy Server' in lets_encrypt_cert_setup_output.stdout"
