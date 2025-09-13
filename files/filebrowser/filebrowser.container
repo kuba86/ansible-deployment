@@ -19,6 +19,7 @@ Volume=/var/mnt/data1/filebrowser/.filebrowser.json:/config/settings.json:rw,z
 UserNS=keep-id
 PodmanArgs=--memory=1g
 PodmanArgs=--cpus=2
+PodmanArgs=--no-healthcheck
 NoNewPrivileges=true
 
 [Service]
