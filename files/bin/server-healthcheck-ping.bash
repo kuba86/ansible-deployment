@@ -27,10 +27,9 @@ ping_host() {
 
     while [ $attempt -le $max_retries ]; do
         echo "  Attempt $attempt for $host..."
-        
-        # Execute the podman ping command
+
         # Note: We need to handle the command failure explicitly due to set -e
-        if podman run -it --rm --cap-add=NET_RAW fedora-dev:latest ping -c 4 -q -i 0.1 "$host" >/dev/null 2>&1; then
+        if ping -c 4 -q -i 0.1 "$host" >/dev/null 2>&1; then
             echo "SUCCESS: $host (succeeded on attempt $attempt)"
             return 0
         else
