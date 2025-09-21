@@ -1,0 +1,44 @@
+- name: Playbooks | Fedora CoreOS bootc rebase
+  ansible.builtin.import_playbook: fedora-coreos-bootc-rebase.yaml
+
+- name: Playbooks | install tailscale
+  ansible.builtin.import_playbook: tailscale.yaml
+
+- name: Playbooks | setup users
+  ansible.builtin.import_playbook: setup-users.yaml
+  
+- name: Playbooks | Sysctl
+  ansible.builtin.import_playbook: sysctl.yaml
+  
+- name: Playbooks | mask-docker-service
+  ansible.builtin.import_playbook: mask-docker-service.yaml
+
+- name: Playbooks | install fish shell
+  ansible.builtin.import_playbook: install-fish.yaml
+
+- name: Playbooks | install scala-cli
+  ansible.builtin.import_playbook: install-scala-cli.yaml
+
+- name: Playbooks | install ntfy-server-boot service and timer
+  ansible.builtin.import_playbook: ntfy-server-boot.yaml
+
+- name: Playbooks | install packages
+  ansible.builtin.import_playbook: install-packages.yaml
+
+- name: Playbooks | common functions
+  ansible.builtin.import_playbook: common-functions.yaml
+
+- name: Playbooks | setup DNS
+  ansible.builtin.import_playbook: setup-dns.yaml
+
+- name: Playbooks | setup path
+  ansible.builtin.import_playbook: setup-path.yaml
+
+- name: Playbooks | Setup Podman
+  ansible.builtin.import_playbook: setup-podman.yaml
+
+- name: Playbooks | Install Incus
+  ansible.builtin.import_playbook: incus-via-podman.yaml
+
+- name: Playbooks | Install Syncthing
+  ansible.builtin.import_playbook: install-syncthing.yaml

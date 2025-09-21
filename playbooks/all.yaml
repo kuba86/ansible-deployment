@@ -7,6 +7,9 @@
 - name: Playbooks | create user core
   ansible.builtin.import_playbook: user-core.yaml
 
+- name: Playbooks | create user emergency
+  ansible.builtin.import_playbook: user-emergency.yaml
+  
 - name: Playbooks | update ssh authorized keys
   ansible.builtin.import_playbook: update-ssh-authorized-keys.yaml
   
