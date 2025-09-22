@@ -74,13 +74,13 @@
         - name: Fish | fish.bashrc (autostart)
           ansible.builtin.copy:
             content: |
-              if [[ $- == *i* ]]
-              then
-                if [[ $(ps --no-header --pid=$PPID --format=cmd) != "fish" ]]
-                then
-                  which fish > /dev/null # && exec fish
-                fi
-              fi
+              #if [[ $- == *i* ]]
+              #then
+              #  if [[ $(ps --no-header --pid=$PPID --format=cmd) != "fish" ]]
+              #  then
+              #    which fish > /dev/null # && exec fish
+              #  fi
+              #fi
             dest: /home/{{ main_user }}/.bashrc.d/fish.bashrc
             owner: "{{ main_user }}"
             group: "{{ main_user }}"
