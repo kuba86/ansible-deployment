@@ -12,3 +12,4 @@
 /files/functions/*.fish
 /files/hosts/**/Caddyfile*
 !/files/hosts/**/*.encrypted
+/playbooks/temp.yaml
