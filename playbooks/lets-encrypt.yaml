@@ -54,10 +54,6 @@
     
     - name: Lets Encrypt | Caddy setup certs
       ansible.builtin.shell: |
-        #! /usr/bin/env bash
-        
-        set -euo pipefail
-        
         export domains="{{ lets_encrypt_domains }}"
         export lets_encrypt_path="{{ lets_encrypt_path }}"
         export caddy_path="{{ caddy_path }}"
