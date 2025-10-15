@@ -1,11 +1,11 @@
-/.idea
-/.vscode
+.idea
+.vscode
 *.key
 *.crt
 *.pfx
-/.vault_pass
+.vault_pass
 /playbooks/*-artifact-*.json
-/ansible-navigator.log
+ansible-navigator.log
 .bsp
 .scala-build
 /history.txt
@@ -13,3 +13,4 @@
 /files/hosts/**/Caddyfile*
 !/files/hosts/**/*.encrypted
 /playbooks/temp.yaml
+.lego
