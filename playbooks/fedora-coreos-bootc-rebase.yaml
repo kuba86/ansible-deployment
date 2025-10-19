@@ -9,7 +9,7 @@
         set -euo pipefail
         IFS=$'\n\t'
 
-        kuba86_image="ostree-remote-registry:fedora:ghcr.io/kuba86/fedora-coreos-bootc:stable"
+        kuba86_image="ostree-unverified-registry:ghcr.io/kuba86/fedora-coreos-bootc:stable"
         fedora_image="$(rpm-ostree status --booted --json | jq -r '.deployments[] | select(.booted) | .["container-image-reference"]')"
 
         if [[ "$fedora_image" == "$kuba86_image" ]]; then
@@ -22,6 +22,13 @@
         fi
       register: fedora_coreos_bootc_rebase
       changed_when: "'rebasing to kuba86 image' in fedora_coreos_bootc_rebase.stdout"
+      
+    - name: Diable coreos-container-signing-migration-motd.service
+      become: true
+      ansible.builtin.systemd_service:
+        name: coreos-container-signing-migration-motd.service
+        state: disabled
+        daemon_reload: true
 
     - name: Wait for host to become reachable after rebase
       ansible.builtin.wait_for_connection:
