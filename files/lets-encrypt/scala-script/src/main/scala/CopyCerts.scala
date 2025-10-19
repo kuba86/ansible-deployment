@@ -6,5 +6,5 @@ import os.*
 import scribe.*
 
 class CopyCerts(options: CopyCertsOptions) {
-
+  info("copy-certs command executed")
 }

@@ -6,5 +6,5 @@ import os.*
 import scribe.*
 
 class Run(options: RenewOptions) {
-
+  info("run command executed")
 }

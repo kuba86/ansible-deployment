@@ -51,7 +51,7 @@ object RunCommand extends Command[RenewOptions] {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
     info("starting run")
-//    new Run(options)
+    new Run(options)
   }
 }
 
@@ -61,6 +61,6 @@ object CopyCertsCommand extends Command[CopyCertsOptions] {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
     info("starting copy")
-//    new CopyCerts(options)
+    new CopyCerts(options)
   }
 }
