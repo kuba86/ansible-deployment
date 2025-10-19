@@ -1,7 +1,7 @@
 package com.kuba86.letsEntryptScript
 package model
 
-case class CaddyOptions(
+case class CopyCertsOptions(
     logLevel: String = "info",
     domains: List[String] = List(),
     letsEncryptPath: String = "",

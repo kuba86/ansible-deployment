@@ -10,9 +10,10 @@ object Main extends CommandsEntryPoint {
 
   override def progName: String = "Lets Encrypt Script"
 
-  override def commands: Seq[Command[?]] = Seq(
+  override def commands = Seq(
     RenewCommand,
-    CaddyCommand
+    RunCommand,
+    CopyCertsCommand
   )
 
   def setLogLevel(level: String): Logger = {
@@ -35,16 +36,31 @@ object Main extends CommandsEntryPoint {
 }
 
 object RenewCommand extends Command[RenewOptions] {
+  override def name: String = "renew"
   override def run(options: RenewOptions, remainingArgs: RemainingArgs): Unit = {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
+    info("starting renew")
     new Renew(options)
   }
 }
 
-object CaddyCommand extends Command[CaddyOptions] {
-  override def run(options: CaddyOptions, remainingArgs: RemainingArgs): Unit = {
+object RunCommand extends Command[RenewOptions] {
+  override def name: String = "run"
+  override def run(options: RenewOptions, remainingArgs: RemainingArgs): Unit = {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
+    info("starting run")
+//    new Run(options)
+  }
+}
+
+object CopyCertsCommand extends Command[CopyCertsOptions] {
+  override def name: String = "copy-certs"
+  override def run(options: CopyCertsOptions, remainingArgs: RemainingArgs): Unit = {
+    Main.setLogLevel(options.logLevel)
+    debug(pprint.apply(options).render)
+    info("starting copy")
+//    new CopyCerts(options)
   }
 }
