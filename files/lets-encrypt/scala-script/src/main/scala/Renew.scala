@@ -1,7 +1,9 @@
 
 package com.kuba86.letsEntryptScript
 
-import com.kuba86.letsEntryptScript.model.RenewOptions
+import com.kuba86.letsEntryptScript.model.{RenewError, RenewOk, RenewOptions}
+import com.kuba86.letsEntryptScript.model.RenewError.*
+import com.kuba86.letsEntryptScript.model.RenewOk.*
 import os.*
 import scribe.*
 
@@ -10,29 +12,8 @@ import scala.util.matching.Regex
 class Renew(options: RenewOptions) {
   private val daysPattern: Regex = """The certificate expires in (\d+) days""".r
 
-  private def buildCmd(domain: String, action: String): String = {
-    s"""
-       |podman run --rm
-       |  --name=letsencrypt_lego_${domain}
-       |  --volume=${options.letsEncryptPath}:/.lego:z
-       |  --env=CF_DNS_API_TOKEN=${options.cfApiToken}
-       |  --env=CLOUDFLARE_POLLING_INTERVAL=${options.cfPoolingInterval}
-       |  --env=CLOUDFLARE_PROPAGATION_TIMEOUT=${options.cfPropagationTimeout}
-       |  --env=CLOUDFLARE_TTL=${options.CfTtl}
-       |  docker.io/goacme/lego:${options.legoVersion}
-       |    --server=https://acme-staging-v02.api.letsencrypt.org/directory
-       |    --accept-tos
-       |    --dns.resolvers=${options.dnsServers.mkString(",")}
-       |    --email=${options.email}
-       |    --dns=cloudflare
-       |    --domains=${domain}
-       |    --domains=*.${domain}
-       |    ${action}
-       |""".stripMargin
-  }
-
   private def cmds(): List[(domain: String, cmd: String)] = options.domains.map { domain =>
-    (domain = domain, cmd = buildCmd(domain, "renew --no-random-sleep"))
+    (domain = domain, cmd = options.podmanCommand(domain, "renew"))
   }
 
   private def executeCmd(domain: String, cmd: String): (domain: String, stderr: String, exitCode: Int) = {
@@ -67,35 +48,38 @@ class Renew(options: RenewOptions) {
       (domain = record.domain, stderr = record.proc.stderr.text(), exitCode = record.proc.exitCode())
     }
 
-  private def result(): List[(domain: String, msg: String)] = finishedProcesses().flatMap { record =>
+  private def result(): List[Either[RenewError, RenewOk]] = finishedProcesses().map { record =>
     info(s"stderr for ${record.domain}:\n${record.stderr}")
     record.stderr match {
       case stderr if stderr.contains("Server responded with a certificate.") =>
-        List((domain = record.domain, msg = "Server responded with a certificate."))
+        Right(NewCertificate(record.domain))
 
       case stderr if stderr.contains("Error while loading the certificate for domain") =>
+        new Run(options)
         warn(s"Error loading certificate for domain ${record.domain}, retrying with 'run' command")
-        val runCmd: String = buildCmd(record.domain, "run")
+        val runCmd: String = options.podmanCommand(record.domain, "run")
         val runResult: (domain: String, stderr: String, exitCode: Int) = executeCmd(record.domain, runCmd)
         debug(s"stderr for ${record.domain} (run command):\n${runResult.stderr}")
 
-        if (runResult.stderr.contains("Server responded with a certificate.")) {
-          List((domain = record.domain, msg = "Server responded with a certificate. (via run command)"))
-        } else {
-          List((domain = record.domain, msg = s"Error running 'run' command: ${runResult.stderr}"))
+        if (runResult.stderr.contains("Server responded with a certificate."))
+          Right(NewCertificate(record.domain))
+        else {
+          Left(UnspecifiedError(record.domain, runResult.stderr))
         }
 
       case stderr if stderr.contains("The certificate expires in") =>
         daysPattern.findFirstMatchIn(stderr) match {
-          case Some(m) => List((domain = record.domain, msg = s"Days until expiration: ${m.group(1)}"))
-          case None => List((domain = record.domain, msg = "Could not extract days from a certificate expiration message"))
+          case Some(m) =>
+            Right(NoNeedForRenew(record.domain, Option(m.group(1).toInt)))
+          case None =>
+            Left(UnspecifiedError(record.domain, stderr))
         }
 
-      case _ => List((domain = record.domain, msg = s"Unhandled stderr output for domain ${record.domain}"))
+      case _ => Left(UnspecifiedError(record.domain, s"Unhandled stderr output for domain ${record.domain}"))
     }
   }
 
-  private lazy val run: List[(domain: String, msg: String)] = result()
+  private lazy val run: List[Either[RenewError, RenewOk]] = result()
 
   info(pprint.apply(run).render)
 }
