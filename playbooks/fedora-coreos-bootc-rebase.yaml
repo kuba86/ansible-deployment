@@ -16,8 +16,10 @@
           echo "kuba86 image already set"
         else
           echo "rebasing to kuba86 image"
-          systemctl stop zincati.service && \
+          systemctl disable --now zincati.service && \
+          systemctl mask zincati.service && \
           rpm-ostree rebase "$kuba86_image" && \
+          systemctl enable --now bootc-fetch-apply-updates.timer && \
           systemd-run --unit=delayed-reboot --on-active=15s systemctl reboot
         fi
       register: fedora_coreos_bootc_rebase
