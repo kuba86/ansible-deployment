@@ -4,9 +4,9 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=simple
-ExecStart=/usr/local/bin/adguard-cli start --no-fork --log-to-file
-ExecReload=/usr/local/bin/adguard-cli restart
+Type=forking
+ExecStart=/usr/local/bin/adguard-cli start
+ExecReload=/usr/local/bin/adguard-cli filters update
 ExecStop=/usr/local/bin/adguard-cli stop
 Restart=on-failure
 
