@@ -1,0 +1,13 @@
+all:
+  children:
+    coreos:
+      hosts:
+        wyse02.tailnet-ba52.ts.net:
+    dnf:
+      children:
+        el9:
+          hosts:
+        fedora:
+          hosts:
+    desktop:
+      hosts:
