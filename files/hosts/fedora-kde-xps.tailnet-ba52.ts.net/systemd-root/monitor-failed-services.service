@@ -1,0 +1,12 @@
+[Unit]
+Description=Monitor Failed systemd Services Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/user/.local/bin/monitor-systemd-failed.fish
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

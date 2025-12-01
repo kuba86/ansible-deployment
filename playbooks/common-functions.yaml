@@ -46,3 +46,13 @@
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: '700'
+    
+    - name: common functions | copy functions monitor-systemd-failed
+      ansible.builtin.template:
+        src: ../files/bin/monitor-systemd-failed.fish
+        dest: /home/{{ main_user }}/.local/bin/monitor-systemd-failed.fish
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '700'
