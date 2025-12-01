@@ -14,3 +14,4 @@ ansible-navigator.log
 !/files/hosts/**/*.encrypted
 /playbooks/temp.yaml
 .lego
+/files/caddy/etc-config/Caddyfile
