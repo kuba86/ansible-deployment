@@ -6,13 +6,8 @@ Image=docker.io/dxflrs/garage:v2.1.0
 ContainerName=%N
 HostName=%H
 AutoUpdate=registry
-Volume=/var/mnt/ssd1-internal/garage/meta:/var/lib/garage/meta:z
-Volume=/var/mnt/ssd1-internal/garage/data:/var/lib/garage/data:z
-Volume=/var/mnt/ssd1-internal/garage/garage.toml:/etc/garage.toml:z
-PublishPort=53900:53900
-PublishPort=53901:53901
-PublishPort=53902:53902
-PublishPort=53903:53903
+{{ garage_volumes }}
+{{ garage_ports }}
 UserNS=keep-id
 Memory={{ garage_memory }}
 PodmanArgs=--cpus={{ garage_cpu }}

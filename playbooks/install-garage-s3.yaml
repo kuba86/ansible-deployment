@@ -22,9 +22,18 @@
             mode: '600'
           register: systemd_podman_quadlet_output
           
+        - name: Install Garage s3 | ensures garage main directory exists
+          ansible.builtin.file:
+            path: "{{ garage_toml_path }}"
+            state: directory
+            owner: "{{ main_user }}"
+            group: "{{ main_user }}"
+            mode: '750'
+          become: true
+          
         - name: Install Garage s3 | ensures garage meta directory exists
           ansible.builtin.file:
-            path: /var/mnt/ssd1-internal/garage/meta
+            path: "{{ garage_meta_path }}"
             state: directory
             owner: "{{ main_user }}"
             group: "{{ main_user }}"
@@ -33,29 +42,52 @@
           
         - name: Install Garage s3 | ensures garage data directory exists
           ansible.builtin.file:
-            path: /var/mnt/ssd1-internal/garage/data
+            path: "{{ garage_data_path }}"
             state: directory
             owner: "{{ main_user }}"
             group: "{{ main_user }}"
             mode: '750'
           become: true
           
-        - name: Install Garage s3 | Disable copy-on-write for garage data directory
+        - name: Install Garage s3 | Check a filesystem type for data directory
           ansible.builtin.command:
-            cmd: echo chattr +C /var/mnt/ssd1-internal/garage/data
+            cmd: "stat -f -c %T {{ garage_data_path }}"
+          register: garage_fs_type
+          changed_when: false
           become: true
+          
+        - name: Install Garage s3 | Disable copy-on-write for garage data directory if BTRFS
+          ansible.builtin.shell: |
+            if [ "{{ garage_fs_type.stdout }}" == "btrfs" ]; then
+              if [ -z "$(ls -A "{{ garage_data_path }}")" ]; then
+                chattr +C "{{ garage_data_path }}"
+              else
+                echo "Directory {{ garage_data_path }} is not empty, skipping disabling COW"
+              fi
+            else
+              echo "garage_data_path is on {{ garage_fs_type.stdout }}, not on BTRFS, skipping disabling COW"
+            fi
+          register: chattr_result
+          changed_when: "'skipping' not in chattr_result.stdout"
+          become: true
+          
+        - name: Install Garage s3 | Debug chattr result
+          ansible.builtin.debug:
+            msg:
+              - "STDOUT: {{ chattr_result.stdout }}"
+              - "STDERR: {{ chattr_result.stderr }}"
           
         - name: Install Garage s3 | copy garage.toml settings
           ansible.builtin.template:
             src: "../files/garage/garage.toml"
-            dest: "/var/mnt/ssd1-internal/garage/"
+            dest: "{{ garage_toml_path }}/garage.toml"
             comment_start_string: "# BEGIN_OF_COMMENT"
             comment_end_string: "# END_OF_COMMENT"
             owner: "{{ main_user }}"
             group: "{{ main_user }}"
             mode: '600'
           register: garage_toml_output
-
+          
         - name: Install Garage s3 | restart garage.service
           ansible.builtin.systemd:
             daemon_reload: true
@@ -66,4 +98,5 @@
           when: >
             systemd_podman_quadlet_output.changed or
             garage_toml_output.changed
-      when: ansible_facts["virtualization_tech_guest"] == []
+
+      when: ansible_facts["virtualization_tech_guest"] | length == 0
