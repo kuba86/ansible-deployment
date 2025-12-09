@@ -3,7 +3,7 @@ data_dir = "/var/lib/garage/data"
 db_engine = "sqlite"
 metadata_auto_snapshot_interval = "1h"
 
-replication_factor = 1
+replication_factor = 2
 compression_level = 1
 
 rpc_bind_addr = "[::]:53900"
@@ -13,11 +13,11 @@ rpc_secret = "{{ garage_rpc_secret }}"
 [s3_api]
 s3_region = "{{ garage_s3_region }}"
 api_bind_addr = "[::]:53901"
-root_domain = ".s3.garage.kuba86.com"
+root_domain = "{{ garage_s3_root_domain }}"
 
 [s3_web]
 bind_addr = "[::]:53902"
-root_domain = ".web.garage.kuba86.com"
+root_domain = "{{ garage_web_root_domain }}"
 index = "index.html"
 add_host_to_metrics = true
 

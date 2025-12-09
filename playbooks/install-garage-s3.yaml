@@ -1,5 +1,5 @@
 - name: Install Garage s3
-  hosts: wyse03
+  hosts: wyse01.tailnet-ba52.ts.net:wyse03.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
@@ -61,11 +61,12 @@
             if [ "{{ garage_fs_type.stdout }}" == "btrfs" ]; then
               if [ -z "$(ls -A "{{ garage_data_path }}")" ]; then
                 chattr +C "{{ garage_data_path }}"
+                echo "Directory {{ garage_data_path }} COW is disabled"
               else
                 echo "Directory {{ garage_data_path }} is not empty, skipping disabling COW"
               fi
             else
-              echo "garage_data_path is on {{ garage_fs_type.stdout }}, not on BTRFS, skipping disabling COW"
+              echo "Directory {{ garage_data_path }} is on {{ garage_fs_type.stdout }}, not on BTRFS, skipping disabling COW"
             fi
           register: chattr_result
           changed_when: "'skipping' not in chattr_result.stdout"
