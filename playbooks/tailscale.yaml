@@ -6,8 +6,8 @@
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
   vars:
-    tailscale_key: ""
-    tailscale_tags: "tag:server"
+    tailscale_key:
+    tailscale_tags: tag:server
 
   tasks:
     - name: Tailscale | pre-setup
@@ -175,10 +175,10 @@
         
         echo "tailscale needs to be up."
         tailscale up \
-          --authkey={{ tailscale_key }} \
+          --auth-key={{ tailscale_key }} \
           --advertise-exit-node=true \
           --accept-routes=true \
-          --advertise-tags '{{ tailscale_tags }}'
+          --advertise-tags={{ tailscale_tags }}
       args:
         executable: /usr/bin/bash
       register: tailscale_up
