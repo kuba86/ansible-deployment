@@ -8,25 +8,42 @@
   vars:
     main_user: core
   tasks:
-    
-    - name: setup caddy | Caddyfile
+    - name: setup caddy | copy Caddyfile(s)
       ansible.builtin.copy:
-        src: ../files/hosts/wyse01.tailnet-ba52.ts.net/caddy/etc-config/Caddyfile
-        dest: /var/mnt/data1/caddy/etc-caddy/Caddyfile
+        src: "{{ item }}"
+        dest: "/var/mnt/data1/caddy/etc-caddy/{{ item | basename | regex_replace('\\.encrypted$', '') }}"
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
-        mode: '644'
+        mode: '640'
+      with_fileglob:
+        - "../files/caddy/etc-config/*.encrypted"
       become: true
-      register: update_caddyfile
-    
-    - name: setup caddy | fmt & reload
+      register: copy_caddyfile
+      
+      
+    - name: setup caddy | validate Caddyfile(s)
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
         
-        podman exec caddy caddy fmt --overwrite /etc/caddy/Caddyfile;
-        podman exec caddy caddy reload --force --config /etc/caddy/Caddyfile;
+        podman run -it --rm --userns=keep-id \
+          --volume=/var/mnt/data1/caddy/etc-caddy:/etc/caddy:z \
+          --volume=/var/mnt/data1/caddy/config:/config:z \
+          --volume=/var/mnt/data1/caddy/data:/data:z \
+          --volume=/var/mnt/data1/caddy/usr-share-caddy:/usr/share/caddy:z \
+          --volume=/var/mnt/data1/caddy/tls:/certificates:z \
+              docker.io/library/caddy:2 caddy validate --config /etc/caddy/Caddyfile
+      args:
+        executable: /usr/bin/bash
+      register: validate_caddyfile
+    
+    - name: setup caddy | reload caddy server
+      ansible.builtin.shell: |
+        set -euo pipefail
+        IFS=$'\n\t'
+        
+        podman exec caddy caddy reload --force --config /etc/caddy/Caddyfile
       args:
         executable: /usr/bin/bash
       when: >
-        update_caddyfile.changed | default(false)
+        copy_caddyfile.changed | default(false)
