@@ -1,5 +1,6 @@
-#!/usr/bin/env -S scala-cli shebang --server=false --jvm graalvm-java17
+#!/usr/bin/env -S scala-cli shebang --server=false --jvm graalvm-community:21
 
 @main def main() = {
-  println("graalvm-java17 downloaded")
+  println("graalvm-community:21 downloaded")
+  println(s"Java home: ${sys.props("java.home")}")
 }
