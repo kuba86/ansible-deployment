@@ -56,3 +56,11 @@
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: '700'
+    
+    - name: common functions | journalctl-consumed-statistics
+      ansible.builtin.copy:
+        src: ../files/bin/journalctl-consumed-statistics.bash
+        dest: /home/{{ main_user }}/.local/bin/journalctl-consumed-statistics.bash
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '755'
