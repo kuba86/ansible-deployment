@@ -17,45 +17,6 @@
         validate: 'visudo -cf %s'
       when:
         - ansible_pkg_mgr in ['dnf', 'dnf5']
-
-    - name: Install packages | eza
-      become: true
-      ansible.builtin.shell: |
-        set -euo pipefail
-        IFS=$'\n\t'
-        
-        eza_version="0.23.0"
-        global_bin_path="/usr/local/bin"
-        eza_bin_path="$global_bin_path/eza"
-        eza_url="https://github.com/eza-community/eza/releases/download/v$eza_version/eza_$(uname -m)-unknown-linux-gnu.zip"
-        
-        needs_install=false
-        
-        if [ ! -f $eza_bin_path ]; then
-          echo "eza not found, will install..."
-          needs_install=true
-        else
-          # Check if the installed version matches the desired version
-          if $eza_bin_path --version | grep -q "$eza_version"; then
-            echo "eza $eza_version is already installed."
-          else
-            echo "eza is installed, but the version doesn't match $eza_version, will reinstall..."
-            needs_install=true
-          fi
-        fi
-        
-        if [ "$needs_install" = true ]; then
-          echo "Installing eza..."
-          curl -fL $eza_url | gzip -d > $eza_bin_path
-          chmod +x $eza_bin_path
-        fi
-      args:
-        executable: /usr/bin/bash
-      register: install_eza
-      failed_when: install_eza.rc != 0
-      changed_when: "'Installing eza...' in install_eza.stdout"
-      when:
-        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
     
     - name: Install packages | has
       become: true
