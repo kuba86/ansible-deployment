@@ -1,5 +1,5 @@
 - name: Install incus
-  hosts: nuc02.tailnet-ba52.ts.net
+  hosts: wyse02.tailnet-ba52.ts.net
   gather_facts: true
   become: true
   vars_files:
@@ -49,7 +49,7 @@
         set -euo pipefail
         IFS=$'\n\t'
         
-        incus admin init --preseed > /var/tmp/incus-preseed-create.yaml
+        incus admin init --preseed < /var/tmp/incus-preseed-create.yaml
       args:
         executable: /usr/bin/bash
       register: incus_create_cluster

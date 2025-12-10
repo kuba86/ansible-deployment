@@ -46,7 +46,7 @@
             set -euo pipefail
             IFS=$'\n\t'
             
-            incus_version="6.16.0"
+            incus_version="6.19.1"
             global_bin_path="/usr/local/bin"
             incus_bin_path="$global_bin_path/incus"
             incus_agent_bin_path="$global_bin_path/incus-agent"
