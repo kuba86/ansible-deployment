@@ -2,7 +2,7 @@
 Description=%N
 
 [Container]
-Image=docker.io/cryptpad/cryptpad:version-2025.6.0
+Image=docker.io/cryptpad/cryptpad:version-2025.9.0
 ContainerName=%N
 HostName=cryptpad
 AutoUpdate=registry

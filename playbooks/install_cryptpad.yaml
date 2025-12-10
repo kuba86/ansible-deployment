@@ -11,7 +11,7 @@
 
     - name: Install cryptpad | cryptpad.container
       ansible.builtin.copy:
-        src: ../files/hosts/wyse01.tailnet-ba52.ts.net/podman-systemd-user/cryptpad.container
+        src: ../files/cryptpad/cryptpad.container
         dest: /home/{{ main_user }}/.config/containers/systemd/cryptpad.container
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
@@ -20,7 +20,7 @@
 
     - name: Install cryptpad | config.js
       ansible.builtin.template:
-        src: ../files/hosts/wyse01.tailnet-ba52.ts.net/cryptpad/config.js
+        src: ../files/cryptpad/config.js
         dest: /var/mnt/data1/cryptpad/config.js
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
@@ -32,7 +32,7 @@
 
     - name: Install cryptpad | application_config.js
       ansible.builtin.template:
-        src: ../files/hosts/wyse01.tailnet-ba52.ts.net/cryptpad/customize/application_config.js
+        src: ../files/cryptpad/customize/application_config.js
         dest: /var/mnt/data1/cryptpad/customize/application_config.js
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
@@ -48,7 +48,7 @@
         name: cryptpad.service
         state: restarted
         scope: user
-      when:
-        - cryptpad_container_output.changed
-        - cryptpad_config_js_output.changed
-        - cryptpad_application_config_js_output.changed
+      when: >
+        cryptpad_container_output.changed or
+        cryptpad_config_js_output.changed or
+        cryptpad_application_config_js_output.changed
