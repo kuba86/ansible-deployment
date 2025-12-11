@@ -1,5 +1,5 @@
 - name: setup caddy
-  hosts: wyse01.tailnet-ba52.ts.net
+  hosts: wyse01.tailnet-ba52.ts.net:marek246.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
@@ -8,6 +8,14 @@
   vars:
     main_user: core
   tasks:
+#    - name: Run fmt and encrypt script
+#      ansible.builtin.command: fish ../files/caddy/caddy-fmt-encrypt.fish
+#      delegate_to: localhost
+#      args:
+#        executable: /usr/bin/bash
+#      run_once: true
+#      changed_when: false
+      
     - name: setup caddy | copy Caddyfile(s)
       ansible.builtin.copy:
         src: "{{ item }}"
@@ -25,25 +33,21 @@
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
-        
-        podman run -it --rm --userns=keep-id \
-          --volume=/var/mnt/data1/caddy/etc-caddy:/etc/caddy:z \
-          --volume=/var/mnt/data1/caddy/config:/config:z \
-          --volume=/var/mnt/data1/caddy/data:/data:z \
-          --volume=/var/mnt/data1/caddy/usr-share-caddy:/usr/share/caddy:z \
-          --volume=/var/mnt/data1/caddy/tls:/certificates:z \
-              docker.io/library/caddy:2 caddy validate --config /etc/caddy/Caddyfile
+
+        podman exec caddy caddy validate --config /etc/caddy/Caddyfile
       args:
         executable: /usr/bin/bash
+      become: "{{ 'container' in ansible_facts['virtualization_tech_guest'] }}"
       register: validate_caddyfile
-    
+
     - name: setup caddy | reload caddy server
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
-        
+
         podman exec caddy caddy reload --force --config /etc/caddy/Caddyfile
       args:
         executable: /usr/bin/bash
+      become: "{{ 'container' in ansible_facts['virtualization_tech_guest'] }}"
       when: >
         copy_caddyfile.changed | default(false)
