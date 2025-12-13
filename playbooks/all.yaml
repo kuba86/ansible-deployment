@@ -58,9 +58,6 @@
 - name: Playbooks | Setup Caddy
   ansible.builtin.import_playbook: setup-caddy.yaml
 
-- name: Playbooks | Install Minio
-  ansible.builtin.import_playbook:
-
 - name: Playbooks | Install MariaDB
   ansible.builtin.import_playbook:
 

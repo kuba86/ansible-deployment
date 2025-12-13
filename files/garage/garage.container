@@ -8,7 +8,7 @@ HostName=%H
 AutoUpdate=registry
 {{ garage_volumes }}
 {{ garage_ports }}
-UserNS=keep-id
+{{ garage_userns }}
 Memory={{ garage_memory }}
 PodmanArgs=--cpus={{ garage_cpu }}
 NoNewPrivileges=true
@@ -23,7 +23,7 @@ LimitNOFILE=42000
 TasksMax=infinity
 # Disable timeout logic and wait until process is stopped
 TimeoutSec=infinity
-# Disable killing of MinIO by the kernel's OOM killer
+# Disable killing of service by the kernel's OOM killer
 OOMScoreAdjust=-1000
 SendSIGKILL=no
 
