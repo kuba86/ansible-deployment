@@ -9,6 +9,7 @@ AutoUpdate=registry
 {{ garage_volumes }}
 {{ garage_ports }}
 {{ garage_userns }}
+{{ garage_network }}
 Memory={{ garage_memory }}
 PodmanArgs=--cpus={{ garage_cpu }}
 NoNewPrivileges=true

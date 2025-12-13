@@ -1,5 +1,5 @@
 - name: Install Garage s3 Gateway
-  hosts: fedora-kde-xps.tailnet-ba52.ts.net:marek246.tailnet-ba52.ts.net
+  hosts: coreos:dnf:desktop
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
