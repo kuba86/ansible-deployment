@@ -1,0 +1,50 @@
+- name: Install SFTPGo
+  hosts: wyse01.tailnet-ba52.ts.net
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+  
+  tasks:
+    - name: Install SFTPGo | Ensure data directory exists
+      ansible.builtin.file:
+        path: "/var/mnt/data1/sftpgo/data"
+        state: directory
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '0755'
+      become: true
+      
+    - name: Install SFTPGo | Ensure home directory exists
+      ansible.builtin.file:
+        path: "/var/mnt/data1/sftpgo/home"
+        state: directory
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '0755'
+      become: true
+
+    - name: Install SFTPGo | Install systemd quadlet service
+      ansible.builtin.template:
+        src: "../files/sftpgo/sftpgo.container"
+        dest: "/home/{{ main_user }}/.config/containers/systemd/"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: "0600"
+      become: true
+      register: install_service_output
+
+    - name: Install SFTPGo | Restart SFTPGo service
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: sftpgo.service
+        state: restarted
+        enabled: true
+        scope: user
+      when: >
+        install_service_output.changed

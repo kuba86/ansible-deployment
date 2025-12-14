@@ -2,31 +2,15 @@
 Description=%N
 
 [Container]
-Image=ghcr.io/drakkan/sftpgo:latest
+Image=ghcr.io/drakkan/sftpgo:v2
 ContainerName=%N
 HostName=%H
 AutoUpdate=registry
-Volume=/var/mnt/data1/filebrowser/srv:/home/sftpgo/files:rw,z
-Volume=/var/mnt/data1/syncthing/Kuba-media-videos:/home/sftpgo/files/Kuba-media-videos:ro,z
-Volume=/var/mnt/data1/syncthing/Kuba-media-download:/home/sftpgo/files/Kuba-media-download:ro,z
-Volume=/var/mnt/data1/syncthing/Kuba-media-other-videos:/home/sftpgo/files/Kuba-media-other-videos:ro,z
-Volume=/var/mnt/data1/syncthing/Kuba-media-other-photos:/home/sftpgo/files/Kuba-media-other-photos:ro,z
-Volume=/var/mnt/data1/syncthing/Kuba-media-other-current:/home/sftpgo/files/Kuba-media-other-current:ro,z
-Volume=/var/mnt/data1/syncthing/Mariusz-Testy:/home/sftpgo/files/Mariusz-Testy:ro,z
-Volume=/mnt/data1/priv/sftpgo-password.txt:/home/sftpgo/sftpgo-password.txt:ro,z
-PublishPort=9999:9999/tcp
-PublishPort=9998:9998/tcp
-UserNS=keep-id
-PodmanArgs=--memory=2g
-PodmanArgs=--cpus=2
-Exec=sftpgo \
-      portable \
-      --ftpd-port=9999 \
-      --httpd-port=9998 \
-      --permissions="*" \
-      --directory=/home/sftpgo/files \
-      --password-file=/home/sftpgo/sftpgo-password.txt \
-      --username=F3C5HrhtwC
+{{ sftpgo_volumes }}
+{{ sftpgo_ports }}
+{{ sftpgo_userns }}
+PodmanArgs=--memory={{ sftpgo_memory }}
+PodmanArgs=--cpus={{ sftpgo_cpu }}
 NoNewPrivileges=true
 
 [Service]
