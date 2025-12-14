@@ -1,0 +1,29 @@
+[Unit]
+Description=rclone for garage
+Documentation=man:rclone(1)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+ExecStart={{ rclone_bin_path }} \
+  mount \
+  garage: {{ rclone_garage_mount_path }} \
+  --config {{ rclone_conf_path }} \
+  --vfs-cache-mode full \
+  --vfs-cache-max-size 4G \
+  --vfs-read-ahead 256M \
+  --vfs-disk-space-total-size 100G \
+  --s3-sign-accept-encoding=false \
+  --s3-decompress \
+  --dir-cache-time 60s \
+  --poll-interval 10s \
+  --transfers 4 \
+  --links \
+  --allow-other={{ rclone_allow_other }} \
+  --log-level INFO
+
+ExecStop=/usr/bin/umount {{ rclone_garage_mount_path }}
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,90 @@
+- name: Install Rclone Garage
+  hosts: coreos:dnf:desktop
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+  
+  tasks:
+    - name: Install Rclone Garage | Setup variables (detect container)
+      ansible.builtin.set_fact:
+        node_is_container: "{{ (ansible_facts['virtualization_tech_guest'] | default([]) | length) > 0 }}"
+
+    - name: Install Rclone Garage | Setup variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if node_is_container else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        file_owner: "{{ 'root' if node_is_container else main_user }}"
+        file_group: "{{ 'root' if node_is_container else main_user }}"
+        calculated_become: "{{ node_is_container }}"
+        systemd_scope: "{{ 'system' if node_is_container else 'user' }}"
+        
+    - name: Install Rclone Garage | Ensure bin directory exists
+      ansible.builtin.file:
+        path: "/var/home/{{ main_user }}/bin"
+        state: directory
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '0755'
+      become: true
+        
+    - name: Install Rclone Garage | Install rclone binary
+      ansible.builtin.shell: >
+        curl -OfsS "https://downloads.rclone.org/rclone-current-linux-amd64.zip" &&
+        unzip -j rclone-current-linux-amd64.zip "rclone-*-linux-amd64/rclone" &&
+        chmod u+x rclone &&
+        mv rclone /var/home/{{ main_user }}/bin/ &&
+        rm rclone-current-linux-amd64.zip
+      args:
+        creates: "/var/home/{{ main_user }}/bin/rclone"
+
+    - name: Install Rclone Garage | ensures mount directory exists
+      ansible.builtin.file:
+        path: "{{ rclone_garage_mount_path }}"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: '0755'
+      become: true
+      register: mount_dir_creation
+      failed_when:
+        - mount_dir_creation.failed
+        - "'File exists' not in mount_dir_creation.msg"
+    
+    - name: Install Rclone Garage | copy rclone-garage.conf settings
+      ansible.builtin.template:
+        src: "../files/rclone/rclone-garage.conf"
+        dest: "{{ rclone_conf_path }}"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0600"
+      become: true
+      register: rclone_conf_output
+
+    - name: Install Rclone Garage | Install systemd service
+      ansible.builtin.template:
+        src: "../files/rclone/garage/rclone-garage.service"
+        dest: "{{ service_dir }}/rclone-garage.service"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0600"
+      become: "{{ calculated_become }}"
+      register: service_output
+
+    - name: Install Rclone Garage | Restart Rclone Garage service
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: rclone-garage.service
+        state: restarted
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
+      when: >
+        service_output.changed or
+        rclone_conf_output.changed
