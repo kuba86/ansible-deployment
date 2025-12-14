@@ -11,7 +11,6 @@ Volume=/var/mnt/data1/ntfy.sh/lib:/var/lib/ntfy:z
 Volume=/var/mnt/data1/ntfy.sh/cache:/var/cache/ntfy:z
 PublishPort=60460:60460/tcp
 Exec=serve --log-format=json
-UserNS=keep-id
 PodmanArgs=--memory=500m
 PodmanArgs=--cpus=2
 NoNewPrivileges=true
