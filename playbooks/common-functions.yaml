@@ -27,7 +27,7 @@
         group: "{{ main_user }}"
         mode: '755'
         
-    - name: common functions | copy functions health checks
+    - name: common functions | copy functions health checks ping
       ansible.builtin.template:
         src: ../files/bin/server-healthcheck-ping.bash
         dest: /home/{{ main_user }}/.local/bin/server-healthcheck-ping.bash
@@ -37,7 +37,7 @@
         group: "{{ main_user }}"
         mode: '700'
     
-    - name: common functions | copy functions health checks
+    - name: common functions | copy functions health checks website
       ansible.builtin.template:
         src: ../files/bin/server-healthcheck-website.bash
         dest: /home/{{ main_user }}/.local/bin/server-healthcheck-website.bash

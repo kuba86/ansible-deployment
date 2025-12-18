@@ -17,7 +17,7 @@ WEBSITES=(
 # Array to store failed website checks
 FAILED_CHECKS=()
 
-# Function to check a website and verify if it returns 2xx status code
+# Function to check a website and verify if it returns 2xx or 302 status code
 check_website() {
     local website=$1
     local max_retries=5
@@ -31,7 +31,7 @@ check_website() {
         # Execute curl command to check HTTP status code
         # Note: We need to handle the command failure explicitly due to set -e
         local http_code
-        if http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$website" 2>/dev/null) && [[ $http_code =~ ^2[0-9][0-9]$ ]]; then
+        if http_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$website" 2>/dev/null) && [[ $http_code =~ ^2[0-9][0-9]$|^302$ ]]; then
             echo "SUCCESS: $website (HTTP $http_code, succeeded on attempt $attempt)"
             return 0
         else
