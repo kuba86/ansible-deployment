@@ -1,0 +1,63 @@
+- name: Install oauth2 proxy
+  hosts: wyse01.tailnet-ba52.ts.net
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+    - "../inventories/prod/secret_vars/oauth2-proxy.yaml"
+  vars:
+    main_user: core
+  
+  tasks:
+    - name: Install oauth2 proxy | Setup variables (detect container)
+      ansible.builtin.set_fact:
+        quadlet_is_container: "{{ (ansible_facts['virtualization_tech_guest'] | default([]) | length) > 0 }}"
+    
+    - name: Install oauth2 proxy | Setup variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        quadlet_dir: "{{ '/etc/containers/systemd' if quadlet_is_container else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        quadlet_owner: "{{ 'root' if quadlet_is_container else main_user }}"
+        quadlet_group: "{{ 'root' if quadlet_is_container else main_user }}"
+        quadlet_become: "{{ quadlet_is_container }}"
+        systemd_scope: "{{ 'system' if quadlet_is_container else 'user' }}"
+    
+    - name: Install oauth2 proxy | Ensure data directory exists
+      ansible.builtin.file:
+        path: "/var/mnt/data1/oauth2-proxy/config"
+        state: directory
+        owner: "{{ quadlet_owner }}"
+        group: "{{ quadlet_group }}"
+        mode: '0750'
+      become: true
+    
+    - name: Install oauth2 proxy | Generate Config Files
+      ansible.builtin.template:
+        src: "../files/oauth2-proxy/oauth2-proxy-template.cfg"
+        dest: "/var/mnt/data1/oauth2-proxy/config/{{ item.client_id }}.cfg"
+        owner: "{{ quadlet_owner }}"
+        group: "{{ quadlet_group }}"
+        mode: "0640"
+      loop: "{{ oauth2_proxies }}"
+      notify: Restart OAuth2 Proxies
+      
+    - name: Install oauth2 proxy | Generate Podman Quadlet Files
+      ansible.builtin.template:
+        src: "../files/oauth2-proxy/oauth2-proxy-template.container"
+        dest: "{{ quadlet_dir }}/{{ item.client_id }}.container"
+        owner: "{{ quadlet_owner }}"
+        group: "{{ quadlet_group }}"
+        mode: "0640"
+      loop: "{{ oauth2_proxies }}"
+      notify: Restart OAuth2 Proxies
+      
+  handlers:
+    - name: Restart OAuth2 Proxies
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: "{{ item.client_id }}.service"
+        state: restarted
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      loop: "{{ oauth2_proxies }}"
+      become: "{{ quadlet_become }}"
