@@ -5,7 +5,7 @@ Description=%N
 PodName=signal-api
 Network=services
 PublishPort=47425:80/tcp
-PodmanArgs=--memory=500m
+Memory=500m
 PodmanArgs=--cpus=2
 
 [Service]

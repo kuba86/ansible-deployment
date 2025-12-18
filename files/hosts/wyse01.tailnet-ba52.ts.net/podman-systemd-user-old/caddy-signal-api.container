@@ -8,7 +8,7 @@ HostName=%H
 AutoUpdate=registry
 Pod=signal-api.pod
 Volume=/var/mnt/data1/caddy-signal-api/Caddyfile:/etc/caddy/Caddyfile:z
-PodmanArgs=--memory=500m
+Memory=500m
 PodmanArgs=--cpus=2
 NoNewPrivileges=true
 

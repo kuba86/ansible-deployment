@@ -16,7 +16,7 @@ Volume=/var/mnt/data1/syncthing/Mariusz-Testy:/srv/Mariusz-Testy:ro,z
 Volume=/var/mnt/data1/filestash/state:/app/data/state:z
 UserNS=keep-id
 PublishPort=8334:8334/tcp
-PodmanArgs=--memory=2g
+Memory=2g
 PodmanArgs=--cpus=2
 NoNewPrivileges=true
 

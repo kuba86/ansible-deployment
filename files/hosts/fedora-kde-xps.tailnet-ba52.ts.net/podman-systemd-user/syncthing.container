@@ -11,7 +11,7 @@ PublishPort=8384:8384/tcp
 {{ syncthing_ports }}
 PublishPort=21027:21027/udp
 UserNS=keep-id
-PodmanArgs=--memory={{ syncthing_memory }}
+Memory={{ syncthing_memory }}
 PodmanArgs=--cpus={{ syncthing_cpu }}
 NoNewPrivileges=true
 

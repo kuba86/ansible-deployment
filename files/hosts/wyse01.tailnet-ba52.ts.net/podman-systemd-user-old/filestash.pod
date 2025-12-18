@@ -5,7 +5,7 @@ Description=%N
 PodName=filestash
 PublishPort=8334:8334/tcp
 PublishPort=9980:9980/tcp
-PodmanArgs=--memory=2g
+Memory=2g
 PodmanArgs=--cpus=2
 
 [Service]

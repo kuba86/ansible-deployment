@@ -8,7 +8,7 @@ HostName=%H
 AutoUpdate=registry
 Volume=/var/mnt/data2/postgres/data:/var/lib/postgresql/data:z
 PublishPort=5432:5432
-PodmanArgs=--memory=4g
+Memory=4g
 PodmanArgs=--cpus=2
 UserNS=keep-id
 Environment=POSTGRES_PASSWORD=
@@ -16,7 +16,7 @@ NoNewPrivileges=true
 
 [Service]
 Restart=always
-RestartSec=30
+RestartSec=60
 
 [Install]
 WantedBy=multi-user.target default.target

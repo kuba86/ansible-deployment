@@ -20,7 +20,7 @@ Environment=CPAD_INSTALL_ONLYOFFICE=yes
 PublishPort=3000:3000
 PublishPort=3003:3003
 UserNS=keep-id
-PodmanArgs=--memory=2g
+Memory=2g
 PodmanArgs=--cpus=2
 NoNewPrivileges=true
 

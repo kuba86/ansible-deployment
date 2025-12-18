@@ -10,7 +10,7 @@ AutoUpdate=registry
 Volume=/home/core/.local/share/signal-api:/home/.local/share/signal-cli:z
 Environment=MODE=native
 Environment=AUTO_RECEIVE_SCHEDULE="39 */2 * * *"
-PodmanArgs=--memory=500m
+Memory=500m
 PodmanArgs=--cpus=2
 NoNewPrivileges=true
 

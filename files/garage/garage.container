@@ -17,7 +17,7 @@ NoNewPrivileges=true
 [Service]
 # Let systemd restart this service always
 Restart=always
-RestartSec=30
+RestartSec=60
 # Specifies the maximum file descriptor number that can be opened by this process
 LimitNOFILE=42000
 # Specifies the maximum number of threads this process can create

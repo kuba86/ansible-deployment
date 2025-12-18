@@ -17,7 +17,7 @@ PublishPort=11080:80/tcp
 PublishPort=11080:80/udp
 PublishPort=11443:443/tcp
 PublishPort=11443:443/udp
-PodmanArgs=--memory=500m
+Memory=500m
 PodmanArgs=--cpus=2
 NoNewPrivileges=true
 
