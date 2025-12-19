@@ -16,3 +16,4 @@ ansible-navigator.log
 .lego
 /files/caddy/etc-config/Caddyfile
 /files/caddy/etc-config/*.caddy
+/files/kanidm/.bash_history

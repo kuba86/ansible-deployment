@@ -1,0 +1,12 @@
+version = "2"
+bindaddress = "0.0.0.0:8443"
+ldapbindaddress = "0.0.0.0:3636"
+db_path = "/data/kanidm.db"
+tls_chain = "/data/{{ kanidm_domain }}.crt"
+tls_key = "/data/{{ kanidm_domain }}.key"
+domain = "auth.{{ kanidm_domain }}"
+origin = "https://auth.{{ kanidm_domain }}"
+
+[online_backup]
+path = "/data/kanidm/backups/"
+schedule = "22 */4 * * *"

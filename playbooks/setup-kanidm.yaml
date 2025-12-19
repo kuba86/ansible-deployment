@@ -1,0 +1,60 @@
+- name: Install Kanidm
+  hosts: wyse01.tailnet-ba52.ts.net
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+  
+  tasks:
+    - name: Install Kanidm | Ensure kanidm directory exists
+      ansible.builtin.file:
+        path: "/var/mnt/data1/kanidm/data"
+        state: directory
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '0750'
+      become: true
+
+    - name: Install Kanidm | Install systemd quadlet service (user)
+      ansible.builtin.template:
+        src: "../files/kanidm/kanidm.container"
+        dest: "/home/{{ main_user }}/.config/containers/systemd/"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: "0600"
+      register: install_service_output
+    
+    - name: Install Kanidm | Install server.toml
+      ansible.builtin.template:
+        src: "../files/kanidm/data/server.toml"
+        dest: "/var/mnt/data1/kanidm/data/server.toml"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: "0600"
+      register: install_server_toml_output
+      
+    - name: Install Kanidm | copy favicon.png
+      ansible.builtin.copy:
+        src: ../files/kanidm/data/logo/kuba86-com-logo-dark-32-32.png
+        dest: /var/mnt/data1/kanidm/favicon.png
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '0640'
+
+    - name: Install Kanidm | Restart Kanidm service
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: kanidm.service
+        state: restarted
+        enabled: true
+        scope: user
+      when: >
+        install_service_output.changed or
+        install_server_toml_output.changed
