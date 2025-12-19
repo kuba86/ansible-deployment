@@ -1,0 +1,42 @@
+- name: Install Home Assistant
+  hosts: wyse01.tailnet-ba52.ts.net
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+  
+  tasks:
+    - name: Install Home Assistant | Ensure homeassistant directory exists
+      ansible.builtin.file:
+        path: "/var/mnt/data1/homeassistant/config"
+        state: directory
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '0755'
+      become: true
+
+    - name: Install Home Assistant | Install systemd quadlet service (system)
+      ansible.builtin.template:
+        src: "../files/homeassistant/homeassistant.container"
+        dest: "/etc/containers/systemd/"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "root"
+        group: "root"
+        mode: "0600"
+      become: true
+      register: install_service_output
+
+    - name: Install Home Assistant | Restart Home Assistant service
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: homeassistant.service
+        state: restarted
+        enabled: true
+        scope: system
+      become: true
+      when: >
+        install_service_output.changed

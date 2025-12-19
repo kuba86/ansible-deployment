@@ -1,0 +1,22 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=ghcr.io/home-assistant/home-assistant:stable
+ContainerName=%N
+HostName=%H
+AutoUpdate=registry
+AddCapability=NET_ADMIN NET_RAW CAP_NET_BIND_SERVICE
+Environment=TZ=Europe/Warsaw
+Volume=/var/mnt/data1/homeassistant/config:/config:z
+Network=host
+
+Memory=4g
+PodmanArgs=--cpus=1
+
+[Service]
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target default.target
