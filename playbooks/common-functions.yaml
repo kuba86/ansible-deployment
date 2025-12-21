@@ -17,50 +17,16 @@
         state: directory
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
-        mode: '755'
-      
-    - name: common functions | copy functions random delay
-      ansible.builtin.copy:
-        src: ../files/bin/random-delay-seconds.bash
-        dest: /home/{{ main_user }}/.local/bin/random-delay-seconds.bash
+        mode: '0755'
+
+    - name: common functions | Template and upload scripts
+      ansible.builtin.template:
+        src: "{{ item }}"
+        dest: "/home/{{ main_user }}/.local/bin/{{ item | basename }}"
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
-        mode: '755'
-        
-    - name: common functions | copy functions health checks ping
-      ansible.builtin.template:
-        src: ../files/bin/server-healthcheck-ping.bash
-        dest: /home/{{ main_user }}/.local/bin/server-healthcheck-ping.bash
+        mode: '0740'
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '700'
-    
-    - name: common functions | copy functions health checks website
-      ansible.builtin.template:
-        src: ../files/bin/server-healthcheck-website.bash
-        dest: /home/{{ main_user }}/.local/bin/server-healthcheck-website.bash
-        comment_start_string: "# BEGIN_OF_COMMENT"
-        comment_end_string: "# END_OF_COMMENT"
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '700'
-    
-    - name: common functions | copy functions monitor-systemd-failed
-      ansible.builtin.template:
-        src: ../files/bin/monitor-systemd-failed.fish
-        dest: /home/{{ main_user }}/.local/bin/monitor-systemd-failed.fish
-        comment_start_string: "# BEGIN_OF_COMMENT"
-        comment_end_string: "# END_OF_COMMENT"
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '700'
-    
-    - name: common functions | journalctl-consumed-statistics
-      ansible.builtin.copy:
-        src: ../files/bin/journalctl-consumed-statistics.bash
-        dest: /home/{{ main_user }}/.local/bin/journalctl-consumed-statistics.bash
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '755'
+      with_fileglob:
+        - "../files/bin/*"
