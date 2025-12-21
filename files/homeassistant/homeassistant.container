@@ -9,6 +9,7 @@ AutoUpdate=registry
 AddCapability=NET_ADMIN NET_RAW CAP_NET_BIND_SERVICE
 Environment=TZ=Europe/Warsaw
 Volume=/var/mnt/data1/homeassistant/config:/config:z
+AddDevice=/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_DCB4D9111C4C-if00
 Network=host
 
 Memory=4g
