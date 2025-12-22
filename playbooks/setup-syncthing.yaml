@@ -1,0 +1,58 @@
+- name: Setup Syncthing
+  hosts: coreos:dnf:desktop
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+  vars:
+    main_user: core
+  
+  tasks:
+    - name: Setup Syncthing | Setup variables (detect container)
+      ansible.builtin.set_fact:
+        node_is_container: "{{ (ansible_facts['virtualization_tech_guest'] | default([]) | length) > 0 }}"
+    
+    - name: Setup Syncthing | Setup variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if node_is_container else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if node_is_container else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if node_is_container else main_user }}"
+        file_group: "{{ 'root' if node_is_container else main_user }}"
+        calculated_become: "{{ node_is_container }}"
+        systemd_scope: "{{ 'system' if node_is_container else 'user' }}"
+    
+    
+    - name: Setup Syncthing | Systemd Podman Quadlet
+      ansible.builtin.template:
+        src: "../files/syncthing/syncthing.container"
+        dest: "{{ quadlet_dir }}/syncthing.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0600"
+      become: "{{ calculated_become }}"
+      register: systemd_podman_quadlet_output
+    
+    - name: Setup Syncthing | ensures data directory exists
+      ansible.builtin.file:
+        path: "/var/mnt/data/syncthing"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0750"
+      become: true
+      register: data_dir_output
+    
+    - name: Setup Syncthing | Restart service
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: syncthing.service
+        state: restarted
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
+      when: >
+        systemd_podman_quadlet_output.changed or
+        data_dir_output.changed

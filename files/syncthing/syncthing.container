@@ -10,7 +10,7 @@ AutoUpdate=registry
 PublishPort=8384:8384/tcp
 {{ syncthing_ports }}
 PublishPort=21027:21027/udp
-UserNS=keep-id
+{{ syncthing_userns }}
 Memory={{ syncthing_memory }}
 PodmanArgs=--cpus={{ syncthing_cpu }}
 NoNewPrivileges=true

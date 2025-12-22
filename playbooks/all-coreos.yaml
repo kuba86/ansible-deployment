@@ -40,8 +40,8 @@
 #- name: Playbooks | Install Incus
 #  ansible.builtin.import_playbook: incus-via-podman.yaml
 
-- name: Playbooks | Install Syncthing
-  ansible.builtin.import_playbook: install-syncthing.yaml
+- name: Playbooks | Setup Syncthing
+  ansible.builtin.import_playbook: setup-syncthing.yaml
 
 - name: Playbooks | Install Garage S3
   ansible.builtin.import_playbook: install-garage-s3.yaml
