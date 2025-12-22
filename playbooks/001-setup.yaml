@@ -16,7 +16,7 @@
     - name: Setup AAAAA | Setup variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if node_is_container else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
-        quadlet_dir: "{{ '/etc/containers/systemd' if quadlet_is_container else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if node_is_container else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
         file_owner: "{{ 'root' if node_is_container else main_user }}"
         file_group: "{{ 'root' if node_is_container else main_user }}"
         calculated_become: "{{ node_is_container }}"
@@ -55,6 +55,21 @@
         mode: "0750"
       become: true
       register: data_dir_output
+      
+    - name: Setup AAAAA | ensures directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0750"
+      become: "{{ calculated_become }}"
+      register: data_dir_output
+      loop:
+        - "{{ some_path }}"
+        - "{{ some_path }}/data"
+        - "{{ some_path }}/etc"
+        - "{{ some_path }}/tls"
     
     - name: Setup AAAAA | Restart service
       ansible.builtin.systemd:
