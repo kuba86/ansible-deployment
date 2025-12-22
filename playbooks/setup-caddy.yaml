@@ -1,5 +1,5 @@
-- name: setup caddy
-  hosts: wyse01.tailnet-ba52.ts.net:marek246.tailnet-ba52.ts.net
+- name: Setup caddy
+  hosts: coreos:dnf
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
@@ -8,28 +8,114 @@
   vars:
     main_user: core
   tasks:
-#    - name: Run fmt and encrypt script
-#      ansible.builtin.command: fish ../files/caddy/caddy-fmt-encrypt.fish
-#      delegate_to: localhost
-#      args:
-#        executable: /usr/bin/bash
-#      run_once: true
-#      changed_when: false
+
+    - name: Setup caddy | Setup variables (detect container)
+      ansible.builtin.set_fact:
+        node_is_container: "{{ (ansible_facts['virtualization_tech_guest'] | default([]) | length) > 0 }}"
+    
+    - name: Setup caddy | Setup variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if node_is_container else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if node_is_container else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if node_is_container else main_user }}"
+        file_group: "{{ 'root' if node_is_container else main_user }}"
+        calculated_become: "{{ node_is_container }}"
+        systemd_scope: "{{ 'system' if node_is_container else 'user' }}"
+        
+    - name: Setup caddy | Systemd Podman Quadlet
+      ansible.builtin.template:
+        src: "../files/caddy/caddy.container"
+        dest: "{{ quadlet_dir }}/caddy.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_podman_quadlet_output
       
-    - name: setup caddy | copy Caddyfile(s)
+    - name: Setup caddy | ensures directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0750"
+      become: "{{ calculated_become }}"
+      register: data_dir_output
+      loop:
+        - "{{ caddy_path }}"
+        - "{{ caddy_path }}/etc-caddy"
+        - "{{ caddy_path }}/config"
+        - "{{ caddy_path }}/data"
+        - "{{ caddy_path }}/usr-share-caddy"
+        - "{{ caddy_path }}/tls/live"
+        
+    - name: Setup caddy | Fetch certificates from wyse01
+      ansible.builtin.fetch:
+        src: "/var/mnt/data1/lets-encrypt-goacme-lego/.lego/certificates/{{ item }}"
+        dest: "../files/caddy/tls/{{ item }}"
+        flat: yes
+      delegate_to: wyse01.tailnet-ba52.ts.net
+      loop:
+        - "kuba86.com.crt"
+        - "kuba86.com.key"
+      
+    - name: Setup caddy | copy certificates
+      ansible.builtin.copy:
+        src: "../files/caddy/tls/{{ item }}"
+        dest: "{{ caddy_path }}/tls/live/{{ item }}"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0600"
+      loop:
+        - "kuba86.com.crt"
+        - "kuba86.com.key"
+      become: "{{ calculated_become }}"
+      register: copy_certificates
+        
+    - name: Setup caddy | copy Caddyfile(s)
       ansible.builtin.copy:
         src: "{{ item }}"
-        dest: "/var/mnt/data1/caddy/etc-caddy/{{ item | basename | regex_replace('\\.encrypted$', '') }}"
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '640'
+        dest: "{{ caddy_path }}/etc-caddy/{{ item | basename | regex_replace('\\.encrypted$', '') }}"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
       with_fileglob:
         - "../files/caddy/etc-config/*.encrypted"
-      become: true
+      become: "{{ calculated_become }}"
       register: copy_caddyfile
       
+    - name: Setup caddy | Remove 2lo-absolwenci if not wyse01
+      ansible.builtin.file:
+        path: "{{ caddy_path }}/etc-caddy/2lo-absolwenci.caddy"
+        state: absent
+      when: inventory_hostname != 'wyse01.tailnet-ba52.ts.net'
+      become: "{{ calculated_become }}"
+      register: remove_2lo_caddyfile
       
-    - name: setup caddy | validate Caddyfile(s)
+    - name: Setup caddy | Remove import 2lo-absolwenci if not wyse01
+      ansible.builtin.lineinfile:
+        path: "{{ caddy_path }}/etc-caddy/Caddyfile"
+        regexp: '^import 2lo-absolwenci\.caddy$'
+        state: absent
+      when: inventory_hostname != 'wyse01.tailnet-ba52.ts.net'
+      become: "{{ calculated_become }}"
+      register: remove_2lo_import
+      
+    - name: Setup caddy | Restart service
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: caddy.service
+        state: restarted
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
+      when: >
+        systemd_podman_quadlet_output.changed or
+        data_dir_output.changed
+      
+    - name: Setup caddy | validate Caddyfile(s)
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
@@ -37,10 +123,9 @@
         podman exec caddy caddy validate --config /etc/caddy/Caddyfile
       args:
         executable: /usr/bin/bash
-      become: "{{ 'container' in ansible_facts['virtualization_tech_guest'] }}"
-      register: validate_caddyfile
+      become: "{{ calculated_become }}"
 
-    - name: setup caddy | reload caddy server
+    - name: Setup caddy | reload caddy server
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
@@ -48,6 +133,4 @@
         podman exec caddy caddy reload --force --config /etc/caddy/Caddyfile
       args:
         executable: /usr/bin/bash
-      become: "{{ 'container' in ansible_facts['virtualization_tech_guest'] }}"
-      when: >
-        copy_caddyfile.changed | default(false)
+      become: "{{ calculated_become }}"

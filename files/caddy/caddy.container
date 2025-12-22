@@ -6,18 +6,12 @@ Image=docker.io/library/caddy:2
 ContainerName=%N
 HostName=%H
 AutoUpdate=registry
-Network=slirp4netns:port_handler=slirp4netns
-Volume=/var/mnt/data1/caddy/etc-caddy:/etc/caddy:z
-Volume=/var/mnt/data1/caddy/config:/config:z
-Volume=/var/mnt/data1/caddy/data:/data:z
-Volume=/var/mnt/data1/caddy/usr-share-caddy:/usr/share/caddy:z
-Volume=/var/mnt/data1/caddy/tls:/certificates:z
-PublishPort=11080:80/tcp
-PublishPort=11080:80/udp
-PublishPort=11443:443/tcp
-PublishPort=11443:443/udp
-Memory=1g
-PodmanArgs=--cpus=2
+AddCapability=CAP_NET_BIND_SERVICE
+{{ caddy_volumes }}
+{{ caddy_network }}
+{{ caddy_ports }}
+Memory={{ caddy_memory }}
+PodmanArgs=--cpus={{ caddy_cpu }}
 NoNewPrivileges=true
 
 [Service]
