@@ -19,7 +19,6 @@
           systemctl disable --now zincati.service && \
           systemctl mask zincati.service && \
           rpm-ostree rebase "$kuba86_image" && \
-          systemctl disable coreos-container-signing-migration-motd.service && \
           systemctl enable --now bootc-fetch-apply-updates.timer && \
           systemd-run --unit=delayed-reboot --on-active=15s systemctl reboot
         fi

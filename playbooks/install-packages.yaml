@@ -59,7 +59,7 @@
         set -euo pipefail
         IFS=$'\n\t'
         
-        dysk_version="2.10.1"
+        dysk_version="3.5.0"
         global_bin_path="/usr/local/bin"
         dysk_bin_path="$global_bin_path/dysk"
         dysk_url="https://github.com/Canop/dysk/releases/download/v${dysk_version}/dysk_${dysk_version}.zip"

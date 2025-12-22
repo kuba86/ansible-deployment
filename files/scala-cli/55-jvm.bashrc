@@ -110,9 +110,9 @@ remove_from_path_env_var() {
 }
 
 set_java_home_and_update_path_env_var() {
-  if [ -v JAVA_HOME_GRAALVM_17 ]; then
+  if [ -v JAVA_HOME_GRAALVM_21 ]; then
     # remove_from_path_env_var "$jdk_path"
-    export JAVA_HOME="$JAVA_HOME_GRAALVM_17"
+    export JAVA_HOME="$JAVA_HOME_GRAALVM_21"
     export PATH="$PATH:${JAVA_HOME}/bin"
   fi
 }

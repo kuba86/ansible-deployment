@@ -1,14 +1,14 @@
 - name: Playbooks | Fedora CoreOS bootc rebase
   ansible.builtin.import_playbook: fedora-coreos-bootc-rebase.yaml
 
+- name: Playbooks | Sysctl
+  ansible.builtin.import_playbook: sysctl.yaml
+
 - name: Playbooks | install tailscale
   ansible.builtin.import_playbook: tailscale.yaml
 
 - name: Playbooks | setup users
   ansible.builtin.import_playbook: setup-users.yaml
-  
-- name: Playbooks | Sysctl
-  ansible.builtin.import_playbook: sysctl.yaml
   
 - name: Playbooks | mask-docker-service
   ansible.builtin.import_playbook: mask-docker-service.yaml
@@ -37,8 +37,11 @@
 - name: Playbooks | Setup Podman
   ansible.builtin.import_playbook: setup-podman.yaml
 
-- name: Playbooks | Install Incus
-  ansible.builtin.import_playbook: incus-via-podman.yaml
+#- name: Playbooks | Install Incus
+#  ansible.builtin.import_playbook: incus-via-podman.yaml
 
 - name: Playbooks | Install Syncthing
   ansible.builtin.import_playbook: install-syncthing.yaml
+
+- name: Playbooks | Install Garage S3
+  ansible.builtin.import_playbook: install-garage-s3.yaml

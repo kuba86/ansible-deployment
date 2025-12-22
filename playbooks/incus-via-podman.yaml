@@ -29,7 +29,6 @@
             owner: "root"
             group: "root"
             mode: '644'
-          become: true
           register: incus_container_service
             
         - name: Incus | reload and restart incus.service if changed
@@ -37,6 +36,7 @@
             name: incus.service
             state: restarted
             daemon_reload: true
+            scope: system
           when: >
             incus_container_service.changed | default(false)
             
@@ -46,7 +46,7 @@
             set -euo pipefail
             IFS=$'\n\t'
             
-            incus_version="6.19.1"
+            incus_version="6.20.0"
             global_bin_path="/usr/local/bin"
             incus_bin_path="$global_bin_path/incus"
             incus_agent_bin_path="$global_bin_path/incus-agent"

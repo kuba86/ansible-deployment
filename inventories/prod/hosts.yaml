@@ -14,7 +14,6 @@ all:
         wyse01.tailnet-ba52.ts.net:
         wyse02.tailnet-ba52.ts.net:
         wyse03.tailnet-ba52.ts.net:
-#        nuc02.tailnet-ba52.ts.net:
     dnf:
       children:
         el9:

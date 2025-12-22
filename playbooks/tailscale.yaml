@@ -7,7 +7,7 @@
     - "../inventories/prod/secret_vars/all.yaml"
   vars:
     tailscale_key:
-    tailscale_tags: tag:server
+    tailscale_tags: "tag:server,tag:kubernetes"
 
   tasks:
     - name: Tailscale | pre-setup
@@ -16,18 +16,6 @@
         - ansible_distribution in ['Fedora', 'AlmaLinux', 'Rocky']
         - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
       block:
-        - name: Tailscale | add repository Fedora
-          register: add_repo_fedora
-          ansible.builtin.copy:
-            src: ../files/tailscale/tailscale-fedora.repo
-            dest: /etc/yum.repos.d/tailscale.repo
-            owner: root
-            group: root
-            mode: '644'
-          when:
-            - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
-            - ansible_distribution in ['Fedora']
-
         - name: Tailscale | add repository EL-9
           register: add_repo_el_9
           ansible.builtin.copy:
@@ -69,38 +57,6 @@
             tailscale_in_path.rc != 0
           changed_when: >
             tailscale_in_path.stdout.find('tailscale NOT in path') == 0
-
-        - name: Tailscale | install rpm-ostree
-          ansible.builtin.shell: |
-            set -euo pipefail
-            IFS=$'\n\t'
-
-            if command -v tailscale >/dev/null 2>&1; then
-              echo "tailscale found in PATH, skipping install."
-              exit 77
-            fi
-
-            rpm-ostree install \
-              --idempotent \
-              --apply-live \
-              --unchanged-exit-77 \
-              --assumeyes \
-              --allow-inactive \
-              tailscale
-          args:
-            executable: /usr/bin/bash
-          register: install_rpm_ostree
-          failed_when: >
-            (install_rpm_ostree.rc == 1) or
-            (install_rpm_ostree.rc == 2) or
-            (install_rpm_ostree.rc == 3) or
-            (install_rpm_ostree.rc == 4) or
-            (install_rpm_ostree.rc == 78)
-          changed_when: >
-            install_rpm_ostree.rc != 77
-          when:
-            - ansible_pkg_mgr in ['atomic_container']
-            - tailscale_in_path is changed
 
         - name: Tailscale | install dnf
           ansible.builtin.dnf:

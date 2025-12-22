@@ -60,7 +60,7 @@
         if [ "{{ garage_fs_type.stdout }}" == "btrfs" ]; then
           if [ -z "$(ls -A "{{ garage_data_path }}")" ]; then
             chattr +C "{{ garage_data_path }}"
-            echo "Directory {{ garage_data_path }} COW is disabled"
+            echo "Directory {{ garage_data_path }} COW is now disabled"
           else
             echo "Directory {{ garage_data_path }} is not empty, skipping disabling COW"
           fi
