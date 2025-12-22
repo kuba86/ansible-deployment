@@ -45,3 +45,6 @@
 
 - name: Playbooks | Install Garage S3
   ansible.builtin.import_playbook: install-garage-s3.yaml
+  
+- name: Playbooks | Setup Caddy
+  ansible.builtin.import_playbook: setup-caddy.yaml
