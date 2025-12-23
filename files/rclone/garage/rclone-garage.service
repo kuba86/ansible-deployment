@@ -24,6 +24,8 @@ ExecStart={{ rclone_bin_path }} \
   --log-level INFO
 
 ExecStop=/usr/bin/umount {{ rclone_garage_mount_path }}
+Restart=always
+RestartSec=60
 
 [Install]
 WantedBy=default.target

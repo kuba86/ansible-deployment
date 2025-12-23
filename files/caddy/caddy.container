@@ -17,6 +17,8 @@ NoNewPrivileges=true
 [Service]
 Restart=always
 RestartSec=15
+TimeoutSec=10min
+OOMScoreAdjust=-500
 
 [Install]
 WantedBy=multi-user.target default.target

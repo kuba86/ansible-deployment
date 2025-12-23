@@ -15,18 +15,10 @@ PodmanArgs=--cpus={{ garage_cpu }}
 NoNewPrivileges=true
 
 [Service]
-# Let systemd restart this service always
 Restart=always
 RestartSec=60
-# Specifies the maximum file descriptor number that can be opened by this process
-LimitNOFILE=42000
-# Specifies the maximum number of threads this process can create
-TasksMax=infinity
-# Disable timeout logic and wait until process is stopped
-TimeoutSec=infinity
-# Disable killing of service by the kernel's OOM killer
-OOMScoreAdjust=-1000
-SendSIGKILL=no
+TimeoutSec=10min
+OOMScoreAdjust=-500
 
 [Install]
 WantedBy=multi-user.target default.target
