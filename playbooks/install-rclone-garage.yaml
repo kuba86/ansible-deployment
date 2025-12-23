@@ -46,17 +46,26 @@
         state: directory
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: '0755'
+        mode: '0750'
       become: true
       register: mount_dir_creation
       failed_when:
         - mount_dir_creation.failed
         - "'File exists' not in mount_dir_creation.msg"
     
+    - name: Install Rclone Garage | ensures config directory exists
+      ansible.builtin.file:
+        path: "{{ rclone_conf_path }}"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: '0750'
+      become: true
+    
     - name: Install Rclone Garage | copy rclone-garage.conf settings
       ansible.builtin.template:
-        src: "../files/rclone/rclone-garage.conf"
-        dest: "{{ rclone_conf_path }}"
+        src: "../files/rclone/{{ rclone_conf_name }}"
+        dest: "{{ rclone_conf_path }}/{{ rclone_conf_name }}"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
         owner: "{{ file_owner }}"

@@ -48,3 +48,6 @@
   
 - name: Playbooks | Setup Caddy
   ansible.builtin.import_playbook: setup-caddy.yaml
+
+- name: Playbooks | Setup Rclone Garage
+  ansible.builtin.import_playbook: install-rclone-garage.yaml
