@@ -22,6 +22,15 @@
         calculated_become: "{{ node_is_container }}"
         systemd_scope: "{{ 'system' if node_is_container else 'user' }}"
     
+    - name: Setup Syncthing | ensures quadlet directory exists
+      ansible.builtin.file:
+        path: "{{ quadlet_dir }}"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0750"
+      become: true
+      register: quadlet_dir_output
     
     - name: Setup Syncthing | Systemd Podman Quadlet
       ansible.builtin.template:
