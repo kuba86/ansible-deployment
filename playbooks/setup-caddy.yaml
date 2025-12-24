@@ -130,7 +130,7 @@
         set -euo pipefail
         IFS=$'\n\t'
 
-        podman exec caddy caddy reload --force --config /etc/caddy/Caddyfile
+        podman exec caddy caddy reload --config /etc/caddy/Caddyfile
       args:
         executable: /usr/bin/bash
       become: "{{ calculated_become }}"
