@@ -46,7 +46,7 @@
     
     - name: Setup Syncthing | ensures data directory exists
       ansible.builtin.file:
-        path: "/var/mnt/data/syncthing"
+        path: "{{ syncthing_data_dir }}"
         state: directory
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
