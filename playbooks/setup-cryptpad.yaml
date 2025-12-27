@@ -5,6 +5,7 @@
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
+    - "../inventories/prod/secret_vars/cryptpad.yaml"
   vars:
     main_user: core
   tasks:
