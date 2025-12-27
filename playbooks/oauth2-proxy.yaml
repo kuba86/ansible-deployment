@@ -1,5 +1,5 @@
 - name: Install oauth2 proxy
-  hosts: wyse01.tailnet-ba52.ts.net
+  hosts: marek246.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
@@ -24,21 +24,22 @@
     
     - name: Install oauth2 proxy | Ensure data directory exists
       ansible.builtin.file:
-        path: "/var/mnt/data1/oauth2-proxy/config"
+        path: "/var/mnt/data/oauth2-proxy/config"
         state: directory
         owner: "{{ quadlet_owner }}"
         group: "{{ quadlet_group }}"
         mode: '0750'
-      become: true
+      become: "{{ quadlet_become }}"
     
     - name: Install oauth2 proxy | Generate Config Files
       ansible.builtin.template:
         src: "../files/oauth2-proxy/oauth2-proxy-template.cfg"
-        dest: "/var/mnt/data1/oauth2-proxy/config/{{ item.client_id }}.cfg"
+        dest: "/var/mnt/data/oauth2-proxy/config/{{ item.client_id }}.cfg"
         owner: "{{ quadlet_owner }}"
         group: "{{ quadlet_group }}"
         mode: "0640"
       loop: "{{ oauth2_proxies }}"
+      become: "{{ quadlet_become }}"
       notify: Restart OAuth2 Proxies
       
     - name: Install oauth2 proxy | Generate Podman Quadlet Files
@@ -49,6 +50,7 @@
         group: "{{ quadlet_group }}"
         mode: "0640"
       loop: "{{ oauth2_proxies }}"
+      become: "{{ quadlet_become }}"
       notify: Restart OAuth2 Proxies
       
   handlers:
