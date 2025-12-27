@@ -1,86 +1,64 @@
-- name: Lets Encrypt
+- name: Setup Lets Encrypt
   hosts: wyse01.tailnet-ba52.ts.net
-  gather_facts: false
+  gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
+    - "../inventories/prod/secret_vars/lets-encrypt.yaml"
   vars:
     main_user: core
+
   tasks:
+    - name: Setup Lets Encrypt | Setup variables (detect container)
+      ansible.builtin.set_fact:
+        node_is_container: "{{ (ansible_facts['virtualization_tech_guest'] | default([]) | length) > 0 }}"
+
+    - name: Setup Lets Encrypt | Setup variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if node_is_container else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if node_is_container else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if node_is_container else main_user }}"
+        file_group: "{{ 'root' if node_is_container else main_user }}"
+        calculated_become: "{{ node_is_container }}"
+        systemd_scope: "{{ 'system' if node_is_container else 'user' }}"
+
+    - name: Setup Lets Encrypt | Systemd Podman Quadlet
+      ansible.builtin.template:
+        src: "../files/lets-encrypt/lets-encrypt.container"
+        dest: "{{ quadlet_dir }}/lets-encrypt.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_podman_quadlet_output
       
-    - name: Lets Encrypt | Renew
-      ansible.builtin.shell: |
-        set -l lego_version "latest"
-        set -l email "{{ lets_encrypt_email }}"
-        set -l cf_dns_api_token "{{ cf_dns_api_token }}"
-        set -l cf_polling_interval "10"
-        set -l cf_propagation_timeout "180"
-        set -l cf_ttl "120"
-        set -l domains "{{ lets_encrypt_domains }}"
-        set -l lets_encrypt_path "{{ lets_encrypt_path }}"
-        set -l dns_servers "1.1.1.1:53,1.0.0.1:53"
-        set -l lego_domain_flags ""
-        
-        for domain in (string split " " $domains)
-            set --append lego_domain_flags --domains=\""$domain"\" --domains=\""*.$domain"\"
-        end
-        
-        set -l command_to_run podman run --rm \
-          --name=letsencrypt \
-          --volume="$lets_encrypt_path/.lego:/.lego:z" \
-          --env=CF_DNS_API_TOKEN="$cf_dns_api_token" \
-          --env=CLOUDFLARE_POLLING_INTERVAL="$cf_polling_interval" \
-          --env=CLOUDFLARE_PROPAGATION_TIMEOUT="$cf_propagation_timeout" \
-          --env=CLOUDFLARE_TTL="$cf_ttl" \
-          docker.io/goacme/lego:"$lego_version" \
-            --accept-tos \
-            --email="$email" \
-            --dns.resolvers="$dns_servers" \
-            --dns="cloudflare" \
-            $lego_domain_flags \
-            renew --no-random-sleep
-        
-        eval $command_to_run
-      args:
-        executable: /usr/bin/fish
-      register: lets_encrypt_renew_output
-      changed_when: "'Server responded with a certificate.' in lets_encrypt_renew_output.stderr"
+    - name: Setup Lets Encrypt | Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
+      when: systemd_podman_quadlet_output.changed
+
+    - name: Setup Lets Encrypt | Systemd Service
+      ansible.builtin.template:
+        src: "../files/lets-encrypt/lets-encrypt.timer"
+        dest: "{{ service_dir }}/lets-encrypt.timer"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_service_output
     
-    - name: Lets Encrypt | Caddy setup certs
-      ansible.builtin.shell: |
-        set -l lets_encrypt_path "{{ lets_encrypt_path }}"
-        set -l caddy_path "{{ caddy_path }}"
-        set -l ntfy_script "ntfy.fish"
-        set -l sync_output (rsync -ai --include '*/' --exclude '*.issuer.crt' --include '*.crt' --include '*.key' --exclude '*' --prune-empty-dirs "$lets_encrypt_path/.lego/certificates/" "$caddy_path/tls/live/" | awk '$2 != "./" {print $2}')
-        
-        
-        if test -n "$sync_output"
-            echo "Changes detected. Files copied:"
-            echo "$sync_output"
-        
-            if test -x "$ntfy_script"
-                echo "Triggering notification..."
-                ntfy.fish \
-                    --title "Lets Encrypt | Caddy setup certs" \
-                    --tags "lets-encrypt" \
-                    --topic "servers" \
-                    --server_url "{{ ntfy_server }}" \
-                    --message "Files copied: $sync_output" \
-                    --priority "high" \
-                    --apikey "{{ ntfy_api_token }}"
-        
-                echo "Restarting Caddy Server..."
-                podman exec caddy caddy reload --force --config /etc/caddy/Caddyfile
-            else
-                echo "Error: $ntfy_script not found or not executable."
-                exit 1
-            end
-        else
-            echo "No new or changed certificates found."
-            exit 0
-        end
-      args:
-        executable: /usr/bin/fish
-      register: lets_encrypt_cert_setup_output
-      changed_when: "'Restarting Caddy Server' in lets_encrypt_cert_setup_output.stdout"
+    - name: Enable timer
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: lets-encrypt.timer
+        state: started
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"

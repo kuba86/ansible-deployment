@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Lets Encrypt every 5 days
+
+[Timer]
+OnCalendar=*-*-1/5 00:00:00
+RandomizedDelaySec=6h
+Persistent=true
+Unit=lets-encrypt.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Rustic Lego Backup Service
+
+[Container]
+Image=ghcr.io/kuba86/ansible-deployment/lets-encrypt:latest
+
+{{ lets_encrypt_environments }}
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
