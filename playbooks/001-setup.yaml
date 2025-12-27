@@ -33,6 +33,7 @@
         mode: "0640"
       become: "{{ calculated_become }}"
       register: systemd_podman_quadlet_output
+      notify: Restart service
       
     - name: Setup AAAAA | Systemd Service
       ansible.builtin.template:
@@ -45,6 +46,7 @@
         mode: "0640"
       become: "{{ calculated_become }}"
       register: systemd_service_output
+      notify: Restart service
     
     - name: Setup AAAAA | ensures data directory exists
       ansible.builtin.file:
@@ -53,8 +55,9 @@
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
         mode: "0750"
-      become: true
+      become: "{{ calculated_become }}"
       register: data_dir_output
+      notify: Restart service
       
     - name: Setup AAAAA | ensures directories exist
       ansible.builtin.file:
@@ -70,6 +73,7 @@
         - "{{ some_path }}/data"
         - "{{ some_path }}/etc"
         - "{{ some_path }}/tls"
+      notify: Restart service
     
     - name: Setup AAAAA | Restart service
       ansible.builtin.systemd:
@@ -82,3 +86,13 @@
       when: >
         systemd_podman_quadlet_output.changed or
         data_dir_output.changed
+
+  handlers:
+    - name: Restart service
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: AAAAA.service
+        state: restarted
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
