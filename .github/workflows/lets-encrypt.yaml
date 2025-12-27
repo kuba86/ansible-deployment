@@ -27,7 +27,7 @@ jobs:
 
       - name: Lowercase Image Name
         run: |
-          echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}/lets-encrypt" >> ${GITHUB_ENV}
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}/lets-encrypt" >> ${GITHUB_ENV}
 
       - name: Build image
         id: build-image
