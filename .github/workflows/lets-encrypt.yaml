@@ -1,0 +1,55 @@
+name: "Build and Push Let's Encrypt Container"
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'files/lets-encrypt/entrypoint.sh'
+      - 'files/lets-encrypt/lets-encrypt.container'
+      - 'files/lets-encrypt/lets-encrypt.dockerfile'
+
+permissions:
+  contents: read
+  packages: write
+  
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Lowercase Image Name
+        run: |
+          echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}/lets-encrypt" >> ${GITHUB_ENV}
+
+      - name: Build image
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with: 
+          image: ${{ env.IMAGE_NAME }}
+          tags: latest ${{ github.sha }}
+          oci: true
+          containerfiles: |
+            ./files/lets-encrypt/lets-encrypt.dockerfile
+
+      - name: Login to GHCR
+        id: login-to-ghcr
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push to GHCR
+        id: push-to-ghcr
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-image.outputs.image }}
+          tags: ${{ steps.build-image.outputs.tags }}
