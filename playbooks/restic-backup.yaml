@@ -1,0 +1,56 @@
+- name: Setup Restic Backup
+  hosts: marek246.tailnet-ba52.ts.net
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+    - "../inventories/prod/secret_vars/restic-backup.yaml"
+  vars:
+    main_user: core
+  
+  tasks:
+    - name: Setup Restic Backup | Setup variables (detect container)
+      ansible.builtin.set_fact:
+        node_is_container: "{{ (ansible_facts['virtualization_tech_guest'] | default([]) | length) > 0 }}"
+    
+    - name: Setup Restic Backup | Setup variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if node_is_container else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if node_is_container else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if node_is_container else main_user }}"
+        file_group: "{{ 'root' if node_is_container else main_user }}"
+        calculated_become: "{{ node_is_container }}"
+        systemd_scope: "{{ 'system' if node_is_container else 'user' }}"
+    
+    - name: Setup Restic Backup | Systemd Podman Quadlet
+      ansible.builtin.template:
+        src: "../files/restic-backup/server-backup-to-s3.container"
+        dest: "{{ quadlet_dir }}/server-backup-to-s3.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_podman_quadlet_output
+      
+    - name: Setup Restic Backup | Systemd Service
+      ansible.builtin.template:
+        src: "../files/restic-backup/server-backup-to-s3.timer"
+        dest: "{{ service_dir }}/server-backup-to-s3.timer"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_service_output
+    
+    - name: Enable timer
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: server-backup-to-s3.timer
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"

@@ -1,0 +1,15 @@
+[Unit]
+Description=Restic Backup for Server Data
+
+[Container]
+Image=docker.io/restic/restic:{{ restic_version }}
+Network=host
+{{ restic_env_vars }}
+{{ restic_volumes }}
+{{ restic_exec }}
+Memory={{ restic_memory }}
+PodmanArgs=--cpus={{ restic_cpu }}
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
