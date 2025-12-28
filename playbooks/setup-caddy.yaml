@@ -5,6 +5,7 @@
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
+    - "../inventories/prod/secret_vars/lets-encrypt.yaml"
   vars:
     main_user: core
   tasks:
@@ -49,30 +50,6 @@
         - "{{ caddy_path }}/config"
         - "{{ caddy_path }}/data"
         - "{{ caddy_path }}/usr-share-caddy"
-        - "{{ caddy_path }}/tls/live"
-        
-    - name: Setup caddy | Fetch certificates from wyse01
-      ansible.builtin.fetch:
-        src: "/var/mnt/data1/lets-encrypt-goacme-lego/.lego/certificates/{{ item }}"
-        dest: "../files/caddy/tls/{{ item }}"
-        flat: yes
-      delegate_to: wyse01.tailnet-ba52.ts.net
-      loop:
-        - "kuba86.com.crt"
-        - "kuba86.com.key"
-      
-    - name: Setup caddy | copy certificates
-      ansible.builtin.copy:
-        src: "../files/caddy/tls/{{ item }}"
-        dest: "{{ caddy_path }}/tls/live/{{ item }}"
-        owner: "{{ file_owner }}"
-        group: "{{ file_group }}"
-        mode: "0600"
-      loop:
-        - "kuba86.com.crt"
-        - "kuba86.com.key"
-      become: "{{ calculated_become }}"
-      register: copy_certificates
         
     - name: Setup caddy | copy Caddyfile(s)
       ansible.builtin.copy:
