@@ -21,6 +21,11 @@
         file_group: "{{ 'root' if node_is_container else main_user }}"
         calculated_become: "{{ node_is_container }}"
         systemd_scope: "{{ 'system' if node_is_container else 'user' }}"
+        
+    - name: Setup AAAAA | Info about running user
+      ansible.builtin.debug:
+        msg:
+          - "User: {{ file_owner }}"
     
     - name: Setup AAAAA | Systemd Podman Quadlet
       ansible.builtin.template:
