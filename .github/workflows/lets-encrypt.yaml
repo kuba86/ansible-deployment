@@ -6,7 +6,6 @@ on:
     paths:
       - '.github/workflows/lets-encrypt.yaml'
       - 'files/lets-encrypt/entrypoint.sh'
-      - 'files/lets-encrypt/lets-encrypt.container'
       - 'files/lets-encrypt/lets-encrypt.dockerfile'
 
 permissions:
