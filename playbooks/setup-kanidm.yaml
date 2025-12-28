@@ -6,6 +6,7 @@
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
     - "../inventories/prod/secret_vars/kanidm.yaml"
+    - "../inventories/prod/secret_vars/lets-encrypt.yaml"
   vars:
     main_user: core
   
@@ -21,7 +22,7 @@
         file_owner: "{{ 'root' if node_is_container else main_user }}"
         file_group: "{{ 'root' if node_is_container else main_user }}"
         calculated_become: "{{ node_is_container }}"
-        systemd_scope: "{{ 'system' if node_is_container else 'user' }}"  
+        systemd_scope: "{{ 'system' if node_is_container else 'user' }}"
 
     - name: Setup Kanidm | ensures directories exist
       ansible.builtin.file:
@@ -59,30 +60,6 @@
         mode: '0640'
       become: "{{ calculated_become }}"
       register: favicon_output
-      notify: Restart service
-      
-    - name: Setup Kanidm | Fetch certificates from wyse01
-      ansible.builtin.fetch:
-        src: "/var/mnt/data1/lets-encrypt-goacme-lego/.lego/certificates/{{ item }}"
-        dest: "../files/kanidm/data/{{ item }}"
-        flat: yes
-      delegate_to: wyse01.tailnet-ba52.ts.net
-      loop:
-        - "{{ kanidm_domain }}.crt"
-        - "{{ kanidm_domain }}.key"
-    
-    - name: Setup Kanidm | copy certificates
-      ansible.builtin.copy:
-        src: "../files/kanidm/data/{{ item }}"
-        dest: "{{ kanidm_dir }}/data/{{ item }}"
-        owner: "{{ file_owner }}"
-        group: "{{ file_group }}"
-        mode: "0600"
-      loop:
-        - "{{ kanidm_domain }}.crt"
-        - "{{ kanidm_domain }}.key"
-      become: "{{ calculated_become }}"
-      register: copy_certificates
       notify: Restart service
     
     - name: Setup Kanidm | Systemd Podman Quadlet
