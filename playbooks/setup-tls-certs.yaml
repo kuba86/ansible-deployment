@@ -1,0 +1,79 @@
+- name: Setup TLS Certs
+  hosts: coreos:dnf
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/all.yaml"
+    - "../inventories/prod/secret_vars/lets-encrypt.yaml"
+  vars:
+    main_user: core
+  
+  tasks:
+    - name: Setup TLS Certs | Setup variables (detect container)
+      ansible.builtin.set_fact:
+        node_is_container: "{{ (ansible_facts['virtualization_tech_guest'] | default([]) | length) > 0 }}"
+    
+    - name: Setup TLS Certs | Setup variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if node_is_container else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if node_is_container else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if node_is_container else main_user }}"
+        file_group: "{{ 'root' if node_is_container else main_user }}"
+        calculated_become: "{{ node_is_container }}"
+        systemd_scope: "{{ 'system' if node_is_container else 'user' }}"
+        
+    - name: Setup TLS Certs | Info about running user
+      ansible.builtin.debug:
+        msg:
+          - "User: {{ file_owner }}"
+        
+    - name: Setup TLS Certs | ensures data directory exists
+      ansible.builtin.file:
+        path: "{{ lets_encrypt_dir }}"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0700"
+      become: "{{ calculated_become }}"
+      register: data_dir_output
+      
+    - name: Setup TLS Certs | Podman Quadlet Service
+      ansible.builtin.template:
+        src: "../files/tls-certs/tls-certs.container"
+        dest: "{{ quadlet_dir }}/tls-certs.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: quadlet_service_output
+      
+    - name: Setup TLS Certs | Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
+      when: quadlet_service_output.changed
+    
+    - name: Setup TLS Certs | Systemd Timer
+      ansible.builtin.template:
+        src: "../files/tls-certs/tls-certs.timer"
+        dest: "{{ service_dir }}/tls-certs.timer"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_timer_output
+        
+    - name: Enable timer
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: tls-certs.timer
+        state: started
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"

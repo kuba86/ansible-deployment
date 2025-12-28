@@ -12,4 +12,3 @@ PodmanArgs=--cpus={{ restic_cpu }}
 
 [Service]
 Type=oneshot
-RemainAfterExit=no

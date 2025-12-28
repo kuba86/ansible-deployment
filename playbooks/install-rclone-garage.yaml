@@ -80,8 +80,8 @@
         dest: "{{ rclone_conf_path }}/lets-encrypt-rclone.conf"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
-        owner: "root"
-        group: "root"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
         mode: "0600"
       become: true
       register: lets_encrypt_rclone_conf_output

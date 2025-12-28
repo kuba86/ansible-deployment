@@ -1,0 +1,25 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=docker.io/rclone/rclone:1
+LogDriver=passthrough
+ContainerName=%N
+HostName=%H
+AutoUpdate=registry
+Volume={{ rclone_conf_path }}/lets-encrypt-rclone.conf:/config/rclone/rclone.conf:ro,z
+Volume={{ lets_encrypt_dir }}:/data:z
+Network=host
+{{ podman_userns }}
+Memory=1g
+PodmanArgs=--cpus=1 --umask=0077
+NoNewPrivileges=true
+
+Exec=copy \
+  "garage:lets-encrypt/certs/" \
+  "/data" \
+  --include "{{ lets_encrypt_main_domain }}.{crt,key}" \
+  --verbose
+
+[Service]
+Type=oneshot

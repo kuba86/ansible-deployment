@@ -9,4 +9,3 @@ EnvironmentFile={{ lets_encrypt_dir }}/lets-encrypt.env
 
 [Service]
 Type=oneshot
-RemainAfterExit=no
