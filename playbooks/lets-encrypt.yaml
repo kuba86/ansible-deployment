@@ -22,6 +22,28 @@
         file_group: "{{ 'root' if node_is_container else main_user }}"
         calculated_become: "{{ node_is_container }}"
         systemd_scope: "{{ 'system' if node_is_container else 'user' }}"
+        
+    - name: Setup Lets Encrypt | ensures data directory exists
+      ansible.builtin.file:
+        path: "{{ lets_encrypt_dir }}"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0700"
+      become: "{{ calculated_become }}"
+      register: data_dir_output
+      
+    - name: Setup Lets Encrypt | copy environment file
+      ansible.builtin.template:
+        src: "../inventories/prod/secret_vars/lets-encrypt.env"
+        dest: "{{ lets_encrypt_dir }}/lets-encrypt.env"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0600"
+      become: "{{ calculated_become }}"
+      register: env_var_output
 
     - name: Setup Lets Encrypt | Systemd Podman Quadlet
       ansible.builtin.template:
