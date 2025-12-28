@@ -86,17 +86,20 @@ set -l lego_output
 set -l lego_status
 
 if test "$lego_mode" = "renew"
-    set lego_output (lego-renew)
-    set lego_status $status
+    # Capture output and status in one list: [output_string, status_code]
+    set -l result (lego-renew | string collect; echo $pipestatus[1])
+    set lego_output $result[1..-2]
+    set lego_status $result[-1]
 else if test "$lego_mode" = "run"
-    set lego_output (lego-run)
-    set lego_status $status
+    set -l result (lego-run | string collect; echo $pipestatus[1])
+    set lego_output $result[1..-2]
+    set lego_status $result[-1]
 else
     echo ">>> Error: lego_mode variable must be set to 'renew' or 'run'. Got: '$lego_mode'"
     exit 1
 end
 
-echo $lego_output
+echo "$lego_output"
 
 if test $lego_status -eq 0
     echo ">>> Lego command finished successfully."
