@@ -5,7 +5,7 @@ set -g cert_files_path "$LEGO_PATH/certificates"
 function restic-restore
     echo ">>> [1/4] Restoring latest data from Restic..."
     # Note: Using LEGO_PATH to ensure we restore to the exact location Lego expects
-    if restic restore "latest:$LEGO_PATH" --target /
+    if restic restore "latest:$LEGO_PATH" --target $LEGO_PATH
         echo ">>> Restic restore successful."
     else
         echo ">>> Error: Restic restore failed. Exiting."
@@ -51,7 +51,7 @@ function rclone-copy-certs
 
     create_rclone_conf
 
-    if rclone copy "$cert_files_path" garage:lets-encrypt/certs --include "$main_domain.{crt,key}"
+    if rclone copy "$cert_files_path" garage:lets-encrypt/certs --include "$main_domain.{crt,key}" --verbose
         echo ">>> Rclone sync successful."
     else
         echo ">>> Error: Rclone sync failed."
