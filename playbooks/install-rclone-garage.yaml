@@ -73,6 +73,18 @@
         mode: "0600"
       become: true
       register: rclone_conf_output
+      
+    - name: Install Rclone Garage | copy lets-encrypt-rclone.conf settings
+      ansible.builtin.template:
+        src: "../inventories/prod/secret_vars/lets-encrypt-rclone.conf"
+        dest: "{{ rclone_conf_path }}/lets-encrypt-rclone.conf"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "root"
+        group: "root"
+        mode: "0600"
+      become: true
+      register: lets_encrypt_rclone_conf_output
 
     - name: Install Rclone Garage | Install systemd service
       ansible.builtin.template:
