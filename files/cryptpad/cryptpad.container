@@ -7,19 +7,19 @@ ContainerName=%N
 HostName=cryptpad
 AutoUpdate=registry
 Network=slirp4netns:port_handler=slirp4netns
-Volume=/var/mnt/data/cryptpad/config.js:/cryptpad/config/config.js:z,U
-Volume=/var/mnt/data/cryptpad/data/blob:/cryptpad/blob:z,U
-Volume=/var/mnt/data/cryptpad/data/block:/cryptpad/block:z,U
-Volume=/var/mnt/data/cryptpad/customize:/cryptpad/customize:z,U
-Volume=/var/mnt/data/cryptpad/data/data:/cryptpad/data:z,U
-Volume=/var/mnt/data/cryptpad/data/files:/cryptpad/datastore:z,U
-Volume=/var/mnt/data/cryptpad/onlyoffice-dist:/cryptpad/www/common/onlyoffice/dist:z,U
-Volume=/var/mnt/data/cryptpad/onlyoffice-conf:/cryptpad/onlyoffice-conf:z,U
+Volume={{ cryptpad_dir }}/config.js:/cryptpad/config/config.js:z,U
+Volume={{ cryptpad_dir }}/data/blob:/cryptpad/blob:z,U
+Volume={{ cryptpad_dir }}/data/block:/cryptpad/block:z,U
+Volume={{ cryptpad_dir }}/customize:/cryptpad/customize:z,U
+Volume={{ cryptpad_dir }}/data/data:/cryptpad/data:z,U
+Volume={{ cryptpad_dir }}/data/files:/cryptpad/datastore:z,U
+Volume={{ cryptpad_dir }}/onlyoffice-dist:/cryptpad/www/common/onlyoffice/dist:z,U
+Volume={{ cryptpad_dir }}/onlyoffice-conf:/cryptpad/onlyoffice-conf:z,U
 Environment=CPAD_CONF=/cryptpad/config/config.js
 Environment=CPAD_INSTALL_ONLYOFFICE=yes
 PublishPort=3000:3000
 PublishPort=3003:3003
-UserNS=keep-id
+{{ podman_userns }}
 Memory=2g
 PodmanArgs=--cpus=2
 NoNewPrivileges=true

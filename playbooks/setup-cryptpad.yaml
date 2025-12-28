@@ -1,5 +1,5 @@
 - name: Install cryptpad
-  hosts: wyse01.tailnet-ba52.ts.net
+  hosts: marek246.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
@@ -7,39 +7,42 @@
     - "../inventories/prod/secret_vars/all.yaml"
     - "../inventories/prod/secret_vars/cryptpad.yaml"
   vars:
-    main_user: core
+    main_user: root
   tasks:
 
     - name: Install cryptpad | cryptpad.container
-      ansible.builtin.copy:
-        src: ../files/cryptpad/cryptpad.container
-        dest: /home/{{ main_user }}/.config/containers/systemd/cryptpad.container
+      ansible.builtin.template:
+        src: "../files/cryptpad/cryptpad.container"
+        dest: "/etc/containers/systemd/cryptpad.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
-        mode: '644'
+        mode: '640'
+      become: true
       register: cryptpad_container_output
 
     - name: Install cryptpad | config.js
       ansible.builtin.template:
-        src: ../files/cryptpad/config.js
-        dest: /var/mnt/data1/cryptpad/config.js
+        src: "../files/cryptpad/config.js"
+        dest: "{{ cryptpad_dir }}/config.js"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
-        owner: "528288"
-        group: "528288"
-        mode: '644'
+        owner: "4001"
+        group: "4001"
+        mode: '640'
       become: true
       register: cryptpad_config_js_output
 
     - name: Install cryptpad | application_config.js
       ansible.builtin.template:
-        src: ../files/cryptpad/customize/application_config.js
-        dest: /var/mnt/data1/cryptpad/customize/application_config.js
+        src: "../files/cryptpad/customize/application_config.js"
+        dest: "{{ cryptpad_dir }}/customize/application_config.js"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
-        owner: "528288"
-        group: "528288"
-        mode: '644'
+        owner: "4001"
+        group: "4001"
+        mode: '640'
       become: true
       register: cryptpad_application_config_js_output
 
@@ -48,8 +51,9 @@
         daemon_reload: true
         name: cryptpad.service
         state: restarted
-        scope: user
+        scope: system
       when: >
         cryptpad_container_output.changed or
         cryptpad_config_js_output.changed or
         cryptpad_application_config_js_output.changed
+      become: true

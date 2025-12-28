@@ -235,7 +235,7 @@ module.exports = {
      *
      */
     //premiumUploadSize: 100 * 1024 * 1024,
-    premiumUploadSize: 10240 * 1024 * 1024, // 10GB
+    premiumUploadSize: 1024 * 1024 * 1024, // 1GB
 
     /* =====================
      *   DATABASE VOLUMES
