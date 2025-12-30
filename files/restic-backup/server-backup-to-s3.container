@@ -5,7 +5,7 @@ Description=Restic Backup for Server Data
 Image=docker.io/restic/restic:{{ restic_version }}
 LogDriver=passthrough
 Network=host
-{{ restic_env_vars }}
+EnvironmentFile={{ restic_env_vars_file_dir }}/restic.env
 {{ restic_volumes }}
 {{ restic_exec }}
 Memory={{ restic_memory }}
