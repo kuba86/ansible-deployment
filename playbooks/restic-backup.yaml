@@ -1,18 +1,17 @@
 - name: Setup Restic Backup
-  hosts: marek246.tailnet-ba52.ts.net
+  hosts: marek246.tailnet-ba52.ts.net:wyse01.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
-    - "../inventories/prod/secret_vars/restic-backup.yaml"
   vars:
     main_user: core
   
   tasks:
     - name: Setup Restic Backup | Setup variables (detect container)
       ansible.builtin.set_fact:
-        node_is_container: "{{ (ansible_facts['virtualization_tech_guest'] | default([]) | length) > 0 }}"
+        node_is_container: "true"
     
     - name: Setup Restic Backup | Setup variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
@@ -52,5 +51,6 @@
         daemon_reload: true
         name: server-backup-to-s3.timer
         enabled: true
+        state: started
         scope: "{{ systemd_scope }}"
       become: "{{ calculated_become }}"

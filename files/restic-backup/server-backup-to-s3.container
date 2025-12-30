@@ -3,6 +3,7 @@ Description=Restic Backup for Server Data
 
 [Container]
 Image=docker.io/restic/restic:{{ restic_version }}
+LogDriver=passthrough
 Network=host
 {{ restic_env_vars }}
 {{ restic_volumes }}
