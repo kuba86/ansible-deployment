@@ -1,5 +1,5 @@
 - name: Setup caddy
-  hosts: coreos:dnf
+  hosts: coreos
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"

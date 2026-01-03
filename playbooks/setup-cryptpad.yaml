@@ -1,5 +1,5 @@
-- name: Install cryptpad
-  hosts: marek246.tailnet-ba52.ts.net
+- name: Setup cryptpad
+  hosts: wyse01.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
@@ -7,53 +7,78 @@
     - "../inventories/prod/secret_vars/all.yaml"
     - "../inventories/prod/secret_vars/cryptpad.yaml"
   vars:
-    main_user: root
+    main_user: core
   tasks:
+    
+    - name: Setup cryptpad | Setup variables (detect container)
+      ansible.builtin.set_fact:
+        node_is_container: "{{ (ansible_facts['virtualization_tech_guest'] | default([]) | length) > 0 }}"
+    
+    - name: Setup cryptpad | Setup variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if node_is_container else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if node_is_container else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if node_is_container else main_user }}"
+        file_group: "{{ 'root' if node_is_container else main_user }}"
+        calculated_become: "{{ node_is_container }}"
+        systemd_scope: "{{ 'system' if node_is_container else 'user' }}"
 
-    - name: Install cryptpad | cryptpad.container
+    - name: Setup cryptpad | Info about running user
+      ansible.builtin.debug:
+        msg:
+          - "Node is container: {{ node_is_container }}"
+          - "Service dir: {{ service_dir }}"
+          - "Quadlet dir: {{ quadlet_dir }}"
+          - "User: {{ file_owner }}"
+          - "Group: {{ file_group }}"
+          - "Become: {{ calculated_become }}"
+          - "Scope: {{ systemd_scope }}"
+
+    - name: Setup cryptpad | cryptpad.container
       ansible.builtin.template:
         src: "../files/cryptpad/cryptpad.container"
-        dest: "/etc/containers/systemd/cryptpad.container"
+        dest: "{{ quadlet_dir }}/cryptpad.container"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '640'
-      become: true
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: '0640'
+      become: "{{ calculated_become }}"
       register: cryptpad_container_output
+      notify: Restart service
 
-    - name: Install cryptpad | config.js
+    - name: Setup cryptpad | config.js
       ansible.builtin.template:
         src: "../files/cryptpad/config.js"
         dest: "{{ cryptpad_dir }}/config.js"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
-        owner: "4001"
-        group: "4001"
-        mode: '640'
-      become: true
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: '0640'
+      become: "{{ calculated_become }}"
       register: cryptpad_config_js_output
+      notify: Restart service
 
-    - name: Install cryptpad | application_config.js
+    - name: Setup cryptpad | application_config.js
       ansible.builtin.template:
         src: "../files/cryptpad/customize/application_config.js"
         dest: "{{ cryptpad_dir }}/customize/application_config.js"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
-        owner: "4001"
-        group: "4001"
-        mode: '640'
-      become: true
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: '0640'
+      become: "{{ calculated_become }}"
       register: cryptpad_application_config_js_output
+      notify: Restart service
 
-    - name: Install cryptpad | restart cryptpad.service
+  handlers:
+    - name: Restart service
       ansible.builtin.systemd:
         daemon_reload: true
         name: cryptpad.service
         state: restarted
-        scope: system
-      when: >
-        cryptpad_container_output.changed or
-        cryptpad_config_js_output.changed or
-        cryptpad_application_config_js_output.changed
-      become: true
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
