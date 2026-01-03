@@ -1,5 +1,5 @@
 - name: Setup Kanidm
-  hosts: marek246.tailnet-ba52.ts.net
+  hosts: wyse01.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"

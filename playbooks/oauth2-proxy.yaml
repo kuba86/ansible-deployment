@@ -1,5 +1,5 @@
 - name: Install oauth2 proxy
-  hosts: marek246.tailnet-ba52.ts.net
+  hosts: wyse01.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
@@ -24,7 +24,7 @@
     
     - name: Install oauth2 proxy | Ensure data directory exists
       ansible.builtin.file:
-        path: "/var/mnt/data/oauth2-proxy/config"
+        path: "{{ oauth2_data_dir }}"
         state: directory
         owner: "{{ quadlet_owner }}"
         group: "{{ quadlet_group }}"
@@ -34,7 +34,7 @@
     - name: Install oauth2 proxy | Generate Config Files
       ansible.builtin.template:
         src: "../files/oauth2-proxy/oauth2-proxy-template.cfg"
-        dest: "/var/mnt/data/oauth2-proxy/config/{{ item.client_id }}.cfg"
+        dest: "{{ oauth2_data_dir }}/{{ item.client_id }}.cfg"
         owner: "{{ quadlet_owner }}"
         group: "{{ quadlet_group }}"
         mode: "0640"

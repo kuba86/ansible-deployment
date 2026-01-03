@@ -1,0 +1,15 @@
+[Unit]
+Description=Restic Backup prune old snapshots
+
+[Container]
+Image=docker.io/restic/restic:{{ restic_version }}
+LogDriver=passthrough
+Network=host
+EnvironmentFile={{ restic_env_vars_file_dir }}/restic.env
+{{ restic_volumes }}
+{{ restic_exec_prune }}
+Memory={{ restic_memory }}
+PodmanArgs=--cpus={{ restic_cpu }}
+
+[Service]
+Type=oneshot

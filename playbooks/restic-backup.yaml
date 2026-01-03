@@ -4,6 +4,7 @@
   vars_files:
     - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
+    - "../inventories/prod/secret_vars/{{ inventory_hostname }}/restic.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
   vars:
     main_user: core
@@ -70,6 +71,41 @@
       ansible.builtin.systemd:
         daemon_reload: true
         name: server-backup-to-s3.timer
+        enabled: true
+        state: started
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
+      
+    - name: Setup Restic Backup | Prune Systemd Podman Quadlet
+      ansible.builtin.template:
+        src: "../files/restic-backup/server-backup-restic-prune-snapshots.container"
+        dest: "{{ quadlet_dir }}/server-backup-restic-prune-snapshots.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_podman_quadlet_output
+      notify: Reload systemd
+    
+    - name: Setup Restic Backup | Prune Systemd Service
+      ansible.builtin.template:
+        src: "../files/restic-backup/server-backup-restic-prune-snapshots.timer"
+        dest: "{{ service_dir }}/server-backup-restic-prune-snapshots.timer"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_service_output
+      notify: Reload systemd
+    
+    - name: Enable Prune timer
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: server-backup-restic-prune-snapshots.timer
         enabled: true
         state: started
         scope: "{{ systemd_scope }}"
