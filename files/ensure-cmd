@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+set -o errtrace
+IFS=$'\n\t'
+
+die() { echo "Error: $*" >&2; exit 1; }
+usage() {
+  cat >&2 <<'EOF'
+Usage: ensure-cmd --cmd NAME --select-archive FILE|"" --repo-url URL --install-dir DIR
+Options:
+  --cmd NAME              Command name to check/install (required)
+  --select-archive FILE   Archive name for dra (--automatic if empty) (required)
+  --repo-url URL          Repository URL passed to dra (required)
+  --install-dir DIR       Target directory for installation (required)
+  --help                  Show this help
+EOF
+  exit 1
+}
+
+check_required_cmds() {
+  local deps=("$@")
+  for dep in "${deps[@]}"; do
+    if ! command -v "${dep}" >/dev/null 2>&1; then
+      die "Required command '${dep}' not found in PATH"
+    fi
+  done
+}
+
+check_required_cmds dra getopt mkdir
+
+cmd=""
+select_archive=""
+repo_url=""
+install_dir=""
+
+# Parse args with getopt for robustness
+parsed_opts=$(getopt -o h --long cmd:,select-archive:,repo-url:,install-dir:,help -- "$@") || die "Failed to parse options"
+eval set -- "${parsed_opts}"
+while true; do
+  case "$1" in
+    --cmd) cmd=${2:?}; shift 2 ;;
+    --select-archive) select_archive=${2-}; shift 2 ;;
+    --repo-url) repo_url=${2:?}; shift 2 ;;
+    --install-dir) install_dir=${2:?}; shift 2 ;;
+    -h|--help) usage ;;
+    --) shift; break ;;
+    *) die "Unknown option: $1" ;;
+  esac
+done
+
+[[ -n "${cmd}" ]] || die "Missing required option: --cmd"
+# select_archive may be empty to trigger --automatic
+[[ -n "${repo_url}" ]] || die "Missing required option: --repo-url"
+[[ -n "${install_dir}" ]] || die "Missing required option: --install-dir"
+
+install_cmd() {
+  local cmd_name=$1
+  local archive=$2
+  local target_dir=$3
+  local url=$4
+
+  mkdir -p -- "${target_dir}" || die "Cannot create install dir '${target_dir}'"
+  echo "installing..."
+  local select_flag=()
+  if [[ -n "${archive}" ]]; then
+    select_flag=(--select "${archive}")
+  else
+    select_flag=(--automatic)
+  fi
+
+  dra download \
+    --install \
+    "${select_flag[@]}" \
+    --output="${target_dir}" \
+    "${url}"
+}
+
+if ! command -v "${cmd}" >/dev/null 2>&1; then
+  echo "'${cmd}' not found; installing..."
+  install_cmd "${cmd}" "${select_archive}" "${install_dir}" "${repo_url}"
+else
+  cmd_path=$(command -v "${cmd}")
+  if [[ "${cmd_path}" == "${install_dir}"/* ]]; then
+    echo "'${cmd}' found in install dir; reinstalling..."
+    install_cmd "${cmd}" "${select_archive}" "${install_dir}" "${repo_url}"
+  else
+    echo "command located in ${cmd_path}. NO INSTALL"
+  fi
+fi

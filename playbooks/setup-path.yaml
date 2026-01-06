@@ -2,12 +2,25 @@
   hosts: coreos:dnf:desktop
   gather_facts: false
   vars_files:
-    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
-    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
-  vars:
-    main_user: core
+  
+  pre_tasks:
+    - name: Gather per-host secret files
+      ansible.builtin.include_vars:
+        file: "{{ item }}"
+      loop:
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+      when: lookup('ansible.builtin.fileglob', item) | length > 0
+  
   tasks:
+    
+    - name: setup PATH | ensures /home/{{ main_user }}/.bashrc.d/ directory exists
+      ansible.builtin.file:
+        path: /home/{{ main_user }}/.bashrc.d/
+        state: directory
+        owner: "{{ main_user }}"
+        group: "{{ main_user }}"
+        mode: '0755'
     
     - name: setup PATH | bashrc
       ansible.builtin.copy:
@@ -15,4 +28,4 @@
         dest: /home/{{ main_user }}/.bashrc.d/75-path.bashrc
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
-        mode: '644'
+        mode: '0644'

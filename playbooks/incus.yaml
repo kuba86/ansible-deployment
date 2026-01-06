@@ -1,12 +1,7 @@
 - name: Install incus
   hosts: test
   gather_facts: true
-#  vars_files:
-#    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
-#    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
-#    - "../inventories/prod/secret_vars/all.yaml"
-  vars:
-    main_user: core
+
   tasks:
     - name: Incus | Install and setup
       become: true

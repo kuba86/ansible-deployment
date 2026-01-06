@@ -1,61 +1,67 @@
-- name: Install Garage s3
+- name: Setup Garage s3
   hosts: coreos:dnf:desktop
   gather_facts: true
   vars_files:
-    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
-    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
-  vars:
-    main_user: core
   
+  pre_tasks:
+    - name: Gather per-host secret files
+      ansible.builtin.include_vars:
+        file: "{{ item }}"
+      loop:
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/garage.yaml"
+      when: lookup('ansible.builtin.fileglob', item) | length > 0
+
   tasks:
-    - name: Install Garage s3 | Setup variables (detect container)
+    - name: Setup Garage s3 | Setup variables (detect container)
       ansible.builtin.set_fact:
-        quadlet_is_container: "{{ (ansible_facts['virtualization_tech_guest'] | default([]) | length) > 0 }}"
+        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default('') in ['lxc', 'container'] }}"
 
-    - name: Install Garage s3 | Setup variables (compute once, reuse everywhere)
+    - name: Setup Garage s3 | Setup variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
-        quadlet_dir: "{{ '/etc/containers/systemd' if quadlet_is_container else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
-        quadlet_owner: "{{ 'root' if quadlet_is_container else main_user }}"
-        quadlet_group: "{{ 'root' if quadlet_is_container else main_user }}"
-        quadlet_become: "{{ quadlet_is_container }}"
-        systemd_scope: "{{ 'system' if quadlet_is_container else 'user' }}"
+        service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if run_as_root else main_user }}"
+        file_group: "{{ 'root' if run_as_root else main_user }}"
+        calculated_become: "{{ run_as_root }}"
+        systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
 
-    - name: Install Garage s3 | ensures garage main directory exists
+    - name: Setup Garage s3 | ensures garage main directory exists
       ansible.builtin.file:
         path: "{{ garage_toml_path }}"
         state: directory
-        owner: "{{ quadlet_owner }}"
-        group: "{{ quadlet_group }}"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
         mode: '0750'
       become: true
-      
-    - name: Install Garage s3 | ensures garage meta directory exists
+
+    - name: Setup Garage s3 | ensures garage meta directory exists
       ansible.builtin.file:
         path: "{{ garage_meta_path }}"
         state: directory
-        owner: "{{ quadlet_owner }}"
-        group: "{{ quadlet_group }}"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
         mode: '0750'
       become: true
-    
-    - name: Install Garage s3 | ensures garage data directory exists
+
+    - name: Setup Garage s3 | ensures garage data directory exists
       ansible.builtin.file:
         path: "{{ garage_data_path }}"
         state: directory
-        owner: "{{ quadlet_owner }}"
-        group: "{{ quadlet_group }}"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
         mode: '0750'
       become: true
     
-    - name: Install Garage s3 | Check a filesystem type for data directory
+    - name: Setup Garage s3 | Check a filesystem type for data directory
       ansible.builtin.command:
         cmd: "stat -f -c %T {{ garage_data_path }}"
       register: garage_fs_type
       changed_when: false
       become: true
     
-    - name: Install Garage s3 | Disable copy-on-write for garage data directory if BTRFS
+    - name: Setup Garage s3 | Disable copy-on-write for garage data directory if BTRFS
       ansible.builtin.shell: |
         if [ "{{ garage_fs_type.stdout }}" == "btrfs" ]; then
           if [ -z "$(ls -A "{{ garage_data_path }}")" ]; then
@@ -71,44 +77,44 @@
       changed_when: "'skipping' not in chattr_result.stdout"
       become: true
     
-    - name: Install Garage s3 | Debug chattr result
+    - name: Setup Garage s3 | Debug chattr result
       ansible.builtin.debug:
         msg:
           - "STDOUT: {{ chattr_result.stdout }}"
           - "STDERR: {{ chattr_result.stderr }}"
 
-    - name: Install Garage s3 | copy garage.toml settings
+    - name: Setup Garage s3 | copy garage.toml settings
       ansible.builtin.template:
         src: "../files/garage/garage.toml"
         dest: "{{ garage_toml_path }}/garage.toml"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
-        owner: "{{ quadlet_owner }}"
-        group: "{{ quadlet_group }}"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
         mode: "0600"
       become: true
       register: garage_toml_output
 
-    - name: Install Garage s3 | Install systemd Podman quadlet unit
+    - name: Setup Garage s3 | Install systemd Podman quadlet unit
       ansible.builtin.template:
         src: "../files/garage/garage.container"
         dest: "{{ quadlet_dir }}/garage.container"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
-        owner: "{{ quadlet_owner }}"
-        group: "{{ quadlet_group }}"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
         mode: "0600"
-      become: "{{ quadlet_become }}"
+      become: "{{ calculated_become }}"
       register: systemd_podman_quadlet_output
 
-    - name: Install Garage s3 | Restart garage service when unit or config changed
+    - name: Setup Garage s3 | Restart garage service when unit or config changed
       ansible.builtin.systemd:
         daemon_reload: true
         name: garage.service
         state: restarted
         enabled: true
         scope: "{{ systemd_scope }}"
-      become: "{{ quadlet_become }}"
+      become: "{{ calculated_become }}"
       when: >
         systemd_podman_quadlet_output.changed or
         garage_toml_output.changed

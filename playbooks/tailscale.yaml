@@ -1,23 +1,51 @@
-- name: Install tailscale
+- name: Setup Tailscale
   hosts: coreos:dnf:desktop
   gather_facts: true
   vars_files:
-    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
-    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
-  vars:
-    tailscale_key:
-    tailscale_tags: "tag:server,tag:kubernetes"
+    
+  pre_tasks:
+    - name: Gather per-host secret files
+      ansible.builtin.include_vars:
+        file: "{{ item }}"
+      loop:
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/tailscale.yaml"
+      when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
+    - name: Setup Tailscale | Setup variables (detect container)
+      ansible.builtin.set_fact:
+        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default('') in ['lxc', 'container'] }}"
+    
+    - name: Setup Tailscale | Setup variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if run_as_root else main_user }}"
+        file_group: "{{ 'root' if run_as_root else main_user }}"
+        calculated_become: "{{ run_as_root }}"
+        systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
+    
+    - name: Setup Tailscale | Info about running user
+      ansible.builtin.debug:
+        msg:
+          - "Run as root: {{ run_as_root }}"
+          - "Service dir: {{ service_dir }}"
+          - "Quadlet dir: {{ quadlet_dir }}"
+          - "User: {{ file_owner }}"
+          - "Group: {{ file_group }}"
+          - "Become: {{ calculated_become }}"
+          - "Scope: {{ systemd_scope }}"
+      
     - name: Tailscale | pre-setup
       become: true
       when:
-        - ansible_distribution in ['Fedora', 'AlmaLinux', 'Rocky']
-        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+        - ansible_facts['distribution'] in ['Fedora', 'AlmaLinux', 'Rocky']
+        - ansible_facts['pkg_mgr'] in ['atomic_container', 'dnf', 'dnf5']
       block:
-        - name: Tailscale | add repository EL-9
-          register: add_repo_el_9
+        - name: Tailscale | add repository EL
+          register: add_repo_el
           ansible.builtin.copy:
             src: ../files/tailscale/tailscale-rhel.repo
             dest: /etc/yum.repos.d/tailscale.repo
@@ -25,8 +53,8 @@
             group: root
             mode: '644'
           when:
-            - ansible_pkg_mgr in ['dnf', 'dnf5']
-            - ansible_distribution in ['AlmaLinux', 'Rocky']
+            - ansible_facts['pkg_mgr'] in ['dnf', 'dnf5']
+            - ansible_facts['distribution'] in ['AlmaLinux', 'Rocky']
 
         - name: Tailscale | sysctl set net.ipv4.ip_forward=1
           ansible.posix.sysctl:
@@ -45,8 +73,8 @@
     - name: Tailscale | Install
       become: true
       when: >
-        ansible_distribution in ['Fedora', 'AlmaLinux', 'Rocky'] and
-        ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+        ansible_facts['distribution'] in ['Fedora', 'AlmaLinux', 'Rocky'] and
+        ansible_facts['pkg_mgr'] in ['atomic_container', 'dnf', 'dnf5']
       block:
         - name: Tailscale | check if 'tailscale' is in PATH
           ansible.builtin.script: ../files/tailscale/tailscale-in-path.sh
@@ -67,7 +95,7 @@
             state: present
           register: install_dnf
           when:
-            - ansible_pkg_mgr in ['dnf', 'dnf5']
+            - ansible_facts['pkg_mgr'] in ['dnf', 'dnf5']
             - tailscale_in_path is changed
 
     - name: Tailscale | start and enable 'tailscaled' systemd service
@@ -80,14 +108,12 @@
         scope: system
       register: tailscale_service
       when: >
-        (ansible_distribution in ['Fedora', 'AlmaLinux', 'Rocky'] and
-        ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5'])
+        (ansible_facts['distribution'] in ['Fedora', 'AlmaLinux', 'Rocky'] and
+        ansible_facts['pkg_mgr'] in ['atomic_container', 'dnf', 'dnf5'])
 
     - name: Tailscale | optimizations
       become: true
-      when: >
-        (ansible_distribution in ['Fedora', 'AlmaLinux', 'Rocky'] and
-        ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5'])
+      when: not run_as_root
       block:
         - name: Tailscale | copy tailscale-optimizations.service
           ansible.builtin.copy:
@@ -108,13 +134,14 @@
           register: tailscale_optimizations_service
           when: tailscale_copy_optimizations_service is changed
 
-        - name: Tailscale | add profile env vars
-          ansible.builtin.copy:
-            src: ../files/tailscale/10-tailscale.sh
-            dest: /etc/profile.d/10-tailscale.sh
-            owner: root
-            group: root
-            mode: '644'
+    - name: Tailscale | add profile env vars
+      ansible.builtin.copy:
+        src: ../files/tailscale/10-tailscale.sh
+        dest: /etc/profile.d/10-tailscale.sh
+        owner: root
+        group: root
+        mode: '644'
+      become: true
 
     - name: Tailscale | up
       become: true

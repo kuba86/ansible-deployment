@@ -2,57 +2,61 @@
   hosts: wyse01.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
-    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
-    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
     - "../inventories/prod/secret_vars/oauth2-proxy.yaml"
-  vars:
-    main_user: core
-  
+
+  pre_tasks:
+    - name: Gather per-host secret files
+      ansible.builtin.include_vars:
+        file: "{{ item }}"
+      loop:
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+      when: lookup('ansible.builtin.fileglob', item) | length > 0
+
   tasks:
     - name: Install oauth2 proxy | Setup variables (detect container)
       ansible.builtin.set_fact:
-        quadlet_is_container: "{{ (ansible_facts['virtualization_tech_guest'] | default([]) | length) > 0 }}"
-    
+        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default('') in ['lxc', 'container'] }}"
+
     - name: Install oauth2 proxy | Setup variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
-        quadlet_dir: "{{ '/etc/containers/systemd' if quadlet_is_container else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
-        quadlet_owner: "{{ 'root' if quadlet_is_container else main_user }}"
-        quadlet_group: "{{ 'root' if quadlet_is_container else main_user }}"
-        quadlet_become: "{{ quadlet_is_container }}"
-        systemd_scope: "{{ 'system' if quadlet_is_container else 'user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if run_as_root else main_user }}"
+        file_group: "{{ 'root' if run_as_root else main_user }}"
+        calculated_become: "{{ run_as_root }}"
+        systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
     
     - name: Install oauth2 proxy | Ensure data directory exists
       ansible.builtin.file:
         path: "{{ oauth2_data_dir }}"
         state: directory
-        owner: "{{ quadlet_owner }}"
-        group: "{{ quadlet_group }}"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
         mode: '0750'
-      become: "{{ quadlet_become }}"
-    
+      become: "{{ calculated_become }}"
+
     - name: Install oauth2 proxy | Generate Config Files
       ansible.builtin.template:
         src: "../files/oauth2-proxy/oauth2-proxy-template.cfg"
         dest: "{{ oauth2_data_dir }}/{{ item.client_id }}.cfg"
-        owner: "{{ quadlet_owner }}"
-        group: "{{ quadlet_group }}"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
         mode: "0640"
       loop: "{{ oauth2_proxies }}"
-      become: "{{ quadlet_become }}"
+      become: "{{ calculated_become }}"
       notify: Restart OAuth2 Proxies
-      
+
     - name: Install oauth2 proxy | Generate Podman Quadlet Files
       ansible.builtin.template:
         src: "../files/oauth2-proxy/oauth2-proxy-template.container"
         dest: "{{ quadlet_dir }}/{{ item.client_id }}.container"
-        owner: "{{ quadlet_owner }}"
-        group: "{{ quadlet_group }}"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
         mode: "0640"
       loop: "{{ oauth2_proxies }}"
-      become: "{{ quadlet_become }}"
+      become: "{{ calculated_become }}"
       notify: Restart OAuth2 Proxies
-      
+
   handlers:
     - name: Restart OAuth2 Proxies
       ansible.builtin.systemd:
@@ -62,4 +66,4 @@
         enabled: true
         scope: "{{ systemd_scope }}"
       loop: "{{ oauth2_proxies }}"
-      become: "{{ quadlet_become }}"
+      become: "{{ calculated_become }}"

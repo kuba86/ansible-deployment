@@ -2,11 +2,16 @@
   hosts: coreos:dnf:desktop
   gather_facts: false
   vars_files:
-    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
-    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
-  vars:
-    main_user: core
+
+  pre_tasks:
+    - name: Gather per-host secret files
+      ansible.builtin.include_vars:
+        file: "{{ item }}"
+      loop:
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+      when: lookup('ansible.builtin.fileglob', item) | length > 0
+
   tasks:
 
     - name: Scala CLI | Install

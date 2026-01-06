@@ -2,8 +2,6 @@
   hosts: coreos:dnf:desktop
   gather_facts: true
   vars_files:
-    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
-    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
     - "../inventories/prod/secret_vars/all.yaml"
   tasks:
 
@@ -26,9 +24,23 @@
         group: "root"
         mode: '600'
       become: true
+      notify: Restart sshd.service
       
-    - name: Setup users | restart sshd.service
-      ansible.builtin.systemd_service:
+    - name: Setup users | update wheel for nopasswd
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%wheel  ALL=(ALL)       ALL$'
+        line:    '%wheel  ALL=(ALL)       NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+      notify: Restart sshd.service
+  
+  handlers:
+    - name: Restart sshd.service
+      ansible.builtin.systemd:
+        daemon_reload: true
         name: sshd.service
         state: restarted
+        scope: system
       become: true

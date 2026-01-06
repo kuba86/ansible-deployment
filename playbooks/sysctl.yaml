@@ -1,10 +1,7 @@
 - name: Set Sysctl config
   hosts: coreos:dnf:desktop
   gather_facts: true
-  vars_files:
-    - "../inventories/prod/host_vars/{{ inventory_hostname }}.yaml"
-    - "../inventories/prod/secret_vars/{{ inventory_hostname }}.yaml"
-    - "../inventories/prod/secret_vars/all.yaml"
+  
   tasks:
     - name: Sysctl | net forwarding
       become: true

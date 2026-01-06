@@ -2,15 +2,18 @@
   ansible.builtin.user:
     name: "{{ setup_user }}"
     create_home: true
-    # time mkpasswd --method=yescrypt --rounds 11 dummy_password
+    # time mkpasswd --method=yescrypt --rounds 9 dummy_password
     password: "{{ core_user_pass_hash }}"
     shell: "{{ user_shells[setup_user] }}"
+    groups: wheel
+    append: true
     state: present
   become: true
   vars:
     user_shells:
       core: /bin/bash
       emergency: /usr/bin/fish
+  notify: Restart sshd.service
 
 - name: Setup users | Create authorized_keys.d directory for '{{ setup_user }}'
   ansible.builtin.file:
@@ -20,6 +23,7 @@
     owner: "{{ setup_user }}"
     group: "{{ setup_user }}"
   become: true
+  notify: Restart sshd.service
 
 - name: Setup users | Update authorized keys for '{{ setup_user }}'
   ansible.builtin.shell: |
@@ -50,13 +54,15 @@
   changed_when: "'Updating...' in ssh_update_output.stdout"
   become: true
   become_user: "{{ setup_user }}"
+  notify: Restart sshd.service
   
-- name: Setup users | enable-linger for '{{ main_user }}'
+- name: Setup users | enable-linger for '{{ setup_user }}'
   ansible.builtin.copy:
     content: ""
-    dest: /var/lib/systemd/linger/{{ main_user }}
+    dest: /var/lib/systemd/linger/{{ setup_user }}
     owner: "root"
     group: "root"
     mode: '644'
   become: true
   register: linger_output
+  notify: Restart sshd.service
