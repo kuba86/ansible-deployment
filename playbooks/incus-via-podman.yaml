@@ -16,7 +16,7 @@
     - name: Incus | Install and setup
       become: true
       when:
-        - '"container" not in ansible_facts["virtualization_tech_guest"]'
+        - "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length == 0 }}"
       block:
 
         - name: Incus | create directory for incus storage

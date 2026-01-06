@@ -74,7 +74,7 @@
             state: started
             scope: user
       when:
-        - '"container" not in ansible_facts["virtualization_tech_guest"]'
+        - "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length == 0 }}"
 
     - name: Podman setup | enable podman-auto-update.timer (root)
       systemd:

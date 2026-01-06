@@ -22,8 +22,8 @@
             sysctl_file: /etc/sysctl.d/10-common.conf
             state: present
     
-    - name: Sysctl | 'container' NOT in virtualization_tech_guest
-      when: '"container" not in ansible_facts["virtualization_tech_guest"]'
+    - name: Sysctl | Only when 'container or lxc' NOT in virtualization_tech_guest
+      when: "ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length == 0"
       become: true
       block:
         - name: Sysctl | set fs.inotify.max_user_watches

@@ -17,7 +17,7 @@
   tasks:
     - name: Setup TLS Certs | Setup variables (detect container)
       ansible.builtin.set_fact:
-        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default('') in ['lxc', 'container'] }}"
+        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
     
     - name: Setup TLS Certs | Setup variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:

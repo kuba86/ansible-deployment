@@ -27,7 +27,7 @@
   ansible.builtin.import_playbook: setup-podman.yaml
 
 - name: Playbooks | Setup Rclone Garage
-  ansible.builtin.import_playbook: setup-rclone-garage.yaml
+  ansible.builtin.import_playbook: setup-rclone.yaml
 
 - name: Playbooks | Setup Garage S3
   ansible.builtin.import_playbook: setup-garage-s3.yaml

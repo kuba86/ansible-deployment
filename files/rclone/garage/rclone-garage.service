@@ -6,7 +6,7 @@ Wants=network-online.target
 
 [Service]
 Type=notify
-ExecStartPre=/usr/bin/umount {{ rclone_garage_mount_path }}
+ExecStartPre=-/usr/bin/umount {{ rclone_garage_mount_path }}
 ExecStart={{ rclone_bin_path }} \
   mount \
   garage: {{ rclone_garage_mount_path }} \
@@ -18,7 +18,6 @@ ExecStart={{ rclone_bin_path }} \
   --s3-sign-accept-encoding=false \
   --s3-decompress \
   --dir-cache-time 60s \
-  --poll-interval 10s \
   --transfers 4 \
   --links \
   --allow-other={{ rclone_allow_other }} \

@@ -4,6 +4,7 @@
   become: true
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
+    - "../inventories/prod/secret_vars/services/dns.yaml"
 
   pre_tasks:
     - name: Gather per-host secret files

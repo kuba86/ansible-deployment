@@ -1,4 +1,4 @@
-- name: Setup Rclone Garage
+- name: Setup Rclone
   hosts: coreos:dnf:desktop
   gather_facts: true
 
@@ -13,19 +13,31 @@
   
   tasks:
     
-    - name: Setup Rclone Garage | Setup variables (detect container)
+    - name: Setup Rclone | Setup variables (detect container)
       ansible.builtin.set_fact:
-        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default('') in ['lxc', 'container'] }}"
-
-    - name: Setup Rclone Garage | Setup variables (compute once, reuse everywhere)
+        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
+    
+    - name: Setup Rclone | Setup variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
         file_owner: "{{ 'root' if run_as_root else main_user }}"
         file_group: "{{ 'root' if run_as_root else main_user }}"
         calculated_become: "{{ run_as_root }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
+
+    - name: Setup Rclone | Info about running user
+      ansible.builtin.debug:
+        msg:
+          - "Run as root: {{ run_as_root }}"
+          - "Service dir: {{ service_dir }}"
+          - "Quadlet dir: {{ quadlet_dir }}"
+          - "User: {{ file_owner }}"
+          - "Group: {{ file_group }}"
+          - "Become: {{ calculated_become }}"
+          - "Scope: {{ systemd_scope }}"
         
-    - name: Setup Rclone Garage | install rclone
+    - name: Setup Rclone | install rclone
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
@@ -38,11 +50,11 @@
       args:
         executable: /usr/bin/bash
       register: rclone
-      failed_when: rclone.rc != 0
+      failed_when: rclone.rc != 0 and 'Text file busy' not in rclone.stderr
       changed_when: "'installing...' in rclone.stdout"
       become: true
 
-    - name: Setup Rclone Garage | ensures mount directory exists
+    - name: Setup Rclone | ensures mount directory exists
       ansible.builtin.file:
         path: "{{ rclone_garage_mount_path }}"
         state: directory
@@ -55,7 +67,7 @@
         - mount_dir_creation.failed
         - "'File exists' not in mount_dir_creation.msg"
     
-    - name: Setup Rclone Garage | ensures config directory exists
+    - name: Setup Rclone | ensures config directory exists
       ansible.builtin.file:
         path: "{{ rclone_conf_path }}"
         state: directory
@@ -64,7 +76,7 @@
         mode: '0750'
       become: true
     
-    - name: Setup Rclone Garage | copy rclone-garage.conf settings
+    - name: Setup Rclone | copy rclone-garage.conf settings
       ansible.builtin.template:
         src: "../files/rclone/{{ rclone_conf_name }}"
         dest: "{{ rclone_conf_path }}/{{ rclone_conf_name }}"
@@ -76,7 +88,7 @@
       become: true
       register: rclone_conf_output
       
-    - name: Setup Rclone Garage | copy lets-encrypt-rclone.conf settings
+    - name: Setup Rclone | copy lets-encrypt-rclone.conf settings
       ansible.builtin.template:
         src: "../inventories/prod/secret_vars/lets-encrypt-rclone.conf"
         dest: "{{ rclone_conf_path }}/lets-encrypt-rclone.conf"
@@ -88,7 +100,7 @@
       become: true
       register: lets_encrypt_rclone_conf_output
 
-    - name: Setup Rclone Garage | Install systemd service
+    - name: Setup Rclone | Install systemd service
       ansible.builtin.template:
         src: "../files/rclone/garage/rclone-garage.service"
         dest: "{{ service_dir }}/rclone-garage.service"
@@ -100,7 +112,7 @@
       become: "{{ calculated_become }}"
       register: service_output
 
-    - name: Setup Rclone Garage | Restart Rclone Garage service
+    - name: Setup Rclone | Restart Rclone Garage service
       ansible.builtin.systemd:
         daemon_reload: true
         name: rclone-garage.service

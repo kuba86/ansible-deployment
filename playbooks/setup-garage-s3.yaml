@@ -3,6 +3,7 @@
   gather_facts: true
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
+    - "../inventories/prod/secret_vars/services/tailscale.yaml"
   
   pre_tasks:
     - name: Gather per-host secret files
@@ -16,7 +17,7 @@
   tasks:
     - name: Setup Garage s3 | Setup variables (detect container)
       ansible.builtin.set_fact:
-        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default('') in ['lxc', 'container'] }}"
+        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
 
     - name: Setup Garage s3 | Setup variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
