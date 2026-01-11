@@ -8,12 +8,6 @@
 ansible-navigator.log
 .bsp
 .scala-build
-/history.txt
 /files/functions/*.fish
-/files/hosts/**/Caddyfile*
-!/files/hosts/**/*.encrypted
-/playbooks/temp.yaml
 .lego
-/files/caddy/etc-config/Caddyfile
-/files/caddy/etc-config/*.caddy
 /files/kanidm/.bash_history

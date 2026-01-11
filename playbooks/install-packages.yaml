@@ -143,3 +143,19 @@
       failed_when: duf.rc != 0
       changed_when: "'installing...' in duf.stdout"
       become: true
+      
+    - name: Install packages | doggo
+      ansible.builtin.shell: |
+        set -euo pipefail
+        
+        ensure-cmd \
+          --cmd doggo \
+          --select-archive "" \
+          --repo-url https://github.com/mr-karan/doggo \
+          --install-dir /usr/local/bin
+      args:
+        executable: /usr/bin/bash
+      register: doggo
+      failed_when: doggo.rc != 0
+      changed_when: "'installing...' in doggo.stdout"
+      become: true

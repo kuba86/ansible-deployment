@@ -1,4 +1,3 @@
-# run this manually first so that the core user is setup
 - name: Playbooks | setup users
   ansible.builtin.import_playbook: setup-users.yaml
 

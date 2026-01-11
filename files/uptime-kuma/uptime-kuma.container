@@ -1,0 +1,21 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=docker.io/louislam/uptime-kuma:2
+ContainerName=%N
+HostName=%H
+AutoUpdate=registry
+{{ uptime_kuma_volumes }}
+{{ uptime_kuma_ports }}
+PodmanArgs=--memory={{ uptime_kuma_memory }}
+PodmanArgs=--cpus={{ uptime_kuma_cpu }}
+NoNewPrivileges=true
+AddCapability=NET_RAW
+
+[Service]
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target default.target

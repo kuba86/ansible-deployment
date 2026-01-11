@@ -5,7 +5,9 @@
     # time mkpasswd --method=yescrypt --rounds 9 dummy_password
     password: "{{ core_user_pass_hash }}"
     shell: "{{ user_shells[setup_user] }}"
-    groups: wheel
+    groups:
+      - wheel
+      - sudo
     append: true
     state: present
   become: true

@@ -60,12 +60,12 @@
     - name: Setup caddy | copy Caddyfile(s)
       ansible.builtin.copy:
         src: "{{ item }}"
-        dest: "{{ caddy_path }}/etc-caddy/{{ item | basename | regex_replace('\\.encrypted$', '') }}"
+        dest: "{{ caddy_path }}/etc-caddy/{{ item | basename }}"
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
         mode: "0640"
       with_fileglob:
-        - "../files/caddy/etc-config/*.encrypted"
+        - "../inventories/prod/secret_vars/services/caddy/*"
       become: "{{ calculated_become }}"
       register: copy_caddyfile
       

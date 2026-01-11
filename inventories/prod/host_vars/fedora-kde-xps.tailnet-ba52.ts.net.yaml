@@ -1,3 +1,0 @@
-main_user: "user"
-ansible_user: "user"
-tailscale_tags: "tag:server,tag:kubernetes,tag:workstation"
