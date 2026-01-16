@@ -10,6 +10,7 @@
         file: "{{ item }}"
       loop:
         - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/sftpgo.yaml"
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
