@@ -9,6 +9,7 @@ AutoUpdate=registry
 {{ sftpgo_volumes }}
 {{ sftpgo_ports }}
 {{ sftpgo_userns }}
+{{ sftpgo_env_var }}
 Memory={{ sftpgo_memory }}
 PodmanArgs=--cpus={{ sftpgo_cpu }}
 NoNewPrivileges=true
