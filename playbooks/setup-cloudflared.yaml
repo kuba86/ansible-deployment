@@ -1,0 +1,98 @@
+- name: Setup cloudflared
+  hosts: coreos:dnf
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/secret_vars/all.yaml"
+
+  pre_tasks:
+    - name: Gather per-host secret files
+      ansible.builtin.include_vars:
+        file: "{{ item }}"
+      loop:
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/cloudflared.yaml"
+      when: lookup('ansible.builtin.fileglob', item) | length > 0
+
+  tasks:
+    
+    - name: Setup cloudflared | Setup variables (run as root for host networking)
+      ansible.builtin.set_fact:
+        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
+
+    - name: Setup cloudflared | Setup variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if run_as_root else main_user }}"
+        file_group: "{{ 'root' if run_as_root else main_user }}"
+        calculated_become: "{{ run_as_root }}"
+        systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
+
+    - name: Setup cloudflared | Info about running user
+      ansible.builtin.debug:
+        msg:
+          - "Run as root: {{ run_as_root }}"
+          - "Service dir: {{ service_dir }}"
+          - "Quadlet dir: {{ quadlet_dir }}"
+          - "User: {{ file_owner }}"
+          - "Group: {{ file_group }}"
+          - "Become: {{ calculated_become }}"
+          - "Scope: {{ systemd_scope }}"
+  
+    - name: Setup cloudflared | ensures data directory exists
+      ansible.builtin.file:
+        path: "/var/mnt/data/cloudflared"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0750"
+      become: "{{ calculated_become }}"
+      register: data_dir_output
+      notify: Restart service
+      
+    - name: Setup cloudflared | copy yaml
+      ansible.builtin.template:
+        src: "../files/cloudflared/config.yaml"
+        dest: "/var/mnt/data/cloudflared/config.yaml"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      notify: Restart service
+      
+    - name: Setup cloudflared | copy json
+      ansible.builtin.template:
+        src: "../inventories/prod/secret_vars/services/cloudflared/cloudflared_caddy_proxy.json"
+        dest: "/var/mnt/data/cloudflared/{{ cloudflared_caddy_proxy }}.json"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      notify: Restart service
+
+    - name: Setup cloudflared | Systemd Podman Quadlet
+      ansible.builtin.template:
+        src: "../files/cloudflared/cloudflared.container"
+        dest: "{{ quadlet_dir }}/cloudflared.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_podman_quadlet_output
+      notify: Restart service
+
+  handlers:
+    - name: Restart service
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: cloudflared.service
+        state: restarted
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"

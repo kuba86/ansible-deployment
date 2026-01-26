@@ -11,3 +11,5 @@ ansible-navigator.log
 /files/functions/*.fish
 .lego
 /files/kanidm/.bash_history
+/inventories/prod/secret_vars/
+/files/garage/commands.sh

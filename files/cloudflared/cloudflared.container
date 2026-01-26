@@ -1,0 +1,22 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=docker.io/cloudflare/cloudflared:latest
+ContainerName=%N
+HostName=%H
+AutoUpdate=registry
+Network=host
+AddCapability=CAP_NET_RAW
+{{ cloudflared_userns }}
+User={{ cloudflared_user }}
+NoNewPrivileges=true
+Volume=/var/mnt/data/cloudflared:/etc/cloudflared:z
+Exec=tunnel run {{ cloudflared_caddy_proxy }}
+
+[Service]
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target default.target

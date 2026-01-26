@@ -1,0 +1,9 @@
+tunnel: {{ cloudflared_caddy_proxy }}
+credentials-file: /etc/cloudflared/{{ cloudflared_caddy_proxy }}.json
+
+ingress:
+  - hostname: "{{ cloudflared_hostname }}"
+    service: "{{ cloudflared_url }}"
+    originRequest:
+      originServerName: "{{ cloudflared_origin_server_name }}"
+  - service: http_status:404
