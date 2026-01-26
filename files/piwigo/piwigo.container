@@ -4,7 +4,7 @@ Description=%N
 [Container]
 Image=lscr.io/linuxserver/piwigo:latest
 ContainerName=%N
-HostName=%H
+HostName={{ host_name }}
 AutoUpdate=registry
 Environment=PUID=1000
 Environment=PGID=1000

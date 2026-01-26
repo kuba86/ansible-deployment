@@ -4,7 +4,7 @@ Description=%N
 [Container]
 Image=lscr.io/linuxserver/mariadb:latest
 ContainerName=%N
-HostName=%H
+HostName={{ host_name }}
 AutoUpdate=registry
 Volume=/var/mnt/data2/mariadb/config:/config:z
 PublishPort=3306:3306

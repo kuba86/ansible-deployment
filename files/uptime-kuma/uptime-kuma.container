@@ -4,7 +4,7 @@ Description=%N
 [Container]
 Image=docker.io/louislam/uptime-kuma:2
 ContainerName=%N
-HostName=%H
+HostName={{ host_name }}
 AutoUpdate=registry
 {{ uptime_kuma_volumes }}
 {{ uptime_kuma_ports }}

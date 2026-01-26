@@ -4,7 +4,7 @@ Description=%N
 [Container]
 Image=docker.io/machines/filestash:latest
 ContainerName=%N
-HostName=%H
+HostName={{ host_name }}
 AutoUpdate=registry
 Volume=/var/mnt/data1/filebrowser/srv:/srv:rw,z
 Volume=/var/mnt/data1/syncthing/Kuba-media-videos:/srv/Kuba-media-videos:ro,z

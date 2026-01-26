@@ -4,7 +4,7 @@ Description=MinIO Node %H.tailnet-ba52.ts.net
 [Container]
 Image=quay.io/minio/minio:latest
 ContainerName=%N
-HostName=%H.tailnet-ba52.ts.net
+HostName={{ host_name }}.tailnet-ba52.ts.net
 AutoUpdate=registry
 Exec=server \
 --console-address ":9001" \

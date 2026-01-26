@@ -4,7 +4,7 @@ Description=%N
 [Container]
 Image=quay.io/oauth2-proxy/oauth2-proxy:{{ item.image_version }}
 ContainerName=%N
-HostName=%H
+HostName={{ host_name }}
 Volume=/var/mnt/data/oauth2-proxy/config/{{ item.client_id }}.cfg:/etc/oauth2-proxy.cfg:z,U
 PublishPort={{ item.port }}:{{ item.port }}
 AutoUpdate=registry

@@ -4,7 +4,7 @@ Description=%N
 [Container]
 Image=ghcr.io/cmspam/incus-docker:latest
 ContainerName=%N
-HostName=%H
+HostName={{ host_name }}
 AutoUpdate=registry
 Network=host
 CgroupsMode=no-conmon

@@ -4,7 +4,7 @@ Description=%N
 [Container]
 Image=docker.io/library/caddy:2
 ContainerName=%N
-HostName=%H
+HostName={{ host_name }}
 AutoUpdate=registry
 Pod=signal-api.pod
 Volume=/var/mnt/data1/caddy-signal-api/Caddyfile:/etc/caddy/Caddyfile:z

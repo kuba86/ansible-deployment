@@ -4,7 +4,7 @@ Description=%N
 [Container]
 Image=docker.io/filebrowser/filebrowser:v2
 ContainerName=%N
-HostName=%H
+HostName={{ host_name }}
 AutoUpdate=registry
 PublishPort=5804:5804/tcp
 Volume=/var/mnt/data1/filebrowser/srv:/srv:rw,z

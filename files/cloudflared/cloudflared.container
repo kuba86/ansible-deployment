@@ -4,7 +4,7 @@ Description=%N
 [Container]
 Image=docker.io/cloudflare/cloudflared:latest
 ContainerName=%N
-HostName=%H
+HostName={{ host_name }}
 AutoUpdate=registry
 Network=host
 AddCapability=CAP_NET_RAW

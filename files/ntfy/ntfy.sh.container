@@ -4,7 +4,7 @@ Description=%N
 [Container]
 Image=docker.io/binwiederhier/ntfy:latest
 ContainerName=%N
-HostName=%H
+HostName={{ host_name }}
 AutoUpdate=registry
 Volume=/var/mnt/data1/ntfy.sh/server.yml:/etc/ntfy/server.yml:z
 Volume=/var/mnt/data1/ntfy.sh/lib:/var/lib/ntfy:z

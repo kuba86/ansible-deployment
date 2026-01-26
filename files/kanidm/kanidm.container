@@ -4,7 +4,7 @@ Description=%N
 [Container]
 Image=docker.io/kanidm/server:1.8.5
 ContainerName=%N
-HostName=%H
+HostName={{ host_name }}
 {{ kanidm_ports }}
 {{ kanidm_volumes }}
 Volume={{ lets_encrypt_dir }}:/certificates:z
