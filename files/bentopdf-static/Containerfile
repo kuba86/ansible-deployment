@@ -1,0 +1,68 @@
+# syntax=docker/dockerfile:1
+
+# Build arguments with sensible defaults for the static Simple Mode bundle
+ARG BENTOPDF_VERSION=v1.16.1
+ARG BASE_URL=/
+ARG SIMPLE_MODE=true
+ARG VITE_USE_CDN=true
+ARG PYMUPDF_VERSION=0.11.14
+ARG GS_VERSION=latest
+ARG CPDF_VERSION=latest
+
+FROM node:20-bookworm-slim AS builder
+ARG BENTOPDF_VERSION
+ARG BASE_URL
+ARG SIMPLE_MODE
+ARG VITE_USE_CDN
+ARG PYMUPDF_VERSION
+ARG GS_VERSION
+ARG CPDF_VERSION
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
+    git \
+    python3 \
+    make \
+    g++ \
+    zip && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+RUN git clone --depth 1 --branch "${BENTOPDF_VERSION}" https://github.com/alam00000/bentopdf.git .
+
+# Install project deps and optional AGPL components (kept separate from node_modules)
+RUN npm ci
+RUN npm install --prefix /tmp/agpl --no-save \
+    "@bentopdf/pymupdf-wasm@${PYMUPDF_VERSION}" \
+    "@bentopdf/gs-wasm@${GS_VERSION}" \
+    "coherentpdf@${CPDF_VERSION}"
+
+ENV BASE_URL=${BASE_URL}
+ENV SIMPLE_MODE=${SIMPLE_MODE}
+ENV VITE_USE_CDN=${VITE_USE_CDN}
+ENV NODE_OPTIONS="--max-old-space-size=3072"
+
+# BASE_URL must end with a slash so Vite rewrites paths correctly
+RUN case "${BASE_URL}" in */) ;; *) echo "BASE_URL must end with / (e.g. / or /bentopdf/)" >&2; exit 1 ;; esac
+
+RUN npm run build:with-docs
+
+# Bundle optional AGPL WASM assets so they can be served from the same origin
+RUN mkdir -p dist/wasm/pymupdf dist/wasm/ghostscript dist/wasm/cpdf && \
+    cp -r /tmp/agpl/node_modules/@bentopdf/pymupdf-wasm/dist dist/wasm/pymupdf/ && \
+    cp -r /tmp/agpl/node_modules/@bentopdf/pymupdf-wasm/assets dist/wasm/pymupdf/ && \
+    cp -r /tmp/agpl/node_modules/@bentopdf/gs-wasm/assets/* dist/wasm/ghostscript/ && \
+    cp -r /tmp/agpl/node_modules/coherentpdf/dist/* dist/wasm/cpdf/
+
+# Handy zip for uploading to S3/minio
+RUN cd dist && zip -r9 /app/dist-bentopdf.zip .
+
+FROM alpine:3.20 AS artifact
+WORKDIR /export
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist-bentopdf.zip ./dist-bentopdf.zip
+COPY --from=builder /app/package.json ./package.json
+
+# Show the artifacts by default
+CMD ["ls", "-l", "/export"]

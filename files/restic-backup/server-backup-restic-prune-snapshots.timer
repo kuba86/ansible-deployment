@@ -1,9 +1,9 @@
 [Unit]
-Description=Run Restic prune old snapshots once a day around 05:00
+Description=Run Restic prune old snapshots once a day around 05:30
 
 [Timer]
-OnCalendar=05:10:00
-RandomizedDelaySec=20m
+OnCalendar=05:30:00
+RandomizedDelaySec=10m
 Persistent=true
 Unit=server-backup-restic-prune-snapshots.service
 

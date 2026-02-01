@@ -8,7 +8,7 @@ HostName={{ host_name }}
 Volume=/var/mnt/data/oauth2-proxy/config/{{ item.client_id }}.cfg:/etc/oauth2-proxy.cfg:z,U
 PublishPort={{ item.port }}:{{ item.port }}
 AutoUpdate=registry
-Memory=500m
+Memory=128m
 PodmanArgs=--cpus=1
 NoNewPrivileges=true
 Exec=--config=/etc/oauth2-proxy.cfg

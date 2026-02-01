@@ -1,8 +1,9 @@
 - name: Setup uptime-kuma
-  hosts: wyse01.tailnet-ba52.ts.net
+  hosts: marek246.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
+    - "../inventories/prod/secret_vars/services/uptime-kuma.yaml"
 
   pre_tasks:
     - name: Gather per-host secret files
@@ -10,7 +11,6 @@
         file: "{{ item }}"
       loop:
         - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
-        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/uptime-kuma.yaml"
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:

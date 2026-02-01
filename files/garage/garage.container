@@ -2,7 +2,7 @@
 Description=%N
 
 [Container]
-Image=docker.io/dxflrs/garage:v2.1.0
+Image=docker.io/dxflrs/garage:v2.2.0
 ContainerName=%N
 HostName={{ host_name }}
 AutoUpdate=registry

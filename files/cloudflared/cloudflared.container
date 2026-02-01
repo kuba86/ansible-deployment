@@ -10,6 +10,8 @@ Network=host
 AddCapability=CAP_NET_RAW
 {{ cloudflared_userns }}
 User={{ cloudflared_user }}
+Memory={{ cloudflared_memory }}
+PodmanArgs=--cpus={{ cloudflared_cpu }}
 NoNewPrivileges=true
 Volume=/var/mnt/data/cloudflared:/etc/cloudflared:z
 Exec=tunnel run {{ cloudflared_caddy_proxy }}

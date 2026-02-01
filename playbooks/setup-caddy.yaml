@@ -69,23 +69,6 @@
       become: "{{ calculated_become }}"
       register: copy_caddyfile
       
-    - name: Setup caddy | Remove 2lo-absolwenci if not wyse01
-      ansible.builtin.file:
-        path: "{{ caddy_path }}/etc-caddy/2lo-absolwenci.caddy"
-        state: absent
-      when: inventory_hostname != 'wyse01.tailnet-ba52.ts.net'
-      become: "{{ calculated_become }}"
-      register: remove_2lo_caddyfile
-      
-    - name: Setup caddy | Remove import 2lo-absolwenci if not wyse01
-      ansible.builtin.lineinfile:
-        path: "{{ caddy_path }}/etc-caddy/Caddyfile"
-        regexp: '^import 2lo-absolwenci\.caddy$'
-        state: absent
-      when: inventory_hostname != 'wyse01.tailnet-ba52.ts.net'
-      become: "{{ calculated_become }}"
-      register: remove_2lo_import
-      
     - name: Setup caddy | Restart service
       ansible.builtin.systemd:
         daemon_reload: true

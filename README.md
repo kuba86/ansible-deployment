@@ -113,7 +113,7 @@ all:
 ansible-navigator --ee false run playbooks/all.yaml -i inventories/prod/hosts.yaml
 
 # Specific service
-ansible-navigator --ee false run playbooks/tailscale.yaml -i inventories/prod/hosts.yaml
+ansible-navigator --ee false run playbooks/setup-tailscale.yaml -i inventories/prod/hosts.yaml
 ```
 
 
@@ -129,7 +129,7 @@ ansible-navigator --ee false run playbooks/tailscale.yaml -i inventories/prod/ho
 
 ### Core Infrastructure
 - `all.yaml` and `all-coreos.yaml` - Complete infrastructure deployment
-- `tailscale.yaml` - Mesh VPN setup with exit nodes
+- `setup-tailscale.yaml` - Mesh VPN setup with exit nodes
 - `setup-users.yaml` - Base user configuration
 - `sysctl.yaml` - Kernel parameter tuning
 - `setup-dns.yaml` - DNS configuration

@@ -52,7 +52,7 @@
       
     - name: Setup cloudflared | copy yaml
       ansible.builtin.template:
-        src: "../files/cloudflared/config.yaml"
+        src: "../inventories/prod/secret_vars/services/cloudflared/config.yaml"
         dest: "/var/mnt/data/cloudflared/config.yaml"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"

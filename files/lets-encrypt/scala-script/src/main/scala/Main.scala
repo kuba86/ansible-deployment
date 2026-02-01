@@ -36,7 +36,7 @@ object Main extends CommandsEntryPoint {
 }
 
 object RenewCommand extends Command[RenewOptions] {
-  override def name: String = "renew"
+  override def name: String                                                   = "renew"
   override def run(options: RenewOptions, remainingArgs: RemainingArgs): Unit = {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
@@ -46,7 +46,7 @@ object RenewCommand extends Command[RenewOptions] {
 }
 
 object RunCommand extends Command[RenewOptions] {
-  override def name: String = "run"
+  override def name: String                                                   = "run"
   override def run(options: RenewOptions, remainingArgs: RemainingArgs): Unit = {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
@@ -56,7 +56,7 @@ object RunCommand extends Command[RenewOptions] {
 }
 
 object CopyCertsCommand extends Command[CopyCertsOptions] {
-  override def name: String = "copy-certs"
+  override def name: String                                                       = "copy-certs"
   override def run(options: CopyCertsOptions, remainingArgs: RemainingArgs): Unit = {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)

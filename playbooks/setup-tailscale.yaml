@@ -17,7 +17,8 @@
   tasks:
     - name: Setup Tailscale | Setup variables (detect container)
       ansible.builtin.set_fact:
-        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
+        running_in_container: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
+        run_as_root: "true"
     
     - name: Setup Tailscale | Setup variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
@@ -114,7 +115,6 @@
 
     - name: Tailscale | optimizations
       become: true
-      when: not run_as_root
       block:
         - name: Tailscale | copy tailscale-optimizations.service
           ansible.builtin.copy:
@@ -134,6 +134,7 @@
             scope: system
           register: tailscale_optimizations_service
           when: tailscale_copy_optimizations_service is changed
+      when: "ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length == 0"
 
     - name: Tailscale | add profile env vars
       ansible.builtin.copy:

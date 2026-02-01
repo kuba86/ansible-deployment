@@ -1,8 +1,8 @@
 - name: Playbooks | Fedora CoreOS bootc rebase
   ansible.builtin.import_playbook: fedora-coreos-bootc-rebase.yaml
 
-- name: Playbooks | install tailscale
-  ansible.builtin.import_playbook: tailscale.yaml
+- name: Playbooks | setup tailscale
+  ansible.builtin.import_playbook: setup-tailscale.yaml
 
 - name: Playbooks | create user core
   ansible.builtin.import_playbook: user-core.yaml

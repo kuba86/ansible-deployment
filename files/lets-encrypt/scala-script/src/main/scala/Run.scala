@@ -1,4 +1,3 @@
-
 package com.kuba86.letsEntryptScript
 
 import com.kuba86.letsEntryptScript.model.RenewOptions

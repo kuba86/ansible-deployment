@@ -1,4 +1,3 @@
-
 package com.kuba86.letsEntryptScript
 
 import com.kuba86.letsEntryptScript.model.{RenewError, RenewOk, RenewOptions}
@@ -57,7 +56,7 @@ class Renew(options: RenewOptions) {
       case stderr if stderr.contains("Error while loading the certificate for domain") =>
         new Run(options)
         warn(s"Error loading certificate for domain ${record.domain}, retrying with 'run' command")
-        val runCmd: String = options.podmanCommand(record.domain, "run")
+        val runCmd: String                                             = options.podmanCommand(record.domain, "run")
         val runResult: (domain: String, stderr: String, exitCode: Int) = executeCmd(record.domain, runCmd)
         debug(s"stderr for ${record.domain} (run command):\n${runResult.stderr}")
 

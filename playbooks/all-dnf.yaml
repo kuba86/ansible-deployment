@@ -4,8 +4,8 @@
 - name: Playbooks | Sysctl
   ansible.builtin.import_playbook: sysctl.yaml
 
-- name: Playbooks | install tailscale
-  ansible.builtin.import_playbook: tailscale.yaml
+- name: Playbooks | setup tailscale
+  ansible.builtin.import_playbook: setup-tailscale.yaml
 
 - name: Playbooks | install ntfy-server-boot service and timer
   ansible.builtin.import_playbook: ntfy-server-boot.yaml

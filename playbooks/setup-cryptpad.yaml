@@ -1,9 +1,9 @@
 - name: Setup cryptpad
-  hosts: wyse01.tailnet-ba52.ts.net
+  hosts: marek246.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
-    - "../inventories/prod/secret_vars/cryptpad.yaml"
+    - "../inventories/prod/secret_vars/services/cryptpad.yaml"
 
   pre_tasks:
     - name: Gather per-host secret files

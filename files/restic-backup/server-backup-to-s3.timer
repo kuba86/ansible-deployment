@@ -1,9 +1,9 @@
 [Unit]
-Description=Run Restic Backup every 4 hours
+Description=Run Restic Backup every 1 hour
 
 [Timer]
-OnCalendar=00/4:10:00
-RandomizedDelaySec=20m
+OnCalendar=00/1:10:00
+RandomizedDelaySec=10m
 Persistent=true
 Unit=server-backup-to-s3.service
 
