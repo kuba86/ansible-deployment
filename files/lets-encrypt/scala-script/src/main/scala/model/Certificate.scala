@@ -4,8 +4,7 @@ package model
 import caseapp.*
 
 case class Certificate(
-    certDomains: String = "",
-    certFileName: String = ""
+    certDomains: String = ""
 )
 
 object Certificate {

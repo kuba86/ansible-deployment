@@ -5,6 +5,7 @@ import caseapp.*
 case class RenewOptions(
     logLevel: String = "info",
     @Recurse cloudflare: Cloudflare,
+    @Recurse certificate: Certificate,
     @Recurse lego: Lego
 )
 
