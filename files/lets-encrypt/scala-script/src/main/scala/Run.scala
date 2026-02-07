@@ -23,41 +23,46 @@ class Run(options: RunOptions) {
     debug(s"Domains: $domains")
     debug(s"DNS Servers: $dnsServers")
 
-    val domainFlags: List[String] = domains.flatMap(d => Seq("--domains", d))
+    val domainFlags: List[String]      = domains.flatMap(d => Seq("--domains", d))
     val dnsResolverFlags: List[String] = dnsServers.flatMap(s => Seq("--dns.resolvers", s))
 
     val legoCommand: Seq[String] = Seq(
       "lego",
       "--accept-tos",
-      "--email", options.lego.legoEmail,
-      "--path", options.lego.legoPath,
-      "--server", options.lego.legoServer,
-      "--dns", options.cloudflare.dnsProvider
+      "--email",
+      options.lego.legoEmail,
+      "--path",
+      options.lego.legoPath,
+      "--server",
+      options.lego.legoServer,
+      "--dns",
+      options.cloudflare.dnsProvider
     ) ++ domainFlags ++ dnsResolverFlags ++ Seq("run")
 
     debug(s"Executing command: ${legoCommand.mkString(" ")}")
 
     val env: Map[String, String] = Map(
-      "CF_DNS_API_TOKEN" -> options.cloudflare.apiToken,
-      "CLOUDFLARE_POLLING_INTERVAL" -> options.cloudflare.pollingInterval.toString,
+      "CF_DNS_API_TOKEN"               -> options.cloudflare.apiToken,
+      "CLOUDFLARE_POLLING_INTERVAL"    -> options.cloudflare.pollingInterval.toString,
       "CLOUDFLARE_PROPAGATION_TIMEOUT" -> options.cloudflare.propagationTimeout.toString,
-      "CLOUDFLARE_TTL" -> options.cloudflare.ttl.toString
+      "CLOUDFLARE_TTL"                 -> options.cloudflare.ttl.toString
     )
 
     debug(s"Environment variables: ${env.keys.mkString(", ")}")
 
     Try {
-      os.proc(legoCommand).call(
-        cwd = os.pwd,
-        env = env,
-        stdout = os.Pipe,
-        stderr = os.Pipe
-      )
+      os.proc(legoCommand)
+        .call(
+          cwd = os.pwd,
+          env = env,
+          stdout = os.Pipe,
+          stderr = os.Pipe
+        )
     } match {
       case Success(result) =>
         result.err.trim() match {
           case stderr if stderr.contains("Server responded with a certificate.") =>
-        Right(CertOk.NewCertificate(domains.head))
+            Right(CertOk.NewCertificate(domains.head))
           case stderr if stderr.contains("The certificate expires in") =>
             daysPattern.findFirstMatchIn(stderr) match {
               case Some(m) =>

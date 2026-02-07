@@ -54,7 +54,7 @@ object RenewCommand extends Command[RenewOptions] {
 }
 
 object RunCommand extends Command[RunOptions] {
-  override def name: String                                                   = "run"
+  override def name: String                                                 = "run"
   override def run(options: RunOptions, remainingArgs: RemainingArgs): Unit = {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
