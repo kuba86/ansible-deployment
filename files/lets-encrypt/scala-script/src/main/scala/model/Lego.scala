@@ -8,7 +8,8 @@ case class Lego(
     legoEmail: String = "",
     legoPath: String = "",
     legoDnsServers: String = "",
-    legoServer: String = ""
+    legoServer: String = "",
+    legoRenewDays: Int = 30
 )
 
 object Lego {

@@ -41,7 +41,7 @@ object RenewCommand extends Command[RenewOptions] {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
     info("starting renew")
-    val result = new Renew(options).execute()
+    val result: Either[CertError, CertOk] = new Renew(options).execute()
     result match {
       case Right(certOk) =>
         info(s"Renew successful: $certOk")
@@ -60,7 +60,7 @@ object RunCommand extends Command[RunOptions] {
     debug(pprint.apply(options).render)
     debug(pprint.apply(remainingArgs).render)
     info("starting run")
-    val result = new Run(options).execute()
+    val result: Either[CertError, CertOk] = new Run(options).execute()
     result match {
       case Right(certOk) =>
         info(s"Run successful: $certOk")

@@ -37,7 +37,12 @@ class Renew(options: RenewOptions) {
       options.lego.legoServer,
       "--dns",
       options.cloudflare.dnsProvider
-    ) ++ domainFlags ++ dnsResolverFlags ++ Seq("renew", "--no-random-sleep", "--days", "90")
+    ) ++ domainFlags ++ dnsResolverFlags ++ Seq(
+      "renew",
+      "--no-random-sleep",
+      "--days",
+      options.lego.legoRenewDays.toString
+    )
 
     debug(s"Executing command: ${legoCommand.mkString(" ")}")
 
