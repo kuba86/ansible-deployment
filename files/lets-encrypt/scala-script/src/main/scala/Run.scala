@@ -1,9 +1,9 @@
 package com.kuba86.letsEntryptScript
 
-import com.kuba86.letsEntryptScript.model.RenewOptions
+import com.kuba86.letsEntryptScript.model.RunOptions
 import os.*
 import scribe.*
 
-class Run(options: RenewOptions, domains: Option[List[String]] = None) {
+class Run(options: RunOptions, domains: Option[List[String]] = None) {
   info("run command executed")
 }

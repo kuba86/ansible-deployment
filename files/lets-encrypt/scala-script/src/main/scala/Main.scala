@@ -10,7 +10,7 @@ object Main extends CommandsEntryPoint {
 
   override def progName: String = "Lets Encrypt Script"
 
-  override def commands = Seq(
+  override def commands: Seq[Command[?]] = Seq(
     RenewCommand,
     RunCommand,
     CopyCertsCommand
@@ -45,9 +45,9 @@ object RenewCommand extends Command[RenewOptions] {
   }
 }
 
-object RunCommand extends Command[RenewOptions] {
+object RunCommand extends Command[RunOptions] {
   override def name: String                                                   = "run"
-  override def run(options: RenewOptions, remainingArgs: RemainingArgs): Unit = {
+  override def run(options: RunOptions, remainingArgs: RemainingArgs): Unit = {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
     info("starting run")

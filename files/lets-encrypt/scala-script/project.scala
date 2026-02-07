@@ -12,7 +12,7 @@
 
 //> using dependency "com.github.alexarchambault::case-app:2.1.0"
 //> using dependency "com.github.pureconfig::pureconfig-core:0.17.10"
-//> using dependency "com.lihaoyi::os-lib:0.11.7"
+//> using dependency "com.lihaoyi::os-lib:0.11.8"
 //> using dependency "com.lihaoyi::pprint:0.9.6"
 //> using dependency "com.outr::scribe:3.17.0"
 //> using dependency "org.scala-lang.modules::scala-parallel-collections:1.2.0"

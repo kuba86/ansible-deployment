@@ -6,5 +6,5 @@ case class Cloudflare(
     cfPoolingInterval: Int = 15,
     cfPropagationTimeout: Int = 240,
     cfTtl: Int = 120,
-    dnsProvider: String = "cloudflare"
+    cfDnsProvider: String = "cloudflare"
 )
