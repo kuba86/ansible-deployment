@@ -1,11 +1,14 @@
 package com.kuba86.letsEntryptScript
 package model
-import caseapp.Recurse
+import caseapp.*
 
 case class RenewOptions(
     logLevel: String = "info",
-    @Recurse(prefix = "cf-")
-    cloudflare: Cloudflare,
-    @Recurse(prefix = "lego-")
-    lego: Lego
+    @Recurse cloudflare: Cloudflare,
+    @Recurse lego: Lego
 )
+
+object RenewOptions {
+  implicit val parser: Parser[RenewOptions] = Parser.derive
+  implicit val help: Help[RenewOptions]     = Help.derive
+}

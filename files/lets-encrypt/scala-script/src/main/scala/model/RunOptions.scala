@@ -1,13 +1,15 @@
 package com.kuba86.letsEntryptScript
 package model
-import caseapp.Recurse
+import caseapp.*
 
 case class RunOptions(
     logLevel: String = "info",
-    @Recurse(prefix = "cf-")
-    cloudflare: Cloudflare,
-    @Recurse(prefix = "cert-")
-    certificate: Certificate,
-    @Recurse(prefix = "lego-")
-    lego: Lego
+    @Recurse cloudflare: Cloudflare,
+    @Recurse certificate: Certificate,
+    @Recurse lego: Lego
 )
+
+object RunOptions {
+  implicit val parser: Parser[RunOptions] = Parser.derive
+  implicit val help: Help[RunOptions]     = Help.derive
+}

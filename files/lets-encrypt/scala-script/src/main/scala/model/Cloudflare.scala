@@ -1,10 +1,17 @@
 package com.kuba86.letsEntryptScript
 package model
 
+import caseapp.*
+
 case class Cloudflare(
-    cfApiToken: String = "",
-    cfPoolingInterval: Int = 15,
-    cfPropagationTimeout: Int = 240,
-    cfTtl: Int = 120,
-    cfDnsProvider: String = "cloudflare"
+    apiToken: String = "",
+    pollingInterval: Int = 15,
+    propagationTimeout: Int = 240,
+    ttl: Int = 120,
+    dnsProvider: String = "cloudflare"
 )
+
+object Cloudflare {
+  implicit val parser: Parser[Cloudflare] = Parser.derive
+  implicit val help: Help[Cloudflare]     = Help.derive
+}

@@ -1,8 +1,8 @@
 package com.kuba86.letsEntryptScript
 
+import scribe.*
 import caseapp.*
 import com.kuba86.letsEntryptScript.model.*
-import scribe.*
 
 object Main extends CommandsEntryPoint {
 
@@ -41,7 +41,15 @@ object RenewCommand extends Command[RenewOptions] {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
     info("starting renew")
-    new Renew(options)
+    val result = new Renew(options).execute()
+    result match {
+      case Right(certOk) =>
+        info(s"Renew successful: $certOk")
+        sys.exit(0)
+      case Left(certError) =>
+        scribe.error(s"Renew failed: $certError")
+        sys.exit(1)
+    }
   }
 }
 
@@ -50,8 +58,17 @@ object RunCommand extends Command[RunOptions] {
   override def run(options: RunOptions, remainingArgs: RemainingArgs): Unit = {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
+    debug(pprint.apply(remainingArgs).render)
     info("starting run")
-    new Run(options)
+    val result = new Run(options).execute()
+    result match {
+      case Right(certOk) =>
+        info(s"Run successful: $certOk")
+        sys.exit(0)
+      case Left(certError) =>
+        scribe.error(s"Run failed: $certError")
+        sys.exit(1)
+    }
   }
 }
 
