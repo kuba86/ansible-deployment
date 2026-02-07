@@ -4,9 +4,9 @@ package model
 import caseapp.*
 
 case class Cloudflare(
-    apiToken: String = "",
+    apiToken: String,
     pollingInterval: Int = 15,
-    propagationTimeout: Int = 240,
+    propagationTimeout: Int = 300,
     ttl: Int = 120,
     dnsProvider: String = "cloudflare"
 )

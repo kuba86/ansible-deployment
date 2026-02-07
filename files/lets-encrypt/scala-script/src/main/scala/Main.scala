@@ -40,7 +40,6 @@ object RenewCommand extends Command[RenewOptions] {
   override def run(options: RenewOptions, remainingArgs: RemainingArgs): Unit = {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
-    info("starting renew")
     val result: Either[CertError, CertOk] = new Renew(options).execute()
     result match {
       case Right(certOk) =>
@@ -59,7 +58,6 @@ object RunCommand extends Command[RunOptions] {
     Main.setLogLevel(options.logLevel)
     debug(pprint.apply(options).render)
     debug(pprint.apply(remainingArgs).render)
-    info("starting run")
     val result: Either[CertError, CertOk] = new Run(options).execute()
     result match {
       case Right(certOk) =>

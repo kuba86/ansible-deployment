@@ -19,7 +19,7 @@
         set -euo pipefail
         IFS=$'\n\t'
         
-        scala_cli_url="https://github.com/VirtusLab/scala-cli/releases/download/v1.12.1/scala-cli-$(uname -m)-pc-linux.gz"
+        scala_cli_url="https://github.com/VirtusLab/scala-cli/releases/download/v1.12.2/scala-cli-$(uname -m)-pc-linux.gz"
         
         if realpath $(which scala-cli) &> /dev/null
         then
