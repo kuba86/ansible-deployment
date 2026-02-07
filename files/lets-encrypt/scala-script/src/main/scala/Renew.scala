@@ -1,6 +1,6 @@
 package com.kuba86.letsEntryptScript
 
-import com.kuba86.letsEntryptScript.model.{RenewError, RenewOk, RenewOptions}
+import com.kuba86.letsEntryptScript.model.{CertError, CertOk, RenewOptions}
 import os.*
 import scribe.*
 
