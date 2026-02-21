@@ -5,6 +5,10 @@ metadata_auto_snapshot_interval = "1h"
 
 replication_factor = 3
 compression_level = 1
+consistency_mode = "degraded"
+
+block_max_concurrent_writes_per_request = 8
+block_max_concurrent_reads = 16
 
 rpc_bind_addr = "[::]:53900"
 rpc_public_addr = "{{ host_name }}.{{ tailscale_tailnet_dns_suffix }}:53900"
