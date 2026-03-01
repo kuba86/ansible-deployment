@@ -1,0 +1,24 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=docker.io/stirlingtools/stirling-pdf:latest-fat
+ContainerName=%N
+HostName={{ host_name }}
+AutoUpdate=registry
+
+{{ stirling_pdf_ports }}
+{{ stirling_pdf_env_var }}
+{{ stirling_pdf_volumes }}
+{{ stirling_pdf_userns }}
+Memory={{ stirling_pdf_memory }}
+PodmanArgs=--cpus={{ stirling_pdf_cpu }}
+NoNewPrivileges=true
+
+[Service]
+Restart=always
+RestartSec=60
+TimeoutSec=5min
+
+[Install]
+WantedBy=multi-user.target default.target
