@@ -1,5 +1,5 @@
 - name: Setup Garage s3
-  hosts: coreos:dnf:desktop
+  hosts: coreos:dnf
   gather_facts: true
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
