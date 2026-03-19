@@ -1,5 +1,5 @@
-- name: Setup Syncthing
-  hosts: coreos:dnf:desktop
+- name: Home Assistant
+  hosts: wyse01.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
@@ -10,15 +10,14 @@
         file: "{{ item }}"
       loop:
         - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
-        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/syncthing.yaml"
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: Setup Syncthing | Setup variables (detect container)
+    - name: Home Assistant | variables (detect container)
       ansible.builtin.set_fact:
         run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
     
-    - name: Setup Syncthing | Setup variables (compute once, reuse everywhere)
+    - name: Home Assistant | variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
@@ -27,46 +26,36 @@
         calculated_become: "{{ run_as_root }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
     
-    - name: Setup Syncthing | ensures quadlet directory exists
+    - name: Home Assistant | Ensure homeassistant directory exists
       ansible.builtin.file:
-        path: "{{ quadlet_dir }}"
+        path: "/var/mnt/data1/homeassistant/config"
         state: directory
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: "0750"
-      become: true
-      register: quadlet_dir_output
-    
-    - name: Setup Syncthing | Systemd Podman Quadlet
+        mode: '0750'
+      become: "{{ calculated_become }}"
+      register: data_dir_output
+      notify: Restart service
+
+    - name: Home Assistant | systemd quadlet service (system)
       ansible.builtin.template:
-        src: "../files/syncthing/syncthing.container"
-        dest: "{{ quadlet_dir }}/syncthing.container"
+        src: "../files/homeassistant/homeassistant.container"
+        dest: "{{ quadlet_dir }}/homeassistant.container"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: "0600"
+        mode: '0640'
       become: "{{ calculated_become }}"
-      register: systemd_podman_quadlet_output
+      register: install_service_output
+      notify: Restart service
     
-    - name: Setup Syncthing | ensures data directory exists
-      ansible.builtin.file:
-        path: "{{ syncthing_data_dir }}"
-        state: directory
-        owner: "{{ file_owner }}"
-        group: "{{ file_group }}"
-        mode: "0750"
-      become: true
-      register: data_dir_output
-    
-    - name: Setup Syncthing | Restart service
+  handlers:
+    - name: Restart service
       ansible.builtin.systemd:
         daemon_reload: true
-        name: syncthing.service
+        name: homeassistant.service
         state: restarted
         enabled: true
         scope: "{{ systemd_scope }}"
       become: "{{ calculated_become }}"
-      when: >
-        systemd_podman_quadlet_output.changed or
-        data_dir_output.changed

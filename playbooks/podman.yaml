@@ -12,7 +12,7 @@
   tasks:
 
     - block:
-        - name: Podman setup | check the system if unused (root)
+        - name: Podman | check the system if unused (root)
           ansible.builtin.script: "../files/podman/check-if-unused.sh"
           args:
             executable: /usr/bin/bash
@@ -22,7 +22,7 @@
             - "'podman is unused, ok to reset' in check_if_unused_root.stdout"
           failed_when: check_if_unused_root.rc >= 1
 
-        - name: Podman setup | check the system if unused ({{ main_user }})
+        - name: Podman | check the system if unused ({{ main_user }})
           ansible.builtin.script: "../files/podman/check-if-unused.sh"
           args:
             executable: /usr/bin/bash
@@ -32,7 +32,7 @@
             - "'podman is unused, ok to reset' in check_if_unused_user.stdout"
           failed_when: check_if_unused_user.rc >= 1
 
-        - name: Podman setup | copy storage.conf
+        - name: Podman | copy storage.conf
           ansible.builtin.copy:
             src: ../files/podman/storage.conf
             dest: /etc/containers/storage.conf
@@ -45,7 +45,7 @@
             - check_if_unused_root.changed | default(false)
             - check_if_unused_user.changed | default(false)
 
-        - name: Podman setup | reset system (root)
+        - name: Podman | reset system (root)
           ansible.builtin.script: "../files/podman/reset-system.sh"
           args:
             executable: /usr/bin/bash
@@ -56,7 +56,7 @@
             - check_if_unused_root.changed | default(false)
             - copy_storage_conf.changed | default(false)
 
-        - name: Podman setup | reset system ({{ main_user }})
+        - name: Podman | reset system ({{ main_user }})
           ansible.builtin.script: "../files/podman/reset-system.sh"
           args:
             executable: /usr/bin/bash
@@ -67,7 +67,7 @@
             - check_if_unused_user.changed | default(false)
             - copy_storage_conf.changed | default(false)
 
-        - name: Podman setup | enable podman-auto-update.timer ({{ main_user }})
+        - name: Podman | enable podman-auto-update.timer ({{ main_user }})
           systemd:
             name: podman-auto-update.timer
             enabled: yes
@@ -76,7 +76,7 @@
       when:
         - "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length == 0 }}"
 
-    - name: Podman setup | enable podman-auto-update.timer (root)
+    - name: Podman | enable podman-auto-update.timer (root)
       systemd:
         name: podman-auto-update.timer
         enabled: yes

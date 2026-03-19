@@ -1,4 +1,4 @@
-- name: Setup users | Add and setup user '{{ setup_user }}'
+- name: users | Add and user '{{ setup_user }}'
   ansible.builtin.user:
     name: "{{ setup_user }}"
     create_home: true
@@ -17,7 +17,7 @@
       emergency: /usr/bin/fish
   notify: Restart sshd.service
 
-- name: Setup users | Create authorized_keys.d directory for '{{ setup_user }}'
+- name: users | Create authorized_keys.d directory for '{{ setup_user }}'
   ansible.builtin.file:
     path: "/home/{{ setup_user }}/.ssh/authorized_keys.d"
     state: directory
@@ -27,7 +27,7 @@
   become: true
   notify: Restart sshd.service
 
-- name: Setup users | Update authorized keys for '{{ setup_user }}'
+- name: users | Update authorized keys for '{{ setup_user }}'
   ansible.builtin.shell: |
     set -euo pipefail
     IFS=$'\n\t'
@@ -58,7 +58,7 @@
   become_user: "{{ setup_user }}"
   notify: Restart sshd.service
   
-- name: Setup users | enable-linger for '{{ setup_user }}'
+- name: users | enable-linger for '{{ setup_user }}'
   ansible.builtin.copy:
     content: ""
     dest: /var/lib/systemd/linger/{{ setup_user }}

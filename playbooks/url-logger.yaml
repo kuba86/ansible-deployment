@@ -1,4 +1,4 @@
-- name: Install url-logger
+- name: url-logger
   hosts: coreos:dnf:!desktop
   gather_facts: true
   vars_files:
@@ -14,7 +14,7 @@
 
   tasks:
 
-    - name: Install url-logger | setup url-logger
+    - name: url-logger | url-logger
       ansible.builtin.copy:
         src: ../files/url-logger
         dest: /usr/local/bin/url-logger
@@ -25,7 +25,7 @@
       when:
         - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
         
-    - name: Install url-logger | setup url-logger as a browser
+    - name: url-logger | url-logger as a browser
       ansible.builtin.copy:
         src: ../files/url-logger-browser.bashrc
         dest: /home/{{ main_user }}/.bashrc.d/url-logger-browser.bashrc

@@ -1,4 +1,4 @@
-- name: Setup caddy
+- name: caddy
   hosts: coreos:dnf
   strategy: free
   gather_facts: true
@@ -17,11 +17,11 @@
   
   tasks:
 
-    - name: Setup caddy | Setup variables (detect container)
+    - name: caddy | variables (detect container)
       ansible.builtin.set_fact:
         run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
     
-    - name: Setup caddy | Setup variables (compute once, reuse everywhere)
+    - name: caddy | variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
@@ -30,7 +30,7 @@
         calculated_become: "{{ run_as_root }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
         
-    - name: Setup caddy | Systemd Podman Quadlet
+    - name: caddy | Systemd Podman Quadlet
       ansible.builtin.template:
         src: "../files/caddy/caddy.container"
         dest: "{{ quadlet_dir }}/caddy.container"
@@ -42,7 +42,7 @@
       become: "{{ calculated_become }}"
       register: systemd_podman_quadlet_output
       
-    - name: Setup caddy | ensures directories exist
+    - name: caddy | ensures directories exist
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
@@ -58,7 +58,7 @@
         - "{{ caddy_path }}/data"
         - "{{ caddy_path }}/usr-share-caddy"
         
-    - name: Setup caddy | copy Caddyfile(s)
+    - name: caddy | copy Caddyfile(s)
       ansible.builtin.copy:
         src: "{{ item }}"
         dest: "{{ caddy_path }}/etc-caddy/{{ item | basename }}"
@@ -70,7 +70,7 @@
       become: "{{ calculated_become }}"
       register: copy_caddyfile
       
-    - name: Setup caddy | Remove import 2lo-absolwenci if not wyse01
+    - name: caddy | Remove import 2lo-absolwenci if not wyse01
       ansible.builtin.lineinfile:
         path: "{{ caddy_path }}/etc-caddy/Caddyfile"
         regexp: '^import 2lo-absolwenci\.caddy$'
@@ -79,7 +79,7 @@
       become: "{{ calculated_become }}"
       register: remove_2lo_import
       
-    - name: Setup caddy | Restart service
+    - name: caddy | Restart service
       ansible.builtin.systemd:
         daemon_reload: true
         name: caddy.service
@@ -91,7 +91,7 @@
         systemd_podman_quadlet_output.changed or
         data_dir_output.changed
       
-    - name: Setup caddy | validate Caddyfile(s)
+    - name: caddy | validate Caddyfile(s)
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
@@ -101,7 +101,7 @@
         executable: /usr/bin/bash
       become: "{{ calculated_become }}"
 
-    - name: Setup caddy | reload caddy server
+    - name: caddy | reload caddy server
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'

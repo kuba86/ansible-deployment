@@ -1,6 +1,6 @@
-- name: Install Gemini CLI
+- name: Fish functions
   hosts: coreos:dnf:desktop
-  gather_facts: true
+  gather_facts: false
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
 
@@ -13,15 +13,9 @@
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-
-    - name: Install Gemini CLI | install Gemini CLI
-      ansible.builtin.shell: |
-        set -euo pipefail
-        IFS=$'\n\t'
-
-        npm install -g @google/gemini-cli
-      args:
-        executable: /usr/bin/bash
-      become: true
-      when:
-        - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
+    
+    - name: Fish | rsync functions
+      ansible.posix.synchronize:
+        src: "../files/functions/"
+        dest: "/home/{{ main_user }}/.config/fish/functions/"
+        delete: yes

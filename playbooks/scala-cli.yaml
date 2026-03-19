@@ -1,4 +1,4 @@
-- name: Install Scala CLI
+- name: Scala CLI
   hosts: dnf:desktop
   gather_facts: false
   vars_files:
@@ -56,7 +56,7 @@
       changed_when: false
       become_user: "{{ main_user }}"
 
-    - name: Scala CLI | setup power mode to true
+    - name: Scala CLI | power mode to true
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
@@ -103,7 +103,7 @@
       changed_when: false
       become_user: "{{ main_user }}"
 
-    - name: Scala CLI | setup JDK env vars
+    - name: Scala CLI | JDK env vars
       ansible.builtin.copy:
         src: ../files/scala-cli/55-jvm.bashrc
         dest: /home/{{ main_user }}/.bashrc.d/55-jvm.bashrc
@@ -111,7 +111,7 @@
         group: "{{ main_user }}"
         mode: '644'
         
-    - name: Scala CLI | setup fish shell completions
+    - name: Scala CLI | fish shell completions
       ansible.builtin.copy:
         src: ../files/scala-cli/scala-cli-completions.fish
         dest: /home/{{ main_user }}/.config/fish/conf.d/scala-cli-completions.fish
@@ -119,7 +119,7 @@
         group: "{{ main_user }}"
         mode: '644'
         
-    - name: Scala CLI | install coursier
+    - name: Scala CLI | coursier
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'

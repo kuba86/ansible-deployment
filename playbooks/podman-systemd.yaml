@@ -1,4 +1,4 @@
-- name: Setup podman systemd quadlet
+- name: podman systemd quadlet
   hosts: coreos:dnf:desktop
   gather_facts: false
   vars_files:

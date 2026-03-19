@@ -1,4 +1,4 @@
-- name: Install k3s via rpm-ostree
+- name: k3s via rpm-ostree
   hosts: coreos:dnf
   gather_facts: true
   vars_files:

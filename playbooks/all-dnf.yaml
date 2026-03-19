@@ -1,41 +1,41 @@
-- name: Playbooks | setup users
-  ansible.builtin.import_playbook: setup-users.yaml
+- name: Playbooks | users
+  ansible.builtin.import_playbook: users.yaml
 
 - name: Playbooks | Sysctl
   ansible.builtin.import_playbook: sysctl.yaml
 
-- name: Playbooks | setup tailscale
-  ansible.builtin.import_playbook: setup-tailscale.yaml
+- name: Playbooks | tailscale
+  ansible.builtin.import_playbook: tailscale.yaml
 
-- name: Playbooks | install ntfy-server-boot service and timer
+- name: Playbooks | ntfy-server-boot service and timer
   ansible.builtin.import_playbook: ntfy-server-boot.yaml
 
-- name: Playbooks | install packages
-  ansible.builtin.import_playbook: install-packages.yaml
+- name: Playbooks | packages
+  ansible.builtin.import_playbook: packages.yaml
 
 - name: Playbooks | common functions
   ansible.builtin.import_playbook: common-functions.yaml
 
-- name: Playbooks | install fish shell
-  ansible.builtin.import_playbook: install-fish.yaml
+- name: Playbooks | fish shell
+  ansible.builtin.import_playbook: fish.yaml
 
-- name: Playbooks | setup path
-  ansible.builtin.import_playbook: setup-path.yaml
+- name: Playbooks | path
+  ansible.builtin.import_playbook: path.yaml
 
-- name: Playbooks | Setup Podman
-  ansible.builtin.import_playbook: setup-podman.yaml
+- name: Playbooks | Podman
+  ansible.builtin.import_playbook: podman.yaml
 
-- name: Playbooks | Setup Rclone Garage
-  ansible.builtin.import_playbook: setup-rclone.yaml
+- name: Playbooks | Rclone Garage
+  ansible.builtin.import_playbook: rclone.yaml
 
-- name: Playbooks | Setup Garage S3
-  ansible.builtin.import_playbook: setup-garage-s3.yaml
+- name: Playbooks | Garage S3
+  ansible.builtin.import_playbook: garage-s3.yaml
   
-- name: Playbooks | Setup TLS certs
-  ansible.builtin.import_playbook: setup-tls-certs.yaml
+- name: Playbooks | TLS certs
+  ansible.builtin.import_playbook: tls-certs.yaml
 
-- name: Playbooks | Setup Caddy
-  ansible.builtin.import_playbook: setup-caddy.yaml
+- name: Playbooks | Caddy
+  ansible.builtin.import_playbook: caddy.yaml
 
-- name: Playbooks | Setup Restic Backup
-  ansible.builtin.import_playbook: setup-restic-backup.yaml
+- name: Playbooks | Restic Backup
+  ansible.builtin.import_playbook: restic-backup.yaml

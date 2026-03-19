@@ -1,9 +1,9 @@
-- name: Setup TLS Certs
-  hosts: coreos:dnf
+- name: cryptpad
+  hosts: marek246.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
-    - "../inventories/prod/secret_vars/lets-encrypt.yaml"
+    - "../inventories/prod/secret_vars/services/cryptpad.yaml"
 
   pre_tasks:
     - name: Gather per-host secret files
@@ -11,15 +11,15 @@
         file: "{{ item }}"
       loop:
         - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
-        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/rclone.yaml"
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: Setup TLS Certs | Setup variables (detect container)
+    
+    - name: cryptpad | variables (detect container)
       ansible.builtin.set_fact:
         run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
     
-    - name: Setup TLS Certs | Setup variables (compute once, reuse everywhere)
+    - name: cryptpad | variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
@@ -27,66 +27,63 @@
         file_group: "{{ 'root' if run_as_root else main_user }}"
         calculated_become: "{{ run_as_root }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
-        
-    - name: Setup TLS Certs | Info about running user
+
+    - name: cryptpad | Info about running user
       ansible.builtin.debug:
         msg:
+          - "Run as root: {{ run_as_root }}"
+          - "Service dir: {{ service_dir }}"
+          - "Quadlet dir: {{ quadlet_dir }}"
           - "User: {{ file_owner }}"
-        
-    - name: Setup TLS Certs | ensures data directory exists
-      ansible.builtin.file:
-        path: "{{ lets_encrypt_dir }}"
-        state: directory
-        owner: "{{ file_owner }}"
-        group: "{{ file_group }}"
-        mode: "0700"
-      become: "{{ calculated_become }}"
-      register: data_dir_output
-      
-    - name: Setup TLS Certs | Podman Quadlet Service
+          - "Group: {{ file_group }}"
+          - "Become: {{ calculated_become }}"
+          - "Scope: {{ systemd_scope }}"
+
+    - name: cryptpad | cryptpad.container
       ansible.builtin.template:
-        src: "../files/tls-certs/tls-certs.container"
-        dest: "{{ quadlet_dir }}/tls-certs.container"
+        src: "../files/cryptpad/cryptpad.container"
+        dest: "{{ quadlet_dir }}/cryptpad.container"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: "0640"
+        mode: '0640'
       become: "{{ calculated_become }}"
-      register: quadlet_service_output
-      
-    - name: Setup TLS Certs | Reload systemd
-      ansible.builtin.systemd:
-        daemon_reload: true
-        scope: "{{ systemd_scope }}"
-      become: "{{ calculated_become }}"
-      when: quadlet_service_output.changed
-    
-    - name: Setup TLS Certs | Systemd Timer
+      register: cryptpad_container_output
+      notify: Restart service
+
+    - name: cryptpad | config.js
       ansible.builtin.template:
-        src: "../files/tls-certs/tls-certs.timer"
-        dest: "{{ service_dir }}/tls-certs.timer"
+        src: "../files/cryptpad/config.js"
+        dest: "{{ cryptpad_dir }}/config.js"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: "0640"
+        mode: '0640'
       become: "{{ calculated_become }}"
-      register: systemd_timer_output
-        
-    - name: Enable timer
+      register: cryptpad_config_js_output
+      notify: Restart service
+
+    - name: cryptpad | application_config.js
+      ansible.builtin.template:
+        src: "../files/cryptpad/customize/application_config.js"
+        dest: "{{ cryptpad_dir }}/customize/application_config.js"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: '0640'
+      become: "{{ calculated_become }}"
+      register: cryptpad_application_config_js_output
+      notify: Restart service
+
+  handlers:
+    - name: Restart service
       ansible.builtin.systemd:
         daemon_reload: true
-        name: tls-certs.timer
-        state: started
+        name: cryptpad.service
+        state: restarted
         enabled: true
-        scope: "{{ systemd_scope }}"
-      become: "{{ calculated_become }}"
-      
-    - name: Start service
-      ansible.builtin.systemd:
-        daemon_reload: true
-        name: tls-certs.service
-        state: started
         scope: "{{ systemd_scope }}"
       become: "{{ calculated_become }}"

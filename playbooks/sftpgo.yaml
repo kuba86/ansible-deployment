@@ -1,4 +1,4 @@
-- name: Setup Home Assistant
+- name: SFTPGo
   hosts: wyse01.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
@@ -10,14 +10,15 @@
         file: "{{ item }}"
       loop:
         - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/sftpgo.yaml"
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: Setup Home Assistant | Setup variables (detect container)
+    - name: SFTPGo | variables (detect container)
       ansible.builtin.set_fact:
         run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
     
-    - name: Setup Home Assistant | Setup variables (compute once, reuse everywhere)
+    - name: SFTPGo | variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
@@ -25,36 +26,54 @@
         file_group: "{{ 'root' if run_as_root else main_user }}"
         calculated_become: "{{ run_as_root }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
-    
-    - name: Setup Home Assistant | Ensure homeassistant directory exists
+
+    - name: SFTPGo | Info about running user
+      ansible.builtin.debug:
+        msg:
+          - "Run as root: {{ run_as_root }}"
+          - "Service dir: {{ service_dir }}"
+          - "Quadlet dir: {{ quadlet_dir }}"
+          - "User: {{ file_owner }}"
+          - "Group: {{ file_group }}"
+          - "Become: {{ calculated_become }}"
+          - "Scope: {{ systemd_scope }}"
+
+    - name: SFTPGo | Ensures data directory exists
       ansible.builtin.file:
-        path: "/var/mnt/data1/homeassistant/config"
+        path: "/var/mnt/data1/sftpgo/data"
         state: directory
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: '0750'
+        mode: "0755"
       become: "{{ calculated_become }}"
-      register: data_dir_output
-      notify: Restart service
+      
+    - name: SFTPGo | Ensures home directory exists
+      ansible.builtin.file:
+        path: "/var/mnt/data1/sftpgo/home"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0755"
+      become: "{{ calculated_become }}"
 
-    - name: Setup Home Assistant | Install systemd quadlet service (system)
+    - name: SFTPGo | Systemd Podman Quadlet
       ansible.builtin.template:
-        src: "../files/homeassistant/homeassistant.container"
-        dest: "{{ quadlet_dir }}/homeassistant.container"
+        src: "../files/sftpgo/sftpgo.container"
+        dest: "{{ quadlet_dir }}/sftpgo.container"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: '0640'
+        mode: "0600"
       become: "{{ calculated_become }}"
-      register: install_service_output
+      register: systemd_podman_quadlet_output
       notify: Restart service
-    
+
   handlers:
     - name: Restart service
       ansible.builtin.systemd:
         daemon_reload: true
-        name: homeassistant.service
+        name: sftpgo.service
         state: restarted
         enabled: true
         scope: "{{ systemd_scope }}"

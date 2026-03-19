@@ -1,4 +1,4 @@
-- name: Setup Stirling PDF
+- name: Stirling PDF
   hosts: wyse01.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
@@ -14,11 +14,11 @@
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: Setup Stirling PDF | Setup variables (detect container)
+    - name: Stirling PDF | variables (detect container)
       ansible.builtin.set_fact:
         run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
     
-    - name: Setup Stirling PDF | Setup variables (compute once, reuse everywhere)
+    - name: Stirling PDF | variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
@@ -27,7 +27,7 @@
         calculated_become: "{{ run_as_root }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
         
-    - name: Setup Stirling PDF | Info about running user
+    - name: Stirling PDF | Info about running user
       ansible.builtin.debug:
         msg:
           - "Run as root: {{ run_as_root }}"
@@ -38,7 +38,7 @@
           - "Become: {{ calculated_become }}"
           - "Scope: {{ systemd_scope }}"
     
-    - name: Setup Stirling PDF | Systemd Podman Quadlet
+    - name: Stirling PDF | Systemd Podman Quadlet
       ansible.builtin.template:
         src: "../files/stirling-pdf/stirling-pdf.container"
         dest: "{{ quadlet_dir }}/stirling-pdf.container"
@@ -51,7 +51,7 @@
       register: systemd_podman_quadlet_output
       notify: Restart service
       
-    - name: Setup Stirling PDF | ensures directories exist
+    - name: Stirling PDF | ensures directories exist
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
@@ -68,7 +68,7 @@
         - "{{ stirling_pdf_dir }}/pipeline"
       notify: Restart service
     
-    - name: Setup Stirling PDF | Restart service
+    - name: Stirling PDF | Restart service
       ansible.builtin.systemd:
         daemon_reload: true
         name: stirling-pdf.service

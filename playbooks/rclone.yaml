@@ -1,4 +1,4 @@
-- name: Setup Rclone
+- name: Rclone
   hosts: coreos:dnf:desktop
   gather_facts: true
 
@@ -13,11 +13,11 @@
   
   tasks:
     
-    - name: Setup Rclone | Setup variables (detect container)
+    - name: Rclone | variables (detect container)
       ansible.builtin.set_fact:
         run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
     
-    - name: Setup Rclone | Setup variables (compute once, reuse everywhere)
+    - name: Rclone | variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
@@ -26,7 +26,7 @@
         calculated_become: "{{ run_as_root }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
 
-    - name: Setup Rclone | Info about running user
+    - name: Rclone | Info about running user
       ansible.builtin.debug:
         msg:
           - "Run as root: {{ run_as_root }}"
@@ -37,7 +37,7 @@
           - "Become: {{ calculated_become }}"
           - "Scope: {{ systemd_scope }}"
         
-    - name: Setup Rclone | install rclone
+    - name: Rclone | rclone
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
@@ -46,7 +46,7 @@
           --cmd rclone \
           --select-archive "" \
           --repo-url https://github.com/rclone/rclone \
-          --install-dir /usr/local/bin
+          --dir /usr/local/bin
       args:
         executable: /usr/bin/bash
       register: rclone
@@ -54,7 +54,7 @@
       changed_when: "'installing...' in rclone.stdout"
       become: true
 
-    - name: Setup Rclone | ensures mount directory exists
+    - name: Rclone | ensures mount directory exists
       ansible.builtin.file:
         path: "{{ rclone_garage_mount_path }}"
         state: directory
@@ -67,7 +67,7 @@
         - mount_dir_creation.failed
         - "'File exists' not in mount_dir_creation.msg"
     
-    - name: Setup Rclone | ensures config directory exists
+    - name: Rclone | ensures config directory exists
       ansible.builtin.file:
         path: "{{ rclone_conf_path }}"
         state: directory
@@ -76,7 +76,7 @@
         mode: '0750'
       become: true
     
-    - name: Setup Rclone | copy rclone-garage.conf settings
+    - name: Rclone | copy rclone-garage.conf settings
       ansible.builtin.template:
         src: "../files/rclone/{{ rclone_conf_name }}"
         dest: "{{ rclone_conf_path }}/{{ rclone_conf_name }}"
@@ -88,7 +88,7 @@
       become: true
       register: rclone_conf_output
       
-    - name: Setup Rclone | copy lets-encrypt-rclone.conf settings
+    - name: Rclone | copy lets-encrypt-rclone.conf settings
       ansible.builtin.template:
         src: "../inventories/prod/secret_vars/lets-encrypt-rclone.conf"
         dest: "{{ rclone_conf_path }}/lets-encrypt-rclone.conf"
@@ -100,7 +100,7 @@
       become: true
       register: lets_encrypt_rclone_conf_output
 
-    - name: Setup Rclone | Install systemd service
+    - name: Rclone | systemd service
       ansible.builtin.template:
         src: "../files/rclone/garage/rclone-garage.service"
         dest: "{{ service_dir }}/rclone-garage.service"
@@ -112,7 +112,7 @@
       become: "{{ calculated_become }}"
       register: service_output
 
-    - name: Setup Rclone | Restart Rclone Garage service
+    - name: Rclone | Restart Rclone Garage service
       ansible.builtin.systemd:
         daemon_reload: true
         name: rclone-garage.service

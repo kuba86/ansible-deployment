@@ -1,9 +1,8 @@
-- name: oauth2 proxy
-  hosts: marek246.tailnet-ba52.ts.net
+- name: Syncthing
+  hosts: coreos:dnf:desktop
   gather_facts: true
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
-    - "../inventories/prod/secret_vars/services/oauth2-proxy.yaml"
 
   pre_tasks:
     - name: Gather per-host secret files
@@ -11,59 +10,63 @@
         file: "{{ item }}"
       loop:
         - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/syncthing.yaml"
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: oauth2 proxy | variables (detect container)
+    - name: Syncthing | variables (detect container)
       ansible.builtin.set_fact:
         run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
-
-    - name: oauth2 proxy | variables (compute once, reuse everywhere)
+    
+    - name: Syncthing | variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
         file_owner: "{{ 'root' if run_as_root else main_user }}"
         file_group: "{{ 'root' if run_as_root else main_user }}"
         calculated_become: "{{ run_as_root }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
     
-    - name: oauth2 proxy | Ensure data directory exists
+    - name: Syncthing | ensures quadlet directory exists
       ansible.builtin.file:
-        path: "{{ oauth2_data_dir }}"
+        path: "{{ quadlet_dir }}"
         state: directory
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: '0750'
-      become: "{{ calculated_become }}"
-
-    - name: oauth2 proxy | Generate Config Files
+        mode: "0750"
+      become: true
+      register: quadlet_dir_output
+    
+    - name: Syncthing | Systemd Podman Quadlet
       ansible.builtin.template:
-        src: "../files/oauth2-proxy/oauth2-proxy-template.cfg"
-        dest: "{{ oauth2_data_dir }}/{{ item.client_id }}.cfg"
+        src: "../files/syncthing/syncthing.container"
+        dest: "{{ quadlet_dir }}/syncthing.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: "0640"
-      loop: "{{ oauth2_proxies }}"
+        mode: "0600"
       become: "{{ calculated_become }}"
-      notify: Restart OAuth2 Proxies
-
-    - name: oauth2 proxy | Generate Podman Quadlet Files
-      ansible.builtin.template:
-        src: "../files/oauth2-proxy/oauth2-proxy-template.container"
-        dest: "{{ quadlet_dir }}/{{ item.client_id }}.container"
+      register: systemd_podman_quadlet_output
+    
+    - name: Syncthing | ensures data directory exists
+      ansible.builtin.file:
+        path: "{{ syncthing_data_dir }}"
+        state: directory
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: "0640"
-      loop: "{{ oauth2_proxies }}"
-      become: "{{ calculated_become }}"
-      notify: Restart OAuth2 Proxies
-
-  handlers:
-    - name: Restart OAuth2 Proxies
+        mode: "0750"
+      become: true
+      register: data_dir_output
+    
+    - name: Syncthing | Restart service
       ansible.builtin.systemd:
         daemon_reload: true
-        name: "{{ item.client_id }}.service"
+        name: syncthing.service
         state: restarted
         enabled: true
         scope: "{{ systemd_scope }}"
-      loop: "{{ oauth2_proxies }}"
       become: "{{ calculated_become }}"
+      when: >
+        systemd_podman_quadlet_output.changed or
+        data_dir_output.changed

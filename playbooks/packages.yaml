@@ -1,4 +1,4 @@
-- name: Install packages
+- name: packages
   hosts: coreos:dnf:desktop
   gather_facts: true
   
@@ -12,7 +12,7 @@
 
   tasks:
 
-    - name: Install packages | update sudoers secure_path to include /usr/local/bin
+    - name: packages | update sudoers secure_path to include /usr/local/bin
       become: true
       ansible.builtin.lineinfile:
         path: /etc/sudoers
@@ -24,7 +24,7 @@
         - ansible_facts["pkg_mgr"] in ['dnf', 'dnf5']
         - (ansible_facts["distribution_major_version"] | int) in [9, 10]
     
-    - name: Install epel-release | dnf
+    - name: epel-release | dnf
       become: true
       ansible.builtin.dnf:
         name:
@@ -36,7 +36,7 @@
       register: install_epel_release
       failed_when: install_epel_release.rc >= 2
       
-    - name: Install packages | dnf install
+    - name: packages | dnf install
       become: true
       ansible.builtin.dnf:
         name:
@@ -68,7 +68,7 @@
         - ansible_facts["pkg_mgr"] in ['dnf', 'dnf5']
         - (ansible_facts["distribution_major_version"] | int) in [9, 10]
     
-    - name: Install packages | dra
+    - name: packages | dra
       ansible.builtin.shell: |
         set -euo pipefail
         
@@ -87,7 +87,7 @@
       changed_when: "'installing...' in dra.stdout"
       become: true
     
-    - name: Install packages | ensure-cmd
+    - name: packages | ensure-cmd
       ansible.builtin.copy:
         src: "../files/ensure-cmd"
         dest: "/usr/local/bin"
@@ -96,7 +96,7 @@
         mode: '0755'
       become: true
     
-    - name: Install packages | eza
+    - name: packages | eza
       ansible.builtin.shell: |
         set -euo pipefail
         
@@ -104,7 +104,7 @@
           --cmd eza \
           --select-archive "" \
           --repo-url https://github.com/eza-community/eza \
-          --install-dir /usr/local/bin
+          --dir /usr/local/bin
       args:
         executable: /usr/bin/bash
       register: eza
@@ -112,7 +112,7 @@
       changed_when: "'installing...' in eza.stdout"
       become: true
     
-    - name: Install packages | dysk
+    - name: packages | dysk
       ansible.builtin.shell: |
         set -euo pipefail
         
@@ -120,7 +120,7 @@
           --cmd dysk \
           --select-archive dysk_3.6.0.zip \
           --repo-url https://github.com/Canop/dysk \
-          --install-dir /usr/local/bin
+          --dir /usr/local/bin
       args:
         executable: /usr/bin/bash
       register: dysk
@@ -128,7 +128,7 @@
       changed_when: "'installing...' in dysk.stdout"
       become: true
     
-    - name: Install packages | duf
+    - name: packages | duf
       ansible.builtin.shell: |
         set -euo pipefail
         
@@ -136,7 +136,7 @@
           --cmd duf \
           --select-archive "" \
           --repo-url https://github.com/muesli/duf \
-          --install-dir /usr/local/bin
+          --dir /usr/local/bin
       args:
         executable: /usr/bin/bash
       register: duf
@@ -144,7 +144,7 @@
       changed_when: "'installing...' in duf.stdout"
       become: true
       
-    - name: Install packages | doggo
+    - name: packages | doggo
       ansible.builtin.shell: |
         set -euo pipefail
         
@@ -152,7 +152,7 @@
           --cmd doggo \
           --select-archive "" \
           --repo-url https://github.com/mr-karan/doggo \
-          --install-dir /usr/local/bin
+          --dir /usr/local/bin
       args:
         executable: /usr/bin/bash
       register: doggo

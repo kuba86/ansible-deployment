@@ -1,4 +1,4 @@
-- name: Install ntfy-server-boot service and timer
+- name: ntfy-server-boot service and timer
   hosts: coreos:dnf:desktop
   become: true
   vars_files:
@@ -15,21 +15,21 @@
 
   tasks:
 
-    - name: Install ntfy-server-boot | Copy ntfy-server-boot.service file
+    - name: ntfy-server-boot | Copy ntfy-server-boot.service file
       ansible.builtin.template:
         src: ../files/ntfy-server-boot/ntfy-server-boot.service
         dest: /etc/systemd/system/ntfy-server-boot.service
         mode: '640'
       register: ntfy_service
 
-    - name: Install ntfy-server-boot | Copy ntfy-server-boot.timer file
+    - name: ntfy-server-boot | Copy ntfy-server-boot.timer file
       ansible.builtin.template:
         src: ../files/ntfy-server-boot/ntfy-server-boot.timer
         dest: /etc/systemd/system/ntfy-server-boot.timer
         mode: '640'
       register: ntfy_timer
 
-    - name: Install ntfy-server-boot | reload daemon for system
+    - name: ntfy-server-boot | reload daemon for system
       ansible.builtin.systemd_service:
         daemon_reload: true
         scope: system
@@ -37,13 +37,13 @@
         ntfy_service.changed | default(false) or
         ntfy_timer.changed | default(false)
 
-    - name: Install ntfy-server-boot | Enable and start ntfy-server-boot.timer
+    - name: ntfy-server-boot | Enable and start ntfy-server-boot.timer
       systemd:
         name: ntfy-server-boot.timer
         enabled: yes
         state: started
         
-    - name: Install ntfy-server-boot | ensures /home/{{ main_user }}/.local/bin directory exists
+    - name: ntfy-server-boot | ensures /home/{{ main_user }}/.local/bin directory exists
       ansible.builtin.file:
         path: /home/{{ main_user }}/.local/bin
         state: directory
@@ -51,7 +51,7 @@
         group: "{{ main_user }}"
         mode: '755'
         
-    - name: Install ntfy-server-boot | Copy ntfy.fish file
+    - name: ntfy-server-boot | Copy ntfy.fish file
       ansible.builtin.copy:
         src: ../files/ntfy-server-boot/ntfy.fish
         dest: /home/{{ main_user }}/.local/bin/ntfy.fish

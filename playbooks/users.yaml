@@ -1,4 +1,4 @@
-- name: Setup users
+- name: users
   hosts: coreos:dnf:desktop
   gather_facts: true
   vars_files:
@@ -13,21 +13,21 @@
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: Setup users | Create sudo group
+    - name: users | Create sudo group
       ansible.builtin.group:
         name: sudo
         state: present
       become: true
     
-    - name: Setup users | loop over users
-      include_tasks: setup-users-tasks.yaml
+    - name: users | loop over users
+      include_tasks: users-tasks.yaml
       loop:
         - core
         - emergency
       loop_control:
         loop_var: setup_user
     
-    - name: Setup users | Setup sshd config
+    - name: users | sshd config
       ansible.builtin.copy:
         content: |
           PasswordAuthentication no
@@ -40,7 +40,7 @@
       become: true
       notify: Restart sshd.service
       
-    - name: Setup users | update sudo group for nopasswd
+    - name: users | update sudo group for nopasswd
       ansible.builtin.copy:
         content: |
           # https://github.com/openshift/os/issues/96

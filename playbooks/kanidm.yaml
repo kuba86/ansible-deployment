@@ -1,9 +1,10 @@
-- name: Setup cryptpad
+- name: Kanidm
   hosts: marek246.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
-    - "../inventories/prod/secret_vars/services/cryptpad.yaml"
+    - "../inventories/prod/secret_vars/services/kanidm.yaml"
+    - "../inventories/prod/secret_vars/lets-encrypt.yaml"
 
   pre_tasks:
     - name: Gather per-host secret files
@@ -14,12 +15,11 @@
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    
-    - name: Setup cryptpad | Setup variables (detect container)
+    - name: Kanidm | variables (detect container)
       ansible.builtin.set_fact:
         run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
     
-    - name: Setup cryptpad | Setup variables (compute once, reuse everywhere)
+    - name: Kanidm | variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
@@ -28,61 +28,62 @@
         calculated_become: "{{ run_as_root }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
 
-    - name: Setup cryptpad | Info about running user
-      ansible.builtin.debug:
-        msg:
-          - "Run as root: {{ run_as_root }}"
-          - "Service dir: {{ service_dir }}"
-          - "Quadlet dir: {{ quadlet_dir }}"
-          - "User: {{ file_owner }}"
-          - "Group: {{ file_group }}"
-          - "Become: {{ calculated_become }}"
-          - "Scope: {{ systemd_scope }}"
+    - name: Kanidm | ensures directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0750"
+      become: "{{ calculated_become }}"
+      register: data_dir_output
+      loop:
+        - "{{ kanidm_dir }}"
+        - "{{ kanidm_dir }}/data"
+      notify: Restart service
 
-    - name: Setup cryptpad | cryptpad.container
+    - name: Kanidm | server.toml
       ansible.builtin.template:
-        src: "../files/cryptpad/cryptpad.container"
-        dest: "{{ quadlet_dir }}/cryptpad.container"
+        src: "../files/kanidm/data/server.toml"
+        dest: "{{ kanidm_dir }}/data/server.toml"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: '0640'
+        mode: "0640"
       become: "{{ calculated_become }}"
-      register: cryptpad_container_output
+      register: install_server_toml_output
       notify: Restart service
-
-    - name: Setup cryptpad | config.js
-      ansible.builtin.template:
-        src: "../files/cryptpad/config.js"
-        dest: "{{ cryptpad_dir }}/config.js"
-        comment_start_string: "# BEGIN_OF_COMMENT"
-        comment_end_string: "# END_OF_COMMENT"
+      
+    - name: Kanidm | copy favicon.png
+      ansible.builtin.copy:
+        src: "../files/kanidm/data/logo/kuba86-com-logo-dark-32-32.png"
+        dest: "{{ kanidm_dir }}/favicon.png"
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
         mode: '0640'
       become: "{{ calculated_become }}"
-      register: cryptpad_config_js_output
+      register: favicon_output
       notify: Restart service
-
-    - name: Setup cryptpad | application_config.js
+    
+    - name: Kanidm | Systemd Podman Quadlet
       ansible.builtin.template:
-        src: "../files/cryptpad/customize/application_config.js"
-        dest: "{{ cryptpad_dir }}/customize/application_config.js"
+        src: "../files/kanidm/kanidm.container"
+        dest: "{{ quadlet_dir }}/kanidm.container"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: '0640'
+        mode: "0640"
       become: "{{ calculated_become }}"
-      register: cryptpad_application_config_js_output
+      register: systemd_podman_quadlet_output
       notify: Restart service
-
+      
   handlers:
     - name: Restart service
       ansible.builtin.systemd:
         daemon_reload: true
-        name: cryptpad.service
+        name: kanidm.service
         state: restarted
         enabled: true
         scope: "{{ systemd_scope }}"

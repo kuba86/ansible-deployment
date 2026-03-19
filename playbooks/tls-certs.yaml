@@ -1,9 +1,8 @@
-- name: Setup Kanidm
-  hosts: marek246.tailnet-ba52.ts.net
+- name: TLS Certs
+  hosts: coreos:dnf
   gather_facts: true
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
-    - "../inventories/prod/secret_vars/services/kanidm.yaml"
     - "../inventories/prod/secret_vars/lets-encrypt.yaml"
 
   pre_tasks:
@@ -12,14 +11,15 @@
         file: "{{ item }}"
       loop:
         - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/rclone.yaml"
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: Setup Kanidm | Setup variables (detect container)
+    - name: TLS Certs | variables (detect container)
       ansible.builtin.set_fact:
         run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
     
-    - name: Setup Kanidm | Setup variables (compute once, reuse everywhere)
+    - name: TLS Certs | variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
@@ -27,64 +27,66 @@
         file_group: "{{ 'root' if run_as_root else main_user }}"
         calculated_become: "{{ run_as_root }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
-
-    - name: Setup Kanidm | ensures directories exist
+        
+    - name: TLS Certs | Info about running user
+      ansible.builtin.debug:
+        msg:
+          - "User: {{ file_owner }}"
+        
+    - name: TLS Certs | ensures data directory exists
       ansible.builtin.file:
-        path: "{{ item }}"
+        path: "{{ lets_encrypt_dir }}"
         state: directory
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
-        mode: "0750"
+        mode: "0700"
       become: "{{ calculated_become }}"
       register: data_dir_output
-      loop:
-        - "{{ kanidm_dir }}"
-        - "{{ kanidm_dir }}/data"
-      notify: Restart service
-
-    - name: Setup Kanidm | Install server.toml
+      
+    - name: TLS Certs | Podman Quadlet Service
       ansible.builtin.template:
-        src: "../files/kanidm/data/server.toml"
-        dest: "{{ kanidm_dir }}/data/server.toml"
+        src: "../files/tls-certs/tls-certs.container"
+        dest: "{{ quadlet_dir }}/tls-certs.container"
         comment_start_string: "# BEGIN_OF_COMMENT"
         comment_end_string: "# END_OF_COMMENT"
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
         mode: "0640"
       become: "{{ calculated_become }}"
-      register: install_server_toml_output
-      notify: Restart service
+      register: quadlet_service_output
       
-    - name: Setup Kanidm | copy favicon.png
-      ansible.builtin.copy:
-        src: "../files/kanidm/data/logo/kuba86-com-logo-dark-32-32.png"
-        dest: "{{ kanidm_dir }}/favicon.png"
-        owner: "{{ file_owner }}"
-        group: "{{ file_group }}"
-        mode: '0640'
-      become: "{{ calculated_become }}"
-      register: favicon_output
-      notify: Restart service
-    
-    - name: Setup Kanidm | Systemd Podman Quadlet
-      ansible.builtin.template:
-        src: "../files/kanidm/kanidm.container"
-        dest: "{{ quadlet_dir }}/kanidm.container"
-        comment_start_string: "# BEGIN_OF_COMMENT"
-        comment_end_string: "# END_OF_COMMENT"
-        owner: "{{ file_owner }}"
-        group: "{{ file_group }}"
-        mode: "0640"
-      become: "{{ calculated_become }}"
-      register: systemd_podman_quadlet_output
-      notify: Restart service
-      
-  handlers:
-    - name: Restart service
+    - name: TLS Certs | Reload systemd
       ansible.builtin.systemd:
         daemon_reload: true
-        name: kanidm.service
-        state: restarted
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
+      when: quadlet_service_output.changed
+    
+    - name: TLS Certs | Systemd Timer
+      ansible.builtin.template:
+        src: "../files/tls-certs/tls-certs.timer"
+        dest: "{{ service_dir }}/tls-certs.timer"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_timer_output
+        
+    - name: Enable timer
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: tls-certs.timer
+        state: started
         enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
+      
+    - name: Start service
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: tls-certs.service
+        state: started
         scope: "{{ systemd_scope }}"
       become: "{{ calculated_become }}"

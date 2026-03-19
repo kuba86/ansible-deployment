@@ -1,4 +1,4 @@
-- name: Setup Tailscale
+- name: Tailscale
   hosts: coreos:dnf:desktop
   gather_facts: true
   vars_files:
@@ -15,12 +15,12 @@
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: Setup Tailscale | Setup variables (detect container)
+    - name: Tailscale | variables (detect container)
       ansible.builtin.set_fact:
         running_in_container: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
         run_as_root: "true"
     
-    - name: Setup Tailscale | Setup variables (compute once, reuse everywhere)
+    - name: Tailscale | variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
@@ -29,7 +29,7 @@
         calculated_become: "{{ run_as_root }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
     
-    - name: Setup Tailscale | Info about running user
+    - name: Tailscale | Info about running user
       ansible.builtin.debug:
         msg:
           - "Run as root: {{ run_as_root }}"
@@ -88,7 +88,7 @@
           changed_when: >
             tailscale_in_path.stdout.find('tailscale NOT in path') == 0
 
-        - name: Tailscale | install dnf
+        - name: Tailscale | dnf
           ansible.builtin.dnf:
             name:
               - tailscale

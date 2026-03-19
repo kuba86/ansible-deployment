@@ -1,4 +1,4 @@
-- name: Install fish
+- name: fish
   hosts: coreos:dnf:desktop
   gather_facts: true
 
@@ -14,7 +14,7 @@
     ansible_shell_executable: /bin/sh
   tasks:
     
-    - name: Fish | install fish shell
+    - name: Fish | fish shell
       block:
 
         - name: Fish | check if fish is installed
@@ -31,7 +31,7 @@
           args:
             executable: /usr/bin/bash
     
-        - name: Fish | install via dnf
+        - name: Fish | via dnf
           become: true
           ansible.builtin.dnf:
             name:

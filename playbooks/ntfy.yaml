@@ -1,4 +1,4 @@
-- name: Setup ntfy
+- name: ntfy
   hosts: marek246.tailnet-ba52.ts.net
   gather_facts: true
   vars_files:
@@ -23,11 +23,11 @@
       when: lookup('ansible.builtin.fileglob', item) | length > 0
   
   tasks:
-    - name: Setup ntfy | Setup variables (detect container)
+    - name: ntfy | variables (detect container)
       ansible.builtin.set_fact:
         run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
     
-    - name: Setup ntfy | Setup variables (compute once, reuse everywhere)
+    - name: ntfy | variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
@@ -47,7 +47,7 @@
         ntfy_restic_image: "{{ ntfy_restic_image }}"
         restic_env_vars_file_dir: "{{ restic_env_vars_file_dir }}"
     
-    - name: Setup ntfy | Info
+    - name: ntfy | Info
       ansible.builtin.debug:
         msg:
           - "Run as root: {{ run_as_root }}"
@@ -65,7 +65,7 @@
           - "ntfy_restic_image: {{ ntfy_restic_image }}"
           - "restic_env_vars_file_dir: {{ restic_env_vars_file_dir }}"
     
-    - name: Setup ntfy | Systemd Podman Quadlet
+    - name: ntfy | Systemd Podman Quadlet
       ansible.builtin.template:
         src: "../files/ntfy/ntfy.container"
         dest: "{{ quadlet_dir }}/ntfy.container"
@@ -78,7 +78,7 @@
       register: systemd_podman_quadlet_output
 #      notify: Restart service
     
-    - name: Setup ntfy | Ensure data directories exist
+    - name: ntfy | Ensure data directories exist
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
@@ -90,7 +90,7 @@
       register: ntfy_directories_output
 #      notify: Restart service
 
-    - name: Setup ntfy | Restore ntfy data from restic backup
+    - name: ntfy | Restore ntfy data from restic backup
       ansible.builtin.command:
         argv:
           - "podman"
@@ -110,7 +110,7 @@
       when: ntfy_restore_backup
 #      notify: Restart service
     
-    - name: Setup ntfy | copy server configuration
+    - name: ntfy | copy server configuration
       ansible.builtin.template:
         src: "../files/ntfy/server.yml"
         dest: "{{ ntfy_config_path }}"

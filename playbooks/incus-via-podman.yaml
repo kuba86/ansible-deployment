@@ -1,4 +1,4 @@
-- name: Install incus
+- name: incus
   hosts: coreos
   gather_facts: true
   vars_files:
@@ -27,7 +27,7 @@
             group: root
             mode: '0755'
           
-        - name: Incus | install incus.container (root)
+        - name: Incus | incus.container (root)
           ansible.builtin.copy:
             src: "../files/incus/incus.container"
             dest: "/etc/containers/systemd/incus.container"
@@ -45,7 +45,7 @@
           when: >
             incus_container_service.changed | default(false)
             
-        - name: Incus | install incus binary and add to path
+        - name: Incus | incus binary and add to path
           become: true
           ansible.builtin.shell: |
             set -euo pipefail

@@ -1,4 +1,4 @@
-- name: Setup AAAAA
+- name: AAAAA
   hosts: coreos:dnf:desktop
   gather_facts: true
   vars_files:
@@ -13,11 +13,11 @@
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: Setup AAAAA | Setup variables (detect container)
+    - name: AAAAA | variables (detect container)
       ansible.builtin.set_fact:
         run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
     
-    - name: Setup AAAAA | Setup variables (compute once, reuse everywhere)
+    - name: AAAAA | variables (compute once, reuse everywhere)
       ansible.builtin.set_fact:
         service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
@@ -26,7 +26,7 @@
         calculated_become: "{{ run_as_root }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
         
-    - name: Setup AAAAA | Info about running user
+    - name: AAAAA | Info about running user
       ansible.builtin.debug:
         msg:
           - "Run as root: {{ run_as_root }}"
@@ -37,7 +37,7 @@
           - "Become: {{ calculated_become }}"
           - "Scope: {{ systemd_scope }}"
     
-    - name: Setup AAAAA | Systemd Podman Quadlet
+    - name: AAAAA | Systemd Podman Quadlet
       ansible.builtin.template:
         src: "../files/AAAAA/AAAAA.container"
         dest: "{{ quadlet_dir }}/AAAAA.container"
@@ -50,7 +50,7 @@
       register: systemd_podman_quadlet_output
       notify: Restart service
       
-    - name: Setup AAAAA | Systemd Service
+    - name: AAAAA | Systemd Service
       ansible.builtin.template:
         src: "../files/AAAAA/AAAAA.service"
         dest: "{{ service_dir }}/AAAAA.service"
@@ -63,7 +63,7 @@
       register: systemd_service_output
       notify: Restart service
     
-    - name: Setup AAAAA | ensures data directory exists
+    - name: AAAAA | ensures data directory exists
       ansible.builtin.file:
         path: "/var/mnt/data/AAAAA"
         state: directory
@@ -74,7 +74,7 @@
       register: data_dir_output
       notify: Restart service
       
-    - name: Setup AAAAA | ensures directories exist
+    - name: AAAAA | ensures directories exist
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
@@ -90,7 +90,7 @@
         - "{{ some_path }}/tls"
       notify: Restart service
     
-    - name: Setup AAAAA | Restart service
+    - name: AAAAA | Restart service
       ansible.builtin.systemd:
         daemon_reload: true
         name: AAAAA.service

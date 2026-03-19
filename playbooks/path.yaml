@@ -1,4 +1,4 @@
-- name: Setup PATH
+- name: PATH
   hosts: coreos:dnf:desktop
   gather_facts: false
   vars_files:
@@ -14,7 +14,7 @@
   
   tasks:
     
-    - name: setup PATH | ensures /home/{{ main_user }}/.bashrc.d/ directory exists
+    - name: PATH | ensures /home/{{ main_user }}/.bashrc.d/ directory exists
       ansible.builtin.file:
         path: /home/{{ main_user }}/.bashrc.d/
         state: directory
@@ -22,7 +22,7 @@
         group: "{{ main_user }}"
         mode: '0755'
     
-    - name: setup PATH | bashrc
+    - name: PATH | bashrc
       ansible.builtin.copy:
         src: ../files/75-path.bashrc
         dest: /home/{{ main_user }}/.bashrc.d/75-path.bashrc

@@ -1,4 +1,4 @@
-- name: Install incus
+- name: incus
   hosts: coreos:!nuc02.tailnet-ba52.ts.net
   become: true
   gather_facts: true
@@ -51,7 +51,7 @@
         timeout: 90
         sleep: 2
     
-    - name: Incus | install join cluster
+    - name: Incus | join cluster
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'

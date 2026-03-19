@@ -1,4 +1,4 @@
-- name: Install common functions
+- name: common functions
   hosts: coreos:dnf:desktop
   gather_facts: false
   vars_files:

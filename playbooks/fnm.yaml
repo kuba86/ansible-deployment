@@ -1,4 +1,4 @@
-- name: Install fnm CLI
+- name: fnm CLI
   hosts: coreos:dnf:desktop
   gather_facts: true
   vars_files:
@@ -14,13 +14,13 @@
 
   tasks:
 
-    - name: Install fnm CLI | install 'fnm' and NodeJS
+    - name: fnm CLI | 'fnm' and NodeJS
       ansible.builtin.shell: |
         set -euo pipefail
         IFS=$'\n\t'
 
-        curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
-        /home/{{ main_user }}/.local/share/fnm/fnm install 22
+        curl -fsSL https://fnm.vercel.app/| bash -s -- --skip-shell
+        /home/{{ main_user }}/.local/share/fnm/fnm 22
       args:
         executable: /usr/bin/bash
       when:
@@ -28,7 +28,7 @@
       register: node_install_output
       changed_when: "'warning: Version already installed at' not in node_install_output.stderr"
       
-    - name: Install fnm CLI | setup fish shell
+    - name: fnm CLI | fish shell
       ansible.builtin.template:
         src: ../files/fmn/fnm.fish
         dest: /home/{{ main_user }}/.config/fish/conf.d/fnm.fish
@@ -38,7 +38,7 @@
       when:
         - ansible_pkg_mgr in ['atomic_container', 'dnf', 'dnf5']
     
-    - name: Install fnm CLI | setup bash shell
+    - name: fnm CLI | bash shell
       ansible.builtin.template:
         src: ../files/fnm/fnm.bashrc
         dest: /home/{{ main_user }}/.bashrc.d/fnm.bashrc
