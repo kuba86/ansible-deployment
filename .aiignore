@@ -1,2 +1,5 @@
 .vault_pass
 inventories/prod/secret_vars
+*.key
+*.crt
+*.pfx
