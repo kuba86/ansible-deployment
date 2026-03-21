@@ -8,19 +8,19 @@ import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 
 abstract class LegoJob {
-  protected def certDomains: String
-  protected def dnsServers: String
-  protected def legoEmail: String
-  protected def legoPath: Option[String]
-  protected def legoServer: Option[String]
-  protected def dnsProvider: String
-  protected def cfApiToken: String
-  protected def cfPollingInterval: String
-  protected def cfPropagationTimeout: String
-  protected def cfTtl: String
+  def certDomains: String
+  def dnsServers: String
+  def legoEmail: String
+  def legoPath: Option[String]
+  def legoServer: Option[String]
+  def dnsProvider: String
+  def cfApiToken: String
+  def cfPollingInterval: String
+  def cfPropagationTimeout: String
+  def cfTtl: String
 
-  protected def actionArgs: Seq[String]
-  protected def actionName: String
+  def actionArgs: Seq[String]
+  def actionName: String
 
   private val daysPattern: Regex = """The certificate expires in (\d+) days""".r
 

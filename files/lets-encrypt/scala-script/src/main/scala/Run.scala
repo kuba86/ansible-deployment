@@ -3,17 +3,17 @@ package com.kuba86.letsEntryptScript
 import com.kuba86.letsEntryptScript.model.RunOptions
 
 class Run(options: RunOptions) extends LegoJob {
-  override protected def certDomains: String          = options.certificate.certDomains
-  override protected def dnsServers: String           = options.lego.legoDnsServers
-  override protected def legoEmail: String            = options.lego.legoEmail
-  override protected def legoPath: Option[String]     = options.lego.legoPath
-  override protected def legoServer: Option[String]   = options.lego.legoServer
-  override protected def dnsProvider: String          = options.cloudflare.dnsProvider
-  override protected def cfApiToken: String           = options.cloudflare.apiToken
-  override protected def cfPollingInterval: String    = options.cloudflare.pollingInterval.toString
-  override protected def cfPropagationTimeout: String = options.cloudflare.propagationTimeout.toString
-  override protected def cfTtl: String                = options.cloudflare.ttl.toString
+  override def certDomains: String          = options.certificate.certDomains
+  override def dnsServers: String           = options.lego.legoDnsServers
+  override def legoEmail: String            = options.lego.legoEmail
+  override def legoPath: Option[String]     = options.lego.legoPath
+  override def legoServer: Option[String]   = options.lego.legoServer
+  override def dnsProvider: String          = options.cloudflare.dnsProvider
+  override def cfApiToken: String           = options.cloudflare.apiToken
+  override def cfPollingInterval: String    = options.cloudflare.pollingInterval.toString
+  override def cfPropagationTimeout: String = options.cloudflare.propagationTimeout.toString
+  override def cfTtl: String                = options.cloudflare.ttl.toString
 
-  override protected def actionName: String      = "run"
-  override protected def actionArgs: Seq[String] = Seq("run")
+  override def actionName: String      = "run"
+  override def actionArgs: Seq[String] = Seq("run")
 }
