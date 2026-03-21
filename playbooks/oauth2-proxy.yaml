@@ -58,9 +58,15 @@
       notify: Restart OAuth2 Proxies
 
   handlers:
-    - name: Restart OAuth2 Proxies
+    - name: Reload systemd for OAuth2 Proxies
       ansible.builtin.systemd:
         daemon_reload: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
+      listen: "Restart OAuth2 Proxies"
+
+    - name: Restart OAuth2 Proxies
+      ansible.builtin.systemd:
         name: "{{ item.client_id }}.service"
         state: restarted
         enabled: true
