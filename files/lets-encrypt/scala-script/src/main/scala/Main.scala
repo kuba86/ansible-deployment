@@ -30,7 +30,8 @@ object Main extends CommandsEntryPoint {
     Logger.root
       .clearHandlers()
       .clearModifiers()
-      .withHandler(minimumLevel = Some(scribeLevel))
+      .withHandler()
+      .withMinimumLevel(scribeLevel)
       .replace()
   }
 }
