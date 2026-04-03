@@ -37,9 +37,6 @@
 - name: Playbooks | Podman
   ansible.builtin.import_playbook: podman.yaml
 
-#- name: Playbooks | Incus
-#  ansible.builtin.import_playbook: incus-via-podman.yaml
-
 - name: Playbooks | Syncthing
   ansible.builtin.import_playbook: syncthing.yaml
 
