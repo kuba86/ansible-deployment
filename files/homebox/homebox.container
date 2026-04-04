@@ -1,0 +1,22 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=ghcr.io/sysadminsmedia/homebox:latest
+ContainerName=%N
+HostName=homebox
+AutoUpdate=registry
+{{ homebox_volumes }}
+{{ homebox_env_vars }}
+{{ homebox_ports }}
+
+Memory=1g
+PodmanArgs=--cpus=1
+NoNewPrivileges=true
+
+[Service]
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target default.target

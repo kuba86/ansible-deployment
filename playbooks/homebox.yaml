@@ -1,0 +1,76 @@
+- name: Homebox
+  hosts: marek246.tailnet-ba52.ts.net
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/secret_vars/all.yaml"
+    - "../inventories/prod/secret_vars/services/homebox.yaml"
+
+  pre_tasks:
+    - name: Homebox | Gather per-host secret files
+      ansible.builtin.include_vars:
+        file: "{{ item }}"
+      loop:
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+      when: lookup('ansible.builtin.fileglob', item) | length > 0
+
+  tasks:
+    - name: Homebox | variables (detect container)
+      ansible.builtin.set_fact:
+        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
+    
+    - name: Homebox | variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if run_as_root else main_user }}"
+        file_group: "{{ 'root' if run_as_root else main_user }}"
+        calculated_become: "{{ run_as_root }}"
+        systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
+        
+    - name: Homebox | Info about running user
+      ansible.builtin.debug:
+        msg:
+          - "Run as root: {{ run_as_root }}"
+          - "Service dir: {{ service_dir }}"
+          - "Quadlet dir: {{ quadlet_dir }}"
+          - "User: {{ file_owner }}"
+          - "Group: {{ file_group }}"
+          - "Become: {{ calculated_become }}"
+          - "Scope: {{ systemd_scope }}"
+    
+    - name: Homebox | Systemd Podman Quadlet
+      ansible.builtin.template:
+        src: "../files/homebox/homebox.container"
+        dest: "{{ quadlet_dir }}/homebox.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_podman_quadlet_output
+      notify: Restart service
+      
+    - name: Homebox | ensures directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0750"
+      become: "{{ calculated_become }}"
+      register: data_dir_output
+      loop:
+        - "{{ homebox_dir }}"
+        - "{{ homebox_dir }}/data"
+      notify: Restart service
+
+  handlers:
+    - name: Restart service
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: homebox.service
+        state: restarted
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
