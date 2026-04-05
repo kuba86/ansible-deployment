@@ -52,7 +52,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: files/google-drive-backup
-          file: files/google-drive-backup/google-drive-backup.dockerfile
+          file: files/google-drive-backup/google-drive-backup.containerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
