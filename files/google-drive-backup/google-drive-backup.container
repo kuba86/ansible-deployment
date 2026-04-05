@@ -1,0 +1,11 @@
+[Unit]
+Description=Google Drive Backup Service
+
+[Container]
+Image=ghcr.io/kuba86/ansible-deployment/google-drive-backup:latest
+LogDriver=passthrough
+
+EnvironmentFile={{ google_drive_backup_dir }}/google-drive-backup.env
+
+[Service]
+Type=oneshot

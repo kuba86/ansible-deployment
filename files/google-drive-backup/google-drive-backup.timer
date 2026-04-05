@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Google Drive Backup every day
+
+[Timer]
+OnCalendar=*-*-* 00:00:00
+RandomizedDelaySec=3h
+Persistent=true
+Unit=google-drive-backup.service
+
+[Install]
+WantedBy=timers.target
