@@ -5,8 +5,6 @@ function print_help
     echo ""
     echo "Options:"
     echo "  --remote=<remote>      (required) rclone remote path, e.g. 'myremote:/'"
-    echo "  --local-path=<path>    (required) local destination path"
-    echo "  --config=<path>        (required) path to rclone config file"
     echo "  --dry-run              (optional) perform a trial run without making changes"
     echo "  -h/--help              (optional) show this help message"
 end
@@ -14,8 +12,6 @@ end
 argparse \
     'h/help' \
     'remote=' \
-    'local-path=' \
-    'config=' \
     'dry-run' \
     -- $argv
 or exit 1
@@ -32,28 +28,15 @@ if not set -q _flag_remote
     exit 1
 end
 
-if not set -q _flag_local_path
-    echo "Error: --local-path is required."
-    echo ""
-    print_help
-    exit 1
-end
-
-if not set -q _flag_config
-    echo "Error: --config is required."
-    echo ""
-    print_help
-    exit 1
-end
-
 rclone sync \
-    $_flag_remote $_flag_local_path \
+    $_flag_remote \
+    /data \
     --checksum \
     --check-first \
     --fast-list \
     --transfers=4 \
     --checkers=4 \
-    --config="$_flag_config" \
+    --config="/rclone.conf" \
     --exclude="/.stfolder/**" \
     --exclude="/.stignore" \
     --exclude="/.Trash-1000" \
