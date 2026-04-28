@@ -4,18 +4,6 @@
 - name: Playbooks | tailscale
   ansible.builtin.import_playbook: tailscale.yaml
 
-- name: Playbooks | create user core
-  ansible.builtin.import_playbook: user-core.yaml
-
-- name: Playbooks | create user emergency
-  ansible.builtin.import_playbook: user-emergency.yaml
-  
-- name: Playbooks | update ssh authorized keys
-  ansible.builtin.import_playbook: update-ssh-authorized-keys.yaml
-  
-- name: Playbooks | enable linger
-  ansible.builtin.import_playbook: enable-linger.yaml
-  
 - name: Playbooks | Sysctl
   ansible.builtin.import_playbook: sysctl.yaml
   
@@ -58,32 +46,5 @@
 - name: Playbooks | Caddy
   ansible.builtin.import_playbook: caddy.yaml
 
-- name: Playbooks | MariaDB
-  ansible.builtin.import_playbook:
-
-- name: Playbooks | PostgresDB
-  ansible.builtin.import_playbook:
-
-- name: Playbooks | CryptPad
-  ansible.builtin.import_playbook:
-
-- name: Playbooks | FileBrowser
-  ansible.builtin.import_playbook:
-
-- name: Playbooks | FileStash
-  ansible.builtin.import_playbook:
-
-- name: Playbooks | SftpGo
-  ansible.builtin.import_playbook:
-
 - name: Playbooks | Gemini CLI #TODO: convert to podman
   ansible.builtin.import_playbook: gemini-cli.yaml
-
-- name: Playbooks | Let's Encrypt
-  ansible.builtin.import_playbook:
-
-- name: Playbooks | Cronicle #TODO: convert to podman
-  ansible.builtin.import_playbook:
-
-- name: Playbooks | ntfy
-  ansible.builtin.import_playbook:
