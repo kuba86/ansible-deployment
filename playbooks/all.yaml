@@ -58,32 +58,32 @@
 - name: Playbooks | Caddy
   ansible.builtin.import_playbook: caddy.yaml
 
-- name: Playbooks | MariaDB
-  ansible.builtin.import_playbook:
+# - name: Playbooks | MariaDB
+#   ansible.builtin.import_playbook:
 
-- name: Playbooks | PostgresDB
-  ansible.builtin.import_playbook:
+# - name: Playbooks | PostgresDB
+#   ansible.builtin.import_playbook:
 
 - name: Playbooks | CryptPad
-  ansible.builtin.import_playbook:
+  ansible.builtin.import_playbook: cryptpad.yaml
 
-- name: Playbooks | FileBrowser
-  ansible.builtin.import_playbook:
+# - name: Playbooks | FileBrowser
+#   ansible.builtin.import_playbook:
 
-- name: Playbooks | FileStash
-  ansible.builtin.import_playbook:
+# - name: Playbooks | FileStash
+#   ansible.builtin.import_playbook:
 
 - name: Playbooks | SftpGo
-  ansible.builtin.import_playbook:
+  ansible.builtin.import_playbook: sftpgo.yaml
 
 - name: Playbooks | Gemini CLI #TODO: convert to podman
   ansible.builtin.import_playbook: gemini-cli.yaml
 
 - name: Playbooks | Let's Encrypt
-  ansible.builtin.import_playbook:
+  ansible.builtin.import_playbook: lets-encrypt.yaml
 
-- name: Playbooks | Cronicle #TODO: convert to podman
-  ansible.builtin.import_playbook:
+# - name: Playbooks | Cronicle #TODO: convert to podman
+#   ansible.builtin.import_playbook:
 
 - name: Playbooks | ntfy
-  ansible.builtin.import_playbook:
+  ansible.builtin.import_playbook: ntfy.yaml
