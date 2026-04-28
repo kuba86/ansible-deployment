@@ -76,7 +76,7 @@
 - name: Playbooks | SftpGo
   ansible.builtin.import_playbook:
 
-- name: Playbooks | Gemini CLI #TODO: convert to podman
+- name: Playbooks | Gemini CLI
   ansible.builtin.import_playbook: gemini-cli.yaml
 
 - name: Playbooks | Let's Encrypt
