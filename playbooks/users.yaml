@@ -31,6 +31,7 @@
       ansible.builtin.copy:
         content: |
           PasswordAuthentication no
+          PermitRootLogin prohibit-password
           AllowUsers core user root emergency
           AuthorizedKeysFile .ssh/authorized_keys.d/ansible
         dest: /etc/ssh/sshd_config.d/60-common.conf
