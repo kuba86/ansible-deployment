@@ -44,4 +44,18 @@ class RenewSpec extends FunSuite {
     assertEquals(renew.actionName, "renew")
     assertEquals(renew.actionArgs, Seq("renew", "--no-random-sleep", "--days", "15"))
   }
+
+  test("Renew.execute should return error when domains are empty") {
+    val emptyOptions = options.copy(certificate = Certificate(certDomains = ""))
+    val renewEmpty   = new Renew(emptyOptions)
+    val result       = renewEmpty.execute()
+    assertEquals(result, Left(CertError.UnspecifiedError("", "No domains provided")))
+  }
+
+  test("Renew.execute should return error when domains are whitespace only") {
+    val whitespaceOptions = options.copy(certificate = Certificate(certDomains = "   "))
+    val renewWhitespace   = new Renew(whitespaceOptions)
+    val result            = renewWhitespace.execute()
+    assertEquals(result, Left(CertError.UnspecifiedError("", "No domains provided")))
+  }
 }
