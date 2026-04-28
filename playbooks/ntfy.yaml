@@ -76,7 +76,7 @@
         mode: "0640"
       become: "{{ calculated_become }}"
       register: systemd_podman_quadlet_output
-#      notify: Restart service
+      notify: Restart service
     
     - name: ntfy | Ensure data directories exist
       ansible.builtin.file:
@@ -88,7 +88,7 @@
       loop: "{{ ntfy_directories }}"
       become: "{{ calculated_become }}"
       register: ntfy_directories_output
-#      notify: Restart service
+      notify: Restart service
 
     - name: ntfy | Restore ntfy data from restic backup
       ansible.builtin.command:
@@ -108,7 +108,7 @@
           - "security.selinux"
       become: "{{ calculated_become }}"
       when: ntfy_restore_backup
-#      notify: Restart service
+      notify: Restart service
     
     - name: ntfy | copy server configuration
       ansible.builtin.template:
@@ -119,7 +119,7 @@
         mode: "0640"
       become: "{{ calculated_become }}"
       register: ntfy_config_output
-#      notify: Restart service
+      notify: Restart service
   
   handlers:
     - name: Restart service
