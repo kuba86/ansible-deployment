@@ -10,20 +10,20 @@ is_service_active() {
   return $?
 }
 
-is_tailscale_ip_null() {
-  local tailscale_ip=$(tailscale status --json | jq -r .Self.TailscaleIPs[0])
-  [[ "$tailscale_ip" == "null" ]]
-  return $?
-}
-
 if ! is_in_path "tailscale"; then
   echo "tailscale not in path"
 elif ! is_service_active "tailscaled.service"; then
   echo "tailscaled.service not active"
-elif is_tailscale_ip_null; then
-  echo "Tailscale IP is null - device may not be connected to the tailnet"
 else
-  export TAILSCALE_IP=$(tailscale status --json | jq -r .Self.TailscaleIPs[0])
-  export TAILSCALE_SHORT_DOMAIN=$(tailscale status --json | jq -r .Self.HostName)
-  export TAILSCALE_FULL_DOMAIN=$(tailscale status --json | jq -r .CertDomains[])
+  tailscale_status=$(tailscale status --json)
+  tailscale_ip=$(echo "$tailscale_status" | jq -r .Self.TailscaleIPs[0])
+  if [[ "$tailscale_ip" == "null" ]]; then
+    echo "Tailscale IP is null - device may not be connected to the tailnet"
+  else
+    export TAILSCALE_IP="$tailscale_ip"
+    export TAILSCALE_SHORT_DOMAIN=$(echo "$tailscale_status" | jq -r .Self.HostName)
+    export TAILSCALE_FULL_DOMAIN=$(echo "$tailscale_status" | jq -r .CertDomains[])
+  fi
+  unset tailscale_status
+  unset tailscale_ip
 fi
