@@ -45,6 +45,3 @@
 
 - name: Playbooks | Caddy
   ansible.builtin.import_playbook: caddy.yaml
-
-- name: Playbooks | Gemini CLI #TODO: convert to podman
-  ansible.builtin.import_playbook: gemini-cli.yaml

@@ -103,14 +103,6 @@
       changed_when: false
       become_user: "{{ main_user }}"
 
-    - name: Scala CLI | JDK env vars
-      ansible.builtin.copy:
-        src: ../files/scala-cli/55-jvm.bashrc
-        dest: /home/{{ main_user }}/.bashrc.d/55-jvm.bashrc
-        owner: "{{ main_user }}"
-        group: "{{ main_user }}"
-        mode: '644'
-        
     - name: Scala CLI | fish shell completions
       ansible.builtin.copy:
         src: ../files/scala-cli/scala-cli-completions.fish
