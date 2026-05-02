@@ -119,14 +119,7 @@ end
 parse-args $argv
 
 # Normalize domain list and prepare Lego flags (Global so functions can access them)
-set -l normalized_domains
-for raw in $domains
-    for domain in (string split " " -- $raw)
-        if test -n "$domain"
-            set --append normalized_domains $domain
-        end
-    end
-end
+set -l normalized_domains (string split -n " " -- "$domains")
 
 if test (count $normalized_domains) -eq 0
     echo ">>> Error: No domains provided after parsing."
