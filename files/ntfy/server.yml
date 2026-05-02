@@ -276,14 +276,15 @@ enable-reservations: false
 # visitor-request-limit-burst: 60
 # visitor-request-limit-replenish: "5s"
 # visitor-request-limit-exempt-hosts: ""
-visitor-request-limit-burst: 60
+visitor-request-limit-burst: 10
 visitor-request-limit-replenish: "60s"
 
 # Rate limiting: Hard daily limit of messages per visitor and day. The limit is reset
 # every day at midnight UTC. If the limit is not set (or set to zero), the request
 # limit (see above) governs the upper limit.
 #
-# visitor-message-daily-limit: 0
+visitor-message-daily-limit: 1000
+
 
 # Rate limiting: Allowed emails per visitor:
 # - visitor-email-limit-burst is the initial bucket of emails each visitor has
