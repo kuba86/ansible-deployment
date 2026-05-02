@@ -24,6 +24,16 @@ abstract class LegoJob {
 
   private val daysPattern: Regex = """The certificate expires in (\d+) days""".r
 
+  protected def runCommand(command: Seq[String], env: Map[String, String]): os.CommandResult = {
+    os.proc(command)
+      .call(
+        cwd = os.pwd,
+        env = env,
+        stdout = os.Pipe,
+        stderr = os.Pipe
+      )
+  }
+
   def execute(): Either[CertError, CertOk] = {
     val domains: List[String] = certDomains.trim.split(" ").filter(_.nonEmpty).toList
     if (domains.isEmpty) {
@@ -59,13 +69,7 @@ abstract class LegoJob {
     )
 
     Try {
-      os.proc(legoCommand)
-        .call(
-          cwd = os.pwd,
-          env = env,
-          stdout = os.Pipe,
-          stderr = os.Pipe
-        )
+      runCommand(legoCommand, env)
     } match {
       case Success(result) =>
         result.err.trim() match {
