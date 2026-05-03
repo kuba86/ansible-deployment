@@ -34,18 +34,33 @@ select_archive=""
 repo_url=""
 install_dir=""
 
-# Parse args with getopt for robustness
-parsed_opts=$(getopt -o h --long cmd:,select-archive:,repo-url:,install-dir:,help -- "$@") || die "Failed to parse options"
-eval set -- "${parsed_opts}"
-while true; do
+# Parse args manually for security (avoid eval)
+while [[ $# -gt 0 ]]; do
   case "$1" in
-    --cmd) cmd=${2:?}; shift 2 ;;
-    --select-archive) select_archive=${2-}; shift 2 ;;
-    --repo-url) repo_url=${2:?}; shift 2 ;;
-    --install-dir) install_dir=${2:?}; shift 2 ;;
+    --cmd)
+      if [[ $# -lt 2 ]]; then die "Missing argument for $1"; fi
+      cmd="$2"; shift 2 ;;
+    --cmd=*)
+      cmd="${1#*=}"; shift 1 ;;
+    --select-archive)
+      if [[ $# -lt 2 ]]; then die "Missing argument for $1"; fi
+      select_archive="$2"; shift 2 ;;
+    --select-archive=*)
+      select_archive="${1#*=}"; shift 1 ;;
+    --repo-url)
+      if [[ $# -lt 2 ]]; then die "Missing argument for $1"; fi
+      repo_url="$2"; shift 2 ;;
+    --repo-url=*)
+      repo_url="${1#*=}"; shift 1 ;;
+    --install-dir|--dir)
+      if [[ $# -lt 2 ]]; then die "Missing argument for $1"; fi
+      install_dir="$2"; shift 2 ;;
+    --install-dir=*|--dir=*)
+      install_dir="${1#*=}"; shift 1 ;;
     -h|--help) usage ;;
     --) shift; break ;;
-    *) die "Unknown option: $1" ;;
+    -*) die "Unknown option: $1" ;;
+    *) break ;;
   esac
 done
 

@@ -50,7 +50,7 @@ abstract class LegoJob {
     val pathFlag: Seq[String]   = legoPath.map(v => Seq("--path", v)).getOrElse(Seq.empty)
     val serverFlag: Seq[String] = legoServer.map(v => Seq("--server", v)).getOrElse(Seq.empty)
 
-    val legoCommand: Seq[String] = Seq(
+    Seq(
       "lego",
       "--accept-tos",
       "--email",
@@ -58,6 +58,36 @@ abstract class LegoJob {
       "--dns",
       dnsProvider
     ) ++ pathFlag ++ serverFlag ++ domainFlags ++ dnsResolverFlags ++ actionArgs
+  }
+
+  private def parseResult(result: os.CommandResult, domain: String): Either[CertError, CertOk] = {
+    result.err.trim() match {
+      case stderr if stderr.contains("Server responded with a certificate.") =>
+        Right(CertOk.NewCertificate(domain))
+      case stderr if stderr.contains("The certificate expires in") =>
+        daysPattern.findFirstMatchIn(stderr) match {
+          case Some(m) =>
+            Right(CertOk.NoNeedForRenew(domain, Option(m.group(1).toInt)))
+          case None =>
+            Left(CertError.UnspecifiedError(domain, stderr))
+        }
+      case _ =>
+        error(s"Lego $actionName command failed with exit code: ${result.exitCode}")
+        Left(CertError.UnspecifiedError(domain, result.err.trim()))
+    }
+  }
+
+  def execute(): Either[CertError, CertOk] = {
+    val domains: List[String] = certDomains.trim.split(" ").filter(_.nonEmpty).toList
+    if (domains.isEmpty) {
+      error("No domains provided")
+      return Left(CertError.UnspecifiedError("", "No domains provided"))
+    }
+    debug(s"Domains: $domains")
+
+    val dnsResolverList: List[String] = dnsServers.trim.split(" ").filter(_.nonEmpty).toList
+
+    val legoCommand: Seq[String] = buildLegoCommand(domains, dnsResolverList)
 
     debug(s"Executing command: ${legoCommand.mkString(" ")}")
 
@@ -72,20 +102,7 @@ abstract class LegoJob {
       runCommand(legoCommand, env)
     } match {
       case Success(result) =>
-        result.err.trim() match {
-          case stderr if stderr.contains("Server responded with a certificate.") =>
-            Right(CertOk.NewCertificate(domains.head))
-          case stderr if stderr.contains("The certificate expires in") =>
-            daysPattern.findFirstMatchIn(stderr) match {
-              case Some(m) =>
-                Right(CertOk.NoNeedForRenew(domains.head, Option(m.group(1).toInt)))
-              case None =>
-                Left(CertError.UnspecifiedError(domains.head, stderr))
-            }
-          case _ =>
-            error(s"Lego $actionName command failed with exit code: ${result.exitCode}")
-            Left(CertError.UnspecifiedError(domains.head, result.err.trim()))
-        }
+        parseResult(result, domains.head)
       case Failure(exception) =>
         error(s"Lego $actionName command failed with exception: ${exception.getMessage}")
         Left(CertError.UnspecifiedError(actionName, s"Exception: ${exception.getMessage}"))
