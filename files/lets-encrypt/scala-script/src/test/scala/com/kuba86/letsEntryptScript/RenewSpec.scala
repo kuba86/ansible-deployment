@@ -58,4 +58,20 @@ class RenewSpec extends FunSuite {
     val result            = renewWhitespace.execute()
     assertEquals(result, Left(CertError.UnspecifiedError("", "No domains provided")))
   }
+
+  test("Renew.execute should handle process execution failure (Exception)") {
+    class RenewThrows(options: RenewOptions) extends Renew(options) {
+      override protected def runCommand(command: Seq[String], env: Map[String, String]): os.CommandResult = {
+        throw new RuntimeException("Simulated process failure")
+      }
+    }
+
+    val renewFailure = new RenewThrows(options)
+    val result       = renewFailure.execute()
+
+    assertEquals(
+      result,
+      Left(CertError.UnspecifiedError("renew", "Exception: Simulated process failure"))
+    )
+  }
 }
