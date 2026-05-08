@@ -226,7 +226,6 @@ module.exports = {
      *  anything larger than this size will be rejected
      *  defaults to 20MB if no value is provided
      */
-    //maxUploadSize: 20 * 1024 * 1024,
     maxUploadSize: 20 * 1024 * 1024, // 20MB
 
     /*  Users with premium accounts (those with a plan included in their customLimit)
@@ -234,7 +233,6 @@ module.exports = {
      *  upload size as any other registered user.
      *
      */
-    //premiumUploadSize: 100 * 1024 * 1024,
     premiumUploadSize: 1024 * 1024 * 1024, // 1GB
 
     /* =====================
