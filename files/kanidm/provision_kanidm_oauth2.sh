@@ -27,6 +27,11 @@ if ! command -v kanidm >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v openssl >/dev/null 2>&1; then
+  echo "ERROR: 'openssl' command not found." >&2
+  exit 1
+fi
+
 # Split scopes string into array args
 read -r -a scopes_arr <<<"$scopes_str"
 
@@ -71,7 +76,7 @@ if [[ -z "${client_secret:-}" ]]; then
   exit 1
 fi
 
-cookie_secret="$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32 || true)"
+cookie_secret="$(openssl rand -base64 32)"
 
 echo ""
 echo "cookie_domain: $domain"
