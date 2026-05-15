@@ -24,34 +24,28 @@ is_in_path() {
 
 
 check_command_output() {
-  local command_to_run="$1"
-  local expected_output="$2"
+  local expected_output="$1"
+  shift
 
   # Check if both arguments were provided
-  # Note: An empty expected string is allowed, but the parameter must be passed.
-  if [[ $# -lt 2 ]]; then
-    echo "Usage: check_command_output <command_string> <expected_output_string>" >&2
-    echo "Example: check_command_output 'echo hello' 'hello'" >&2
+  # Note: An empty expected string is allowed, but the command must be passed.
+  if [[ $# -lt 1 ]]; then
+    echo "Usage: check_command_output <expected_output_string> <command> [args...]" >&2
+    echo "Example: check_command_output 'hello' echo hello" >&2
     return 2
   fi
 
   # --- Execute the command and capture its standard output ---
-  # IMPORTANT SECURITY WARNING:
-  # Executing arbitrary command strings passed as arguments can be dangerous
-  # if the input is not properly sanitized or controlled.
-  # Use 'bash -c' to execute the command string.
   # We capture only stdout. stderr is ignored (redirected to /dev/null).
-  # If you need to check stderr or the command's exit code, modify this part.
   local actual_output
-  actual_output=$(bash -c "$command_to_run" 2>/dev/null)
+  actual_output=$("$@" 2>/dev/null)
   local command_exit_status=$? # Optional: capture the command's exit status
 
   # Optional: Check if the command executed successfully (exit status 0)
   # You might want to return a different error code if the command itself failed.
   if [[ $command_exit_status -ne 0 ]]; then
-    echo "Warning: Command '$command_to_run' failed with exit status $command_exit_status." >&2
-    # Decide if a failed command should be treated as a non-match or a specific error
-    # return 3 # Example: Use a specific code for command execution failure
+    # echo "Warning: Command '$*' failed with exit status $command_exit_status." >&2
+    : # Do nothing, this is often expected
   fi
 
   # --- Compare the captured output with the expected string ---
@@ -70,16 +64,18 @@ check_command_output() {
   fi
 }
 
-if is_in_path "tailscale"
-then
-  echo "tailscale in path"
-else
-  echo "tailscale NOT in path"
-fi
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  if is_in_path "tailscale"
+  then
+    echo "tailscale in path"
+  else
+    echo "tailscale NOT in path"
+  fi
 
-if check_command_output "tailscale status" "failed to connect to local tailscaled; it doesn't appear to be running (sudo systemctl start tailscaled ?)"
-then
-  echo "failed to connect to local tailscaled"
-else
-  echo "connected to tailscaled"
+  if check_command_output "failed to connect to local tailscaled; it doesn't appear to be running (sudo systemctl start tailscaled ?)" tailscale status
+  then
+    echo "failed to connect to local tailscaled"
+  else
+    echo "connected to tailscaled"
+  fi
 fi
