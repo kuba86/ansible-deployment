@@ -34,16 +34,7 @@ abstract class LegoJob {
       )
   }
 
-  def execute(): Either[CertError, CertOk] = {
-    val domains: List[String] = certDomains.trim.split(" ").filter(_.nonEmpty).toList
-    if (domains.isEmpty) {
-      error("No domains provided")
-      return Left(CertError.UnspecifiedError("", "No domains provided"))
-    }
-    debug(s"Domains: $domains")
-
-    val dnsResolverList: List[String] = dnsServers.trim.split(" ").filter(_.nonEmpty).toList
-
+  private def buildLegoCommand(domains: List[String], dnsResolverList: List[String]): Seq[String] = {
     val domainFlags: List[String]      = domains.flatMap(d => Seq("--domains", d))
     val dnsResolverFlags: List[String] = dnsResolverList.flatMap(s => Seq("--dns.resolvers", s))
 
