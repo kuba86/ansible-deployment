@@ -13,7 +13,7 @@
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: vvariables (detect container)
+    - name: variables (detect container)
       ansible.builtin.set_fact:
         run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
     
