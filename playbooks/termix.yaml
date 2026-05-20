@@ -1,0 +1,145 @@
+- name: Termix
+  hosts: wyse01.tailnet-ba52.ts.net
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/secret_vars/all.yaml"
+    - "../inventories/prod/secret_vars/services/termix.yaml"
+
+  pre_tasks:
+    - name: Termix | Gather per-host secret files
+      ansible.builtin.include_vars:
+        file: "{{ item }}"
+      loop:
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+      when: lookup('ansible.builtin.fileglob', item) | length > 0
+
+  tasks:
+    - name: Termix | variables (detect container)
+      ansible.builtin.set_fact:
+        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
+    
+    - name: Termix | variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if run_as_root else main_user }}"
+        file_group: "{{ 'root' if run_as_root else main_user }}"
+        calculated_become: "{{ run_as_root }}"
+        systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
+        termix_quadlet_staging_dir: "{{ '/tmp/termix-quadlet' if run_as_root else '/home/' ~ main_user ~ '/.cache/termix-quadlet' }}"
+        termix_quadlet_file: "{{ '/tmp/termix-quadlet' if run_as_root else '/home/' ~ main_user ~ '/.cache/termix-quadlet' }}/termix.quadlets"
+        termix_quadlet_files:
+          - termix-net.network
+          - termix-guacd.container
+          - termix.container
+        
+    - name: Termix | Info about running user
+      ansible.builtin.debug:
+        msg:
+          - "Run as root: {{ run_as_root }}"
+          - "Service dir: {{ service_dir }}"
+          - "Quadlet dir: {{ quadlet_dir }}"
+          - "User: {{ file_owner }}"
+          - "Group: {{ file_group }}"
+          - "Become: {{ calculated_become }}"
+          - "Scope: {{ systemd_scope }}"
+          - "Quadlet staging file: {{ termix_quadlet_file }}"
+    
+    - name: Termix | Create Quadlet staging directory
+      ansible.builtin.file:
+        path: "{{ termix_quadlet_staging_dir }}"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0750"
+      become: "{{ calculated_become }}"
+    
+    - name: Termix | Render multi-file Podman Quadlet
+      block:
+        - name: Termix | Render staged multi-file Podman Quadlet
+          ansible.builtin.template:
+            src: "../files/termix/termix.quadlets"
+            dest: "{{ termix_quadlet_file }}"
+            owner: "{{ file_owner }}"
+            group: "{{ file_group }}"
+            mode: "0640"
+          become: "{{ calculated_become }}"
+          register: termix_quadlet_template_output
+
+        - name: Termix | Check installed Quadlet files
+          ansible.builtin.stat:
+            path: "{{ quadlet_dir }}/{{ item }}"
+          loop: "{{ termix_quadlet_files }}"
+          register: termix_quadlet_installed_files
+
+        - name: Termix | Install multi-file Podman Quadlet
+          ansible.builtin.command:
+            argv:
+              - podman
+              - quadlet
+              - install
+              - --replace
+              - "{{ termix_quadlet_file }}"
+          become: "{{ calculated_become }}"
+          register: termix_quadlet_install_output
+          changed_when: true
+          when: >
+            termix_quadlet_template_output.changed or
+            termix_quadlet_installed_files.results
+            | selectattr('stat.exists', 'equalto', false)
+            | list
+            | length > 0
+          notify:
+            - Restart Termix network
+            - Restart Termix Guacd
+            - Restart Termix
+      always:
+        - name: Termix | Remove staged Quadlet file
+          ansible.builtin.file:
+            path: "{{ termix_quadlet_file }}"
+            state: absent
+          become: "{{ calculated_become }}"
+
+        - name: Termix | Remove staged Quadlet directory
+          ansible.builtin.file:
+            path: "{{ termix_quadlet_staging_dir }}"
+            state: absent
+          become: "{{ calculated_become }}"
+
+    - name: Termix | Ensure data directory exists
+      ansible.builtin.file:
+        path: "{{ termix_dir }}"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0750"
+      become: "{{ calculated_become }}"
+      register: data_dir_output
+      notify: Restart Termix
+
+  handlers:
+    - name: Restart Termix network
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: termix-net-network.service
+        state: restarted
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
+
+    - name: Restart Termix Guacd
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: termix-guacd.service
+        state: restarted
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"
+
+    - name: Restart Termix
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: termix.service
+        state: restarted
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      become: "{{ calculated_become }}"

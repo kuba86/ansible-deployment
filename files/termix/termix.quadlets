@@ -1,0 +1,62 @@
+# FileName=termix-net
+[Unit]
+Description=%N
+
+[Network]
+Driver=bridge
+NetworkName=termix-net
+
+---
+
+# FileName=termix-guacd
+[Unit]
+Description=%N
+
+[Container]
+Image=docker.io/guacamole/guacd:1.6.0
+ContainerName=%N
+HostName={{ host_name }}
+AutoUpdate=registry
+UserNS=keep-id
+Memory=2g
+PodmanArgs=--cpus=2
+NoNewPrivileges=true
+PublishPort={{ termix_guacd_port }}:{{ termix_guacd_port }}
+Network=termix-net
+
+[Service]
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target default.target
+
+---
+
+# FileName=termix
+[Unit]
+Description=%N
+
+[Container]
+Image=ghcr.io/lukegus/termix:latest
+ContainerName=%N
+HostName={{ host_name }}
+AutoUpdate=registry
+UserNS=keep-id
+Memory=2g
+PodmanArgs=--cpus=2
+NoNewPrivileges=true
+PublishPort={{ termix_port }}:{{ termix_port }}
+Volume={{ termix_dir }}:/app/data:z
+Environment=PORT={{ termix_port }}
+Environment=GUACD_PORT={{ termix_guacd_port }}
+Network=termix-net
+
+[Service]
+Requires=guacd.container
+After=guacd.container
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target default.target
