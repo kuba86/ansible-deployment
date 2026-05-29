@@ -43,8 +43,11 @@
 - name: Playbooks | Garage S3
   ansible.builtin.import_playbook: garage-s3.yaml
   
+- name: Playbooks | Rclone
+  ansible.builtin.import_playbook: rclone.yaml
+  
+- name: Playbooks | tls certs
+  ansible.builtin.import_playbook: tls-certs.yaml
+  
 - name: Playbooks | Caddy
   ansible.builtin.import_playbook: caddy.yaml
-
-- name: Playbooks | Rclone Garage
-  ansible.builtin.import_playbook: rclone-garage.yaml

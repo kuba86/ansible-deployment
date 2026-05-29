@@ -14,12 +14,13 @@
 
     - name: packages | update sudoers secure_path to include /usr/local/bin
       become: true
-      ansible.builtin.lineinfile:
-        path: /etc/sudoers
-        state: present
-        regexp: '^Defaults\s+secure_path\s*=\s*/sbin:/bin:/usr/sbin:/usr/bin$'
-        line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/secure_path
+        content: "Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin\n"
         validate: 'visudo -cf %s'
+        owner: root
+        group: root
+        mode: '0440'
       when:
         - ansible_facts["pkg_mgr"] in ['dnf', 'dnf5']
         - (ansible_facts["distribution_major_version"] | int) in [9, 10]
@@ -96,66 +97,17 @@
         mode: '0755'
       become: true
     
-    - name: packages | eza
-      ansible.builtin.shell: |
-        set -euo pipefail
-        
-        ensure-cmd \
-          --cmd eza \
-          --select-archive "" \
-          --repo-url https://github.com/eza-community/eza \
-          --dir /usr/local/bin
-      args:
-        executable: /usr/bin/bash
-      register: eza
-      failed_when: eza.rc != 0
-      changed_when: "'installing...' in eza.stdout"
-      become: true
-    
     - name: packages | dysk
       ansible.builtin.shell: |
         set -euo pipefail
         
         ensure-cmd \
           --cmd dysk \
-          --select-archive dysk_3.6.0.zip \
+          --select-archive dysk_3.6.1.zip \
           --repo-url https://github.com/Canop/dysk \
-          --dir /usr/local/bin
+          --dir /home/{{ main_user }}/.local/bin
       args:
         executable: /usr/bin/bash
       register: dysk
       failed_when: dysk.rc != 0
       changed_when: "'installing...' in dysk.stdout"
-      become: true
-    
-    - name: packages | duf
-      ansible.builtin.shell: |
-        set -euo pipefail
-        
-        ensure-cmd \
-          --cmd duf \
-          --select-archive "" \
-          --repo-url https://github.com/muesli/duf \
-          --dir /usr/local/bin
-      args:
-        executable: /usr/bin/bash
-      register: duf
-      failed_when: duf.rc != 0
-      changed_when: "'installing...' in duf.stdout"
-      become: true
-      
-    - name: packages | doggo
-      ansible.builtin.shell: |
-        set -euo pipefail
-        
-        ensure-cmd \
-          --cmd doggo \
-          --select-archive "" \
-          --repo-url https://github.com/mr-karan/doggo \
-          --dir /usr/local/bin
-      args:
-        executable: /usr/bin/bash
-      register: doggo
-      failed_when: doggo.rc != 0
-      changed_when: "'installing...' in doggo.stdout"
-      become: true

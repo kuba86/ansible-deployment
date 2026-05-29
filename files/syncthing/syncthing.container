@@ -7,9 +7,7 @@ ContainerName=%N
 HostName={{ host_name }}
 AutoUpdate=registry
 {{ syncthing_volumes }}
-PublishPort=8384:8384/tcp
 {{ syncthing_ports }}
-PublishPort=21027:21027/udp
 {{ syncthing_userns }}
 Memory={{ syncthing_memory }}
 PodmanArgs=--cpus={{ syncthing_cpu }}

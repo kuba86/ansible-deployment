@@ -31,7 +31,7 @@
           # in total across all applications (per user)
           ansible.posix.sysctl:
             name: fs.inotify.max_user_watches
-            value: '524288'
+            value: '1048576'
             sysctl_file: /etc/sysctl.d/10-common.conf
             state: present
     
@@ -40,28 +40,35 @@
           # can watch files (per user)
           ansible.posix.sysctl:
             name: fs.inotify.max_user_instances
-            value: '8192'
+            value: '2048'
+            sysctl_file: /etc/sysctl.d/10-common.conf
+            state: present
+            
+        - name: Sysctl | set fs.inotify.max_queued_events
+          ansible.posix.sysctl:
+            name: fs.inotify.max_queued_events
+            value: '65536'
             sysctl_file: /etc/sysctl.d/10-common.conf
             state: present
           
-        - name: Sysctl | set net.core.rmem_max=25000000 (25MB)
+        - name: Sysctl | set net.core.rmem_max=33554432 (32MB)
           ansible.posix.sysctl:
             name: net.core.rmem_max
-            value: '25000000'
+            value: '33554432'
             sysctl_file: /etc/sysctl.d/10-common.conf
             state: present
-        
-        - name: Sysctl | set net.core.wmem_max=25000000 (25MB)
+            
+        - name: Sysctl | set net.core.wmem_max=33554432 (32MB)
           ansible.posix.sysctl:
             name: net.core.wmem_max
-            value: '25000000'
+            value: '33554432'
             sysctl_file: /etc/sysctl.d/10-common.conf
             state: present
           
         - name: Sysctl | set vm.overcommit_memory=1
           ansible.posix.sysctl:
             name: vm.overcommit_memory
-            value: '1'
+            value: '0'
             sysctl_file: /etc/sysctl.d/10-common.conf
             state: present
           

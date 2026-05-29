@@ -19,7 +19,7 @@
         set -euo pipefail
         IFS=$'\n\t'
         
-        scala_cli_url="https://github.com/VirtusLab/scala-cli/releases/download/v1.12.5/scala-cli-$(uname -m)-pc-linux.gz"
+        scala_cli_url="https://github.com/VirtusLab/scala-cli/releases/download/v1.14.0/scala-cli-$(uname -m)-pc-linux.gz"
         
         if realpath $(which scala-cli) &> /dev/null
         then
@@ -75,11 +75,20 @@
       failed_when: scala_cli_power_mode.rc != 0
       changed_when: "'Scala-Cli power mode set to FALSE, changing to TRUE' in scala_cli_power_mode.stdout"
       become_user: "{{ main_user }}"
+
+    - name: Scala CLI | create temp scala-cli-jvm-setup.scala path
+      ansible.builtin.tempfile:
+        state: file
+        path: /tmp
+        prefix: scala-cli-jvm-setup-
+        suffix: .scala
+      register: scala_cli_jvm_setup_tempfile
+      become_user: "{{ main_user }}"
       
     - name: Scala CLI | copy scala-cli-jvm-setup.scala
       ansible.builtin.copy:
         src: ../files/scala-cli/scala-cli-jvm-setup.scala
-        dest: /home/{{ main_user }}/scala-cli-jvm-setup.scala
+        dest: "{{ scala_cli_jvm_setup_tempfile.path }}"
         owner: "{{ main_user }}"
         group: "{{ main_user }}"
         mode: '744'
@@ -93,15 +102,19 @@
           source "$HOME/.profile"
         fi
 
-        scala-cli clean /home/{{ main_user }}
-        /home/{{ main_user }}/scala-cli-jvm-setup.scala
-        scala-cli clean /home/{{ main_user }}
+        {{ scala_cli_jvm_setup_tempfile.path | quote }}
       args:
         executable: /usr/bin/bash
       register: scala_cli_download_jdk
       failed_when: scala_cli_download_jdk.rc != 0
       changed_when: false
       become_user: "{{ main_user }}"
+
+    - name: Scala CLI | remove temp scala-cli-jvm-setup.scala
+      ansible.builtin.file:
+        path: "{{ scala_cli_jvm_setup_tempfile.path }}"
+        state: absent
+      changed_when: false
 
     - name: Scala CLI | fish shell completions
       ansible.builtin.copy:
@@ -118,21 +131,19 @@
         
         user_bin_path="/home/{{ main_user }}/bin"
         cs_bin_path="$user_bin_path/cs"
-        cs_url="https://github.com/coursier/launchers/raw/master/coursier"
+        cs_url="https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz"
         
         if [ ! -f $cs_bin_path ]; then
           echo "Installing coursier..."
-          mkdir -p $user_bin_path
-          chown {{ main_user }}:{{ main_user }} $user_bin_path
-          curl -fL "https://github.com/coursier/launchers/raw/master/coursier" > $cs_bin_path
-          chmod u+x $cs_bin_path
-          chown {{ main_user }}:{{ main_user }} $cs_bin_path
         else
           echo "$cs_bin_path already exists, updating..."
-          curl -fL "https://github.com/coursier/launchers/raw/master/coursier" > $cs_bin_path
-          chmod u+x $cs_bin_path
-          chown {{ main_user }}:{{ main_user }} $cs_bin_path
         fi
+        
+        mkdir -p $user_bin_path
+        chown {{ main_user }}:{{ main_user }} $user_bin_path
+        curl -fL $cs_url | gzip -d > $cs_bin_path
+        chmod u+x $cs_bin_path
+        chown {{ main_user }}:{{ main_user }} $cs_bin_path
       args:
         executable: /usr/bin/bash
       register: scala_cli_install_coursier

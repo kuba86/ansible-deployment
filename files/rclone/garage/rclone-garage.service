@@ -6,19 +6,19 @@ Wants=network-online.target
 
 [Service]
 Type=notify
-ExecStartPre=-/usr/bin/umount {{ rclone_garage_mount_path }}
-ExecStart={{ rclone_bin_path }} \
-  mount \
+ExecStartPre=-/usr/bin/fusermount -uz {{ rclone_garage_mount_path }}
+ExecStart={{ rclone_bin_path }} mount \
   garage: {{ rclone_garage_mount_path }} \
   --config {{ rclone_conf_path }}/{{ rclone_conf_name }} \
   --vfs-cache-mode full \
-  --vfs-cache-max-size 4G \
+  --vfs-cache-max-size {{ rclone_garage_cache_max_size }} \
+  --vfs-cache-max-age 48h \
   --vfs-read-ahead 256M \
   --vfs-disk-space-total-size 100G \
   --s3-sign-accept-encoding=false \
   --s3-decompress \
   --dir-cache-time 60s \
-  --transfers 4 \
+  --transfers {{ rclone_garage_transfers }} \
   --links \
   --allow-other={{ rclone_allow_other }} \
   --log-level INFO

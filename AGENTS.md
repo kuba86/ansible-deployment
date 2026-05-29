@@ -208,7 +208,7 @@ ansible-navigator --ee false run playbooks/[service].yaml \
 
 ## Common Patterns & Anti-Patterns
 
-### ✅ DO
+### DO
 - Use the `001-setup.yaml` template for consistency
 - Leverage `calculated_become`, `file_owner`, `file_group` variables
 - Use handlers for service restarts
@@ -216,7 +216,7 @@ ansible-navigator --ee false run playbooks/[service].yaml \
 - Keep playbooks focused on single services
 - Specify file modes in octal format: `"0640"`, `"0750"`
 
-### ❌ DON'T
+### DON'T
 - Use "setup-" or "install-" prefixes
 - Hardcode paths to `/etc/systemd/system/` or user directories
 - Hardcode `root` ownership or `become: true`

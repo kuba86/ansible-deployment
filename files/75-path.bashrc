@@ -24,5 +24,5 @@ add_path_append() {
   esac
 }
 
-add_path_append "$HOME/.local/bin"
+# add_path_append "$HOME/.local/bin"
 add_path_append "$HOME/bin"

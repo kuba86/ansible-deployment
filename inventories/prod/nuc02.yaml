@@ -1,0 +1,5 @@
+all:
+  children:
+    coreos:
+      hosts:
+        nuc02.tailnet-ba52.ts.net:
