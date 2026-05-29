@@ -1,5 +1,12 @@
 all:
   children:
+    nuc02:
+      hosts:
+        nuc02.tailnet-ba52.ts.net:
     coreos:
       hosts:
         nuc02.tailnet-ba52.ts.net:
+    dnf:
+      hosts: {}
+    desktop:
+      hosts: {}

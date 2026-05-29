@@ -68,18 +68,18 @@
             - copy_storage_conf.changed | default(false)
 
         - name: Podman | enable podman-auto-update.timer ({{ main_user }})
-          systemd:
+          ansible.builtin.systemd_service:
             name: podman-auto-update.timer
-            enabled: yes
+            enabled: true
             state: started
             scope: user
       when:
-        - "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length == 0 }}"
+        - ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length == 0
 
     - name: Podman | enable podman-auto-update.timer (root)
-      systemd:
+      ansible.builtin.systemd_service:
         name: podman-auto-update.timer
-        enabled: yes
+        enabled: true
         state: started
         scope: system
       become: true
