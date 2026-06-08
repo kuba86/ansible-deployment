@@ -5,7 +5,7 @@ After=network-online.target
 
 [Service]
 Type=exec
-ExecStart=/usr/bin/bash -c 'set -euo pipefail; IFACE=$(/usr/sbin/ip route show default 0.0.0.0/0 | awk '"'"'NR==1 {print $5; exit}'"'"'); if [[ -z $IFACE ]]; then echo "No default interface; aborting" >&2; exit 0; fi; /usr/sbin/ethtool -K "$IFACE" rx-udp-gro-forwarding on rx-gro-list off'
+ExecStart=/usr/bin/bash -c 'set -euo pipefail; while true; do IFACE=$(/usr/sbin/ip route show default 0.0.0.0/0 | awk '"'"'NR==1 {print $5; exit}'"'"'); if [[ -z $IFACE ]]; then echo "No default interface; aborting" >&2; sleep 60; continue; fi; /usr/sbin/ethtool -K "$IFACE" rx-udp-gro-forwarding on rx-gro-list off; echo "Successfully configured interface: $IFACE"; break; done'
 
 [Install]
 WantedBy=multi-user.target default.target
