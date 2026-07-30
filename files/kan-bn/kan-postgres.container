@@ -1,0 +1,18 @@
+[Unit]
+Description=Kan PostgreSQL Database Service
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+ContainerName=kan-postgres
+Image=docker.io/library/postgres:15
+Pod=kan.pod
+EnvironmentFile={{ kan_dir }}/kan.env
+Volume={{ kan_dir }}/postgres_data:/var/lib/postgresql/data:Z
+
+[Service]
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

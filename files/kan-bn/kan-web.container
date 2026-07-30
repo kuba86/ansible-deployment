@@ -1,0 +1,13 @@
+[Unit]
+Description=Kan Web Application Service
+Requires=kan-migrate.service
+After=kan-migrate.service
+
+[Container]
+ContainerName=kan-web
+Image=ghcr.io/kanbn/kan:latest
+Pod=kan.pod
+EnvironmentFile={{ kan_dir }}/kan.env
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,145 @@
+- name: Kan
+  hosts: marek246.tailnet-ba52.ts.net
+  gather_facts: true
+  vars_files:
+    - "../inventories/prod/secret_vars/all.yaml"
+
+  pre_tasks:
+    - name: Kan | Gather per-host secret files
+      ansible.builtin.include_vars:
+        file: "{{ item }}"
+      loop:
+        - "../inventories/prod/secret_vars/{{ inventory_hostname }}/base.yaml"
+        - "../inventories/prod/secret_vars/services/kan.bn/kan.yaml"
+      when: lookup('ansible.builtin.fileglob', item) | length > 0
+
+  tasks:
+    - name: Kan | variables (detect container)
+      ansible.builtin.set_fact:
+        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
+
+    - name: Kan | variables (compute once, reuse everywhere)
+      ansible.builtin.set_fact:
+        service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
+        quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
+        file_owner: "{{ 'root' if run_as_root else main_user }}"
+        file_group: "{{ 'root' if run_as_root else main_user }}"
+        calculated_become: "{{ run_as_root }}"
+        systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
+        kan_dir: "/var/mnt/data/kan.bn"
+
+    - name: Kan | Info about running user
+      ansible.builtin.debug:
+        msg:
+          - "Run as root: {{ run_as_root }}"
+          - "Service dir: {{ service_dir }}"
+          - "Quadlet dir: {{ quadlet_dir }}"
+          - "User: {{ file_owner }}"
+          - "Group: {{ file_group }}"
+          - "Become: {{ calculated_become }}"
+          - "Scope: {{ systemd_scope }}"
+
+    - name: Kan | ensures main data directory exists
+      ansible.builtin.file:
+        path: "{{ kan_dir }}"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0750"
+      become: "{{ calculated_become }}"
+
+    - name: Kan | check if postgres data directory exists
+      ansible.builtin.stat:
+        path: "{{ kan_dir }}/postgres_data"
+      become: "{{ calculated_become }}"
+      register: postgres_data_dir
+
+    - name: Kan | ensures postgres data directory exists
+      ansible.builtin.file:
+        path: "{{ kan_dir }}/postgres_data"
+        state: directory
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0750"
+      become: "{{ calculated_become }}"
+      when: not postgres_data_dir.stat.exists
+
+    - name: Kan | copy environment file
+      ansible.builtin.template:
+        src: "../inventories/prod/secret_vars/services/kan.bn/kan.env"
+        dest: "{{ kan_dir }}/kan.env"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0600"
+      become: "{{ calculated_become }}"
+      register: kan_env_output
+      notify: Restart service
+
+    - name: Kan | Systemd Podman Quadlet Pod
+      ansible.builtin.template:
+        src: "../files/kan-bn/kan.pod"
+        dest: "{{ quadlet_dir }}/kan.pod"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_podman_pod_output
+      notify: Restart service
+
+    - name: Kan | Systemd Podman Quadlet Postgres
+      ansible.builtin.template:
+        src: "../files/kan-bn/kan-postgres.container"
+        dest: "{{ quadlet_dir }}/kan-postgres.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_podman_postgres_output
+      notify: Restart service
+
+    - name: Kan | Systemd Podman Quadlet Migration
+      ansible.builtin.template:
+        src: "../files/kan-bn/kan-migrate.container"
+        dest: "{{ quadlet_dir }}/kan-migrate.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_podman_migrate_output
+      notify: Restart service
+
+    - name: Kan | Systemd Podman Quadlet Web
+      ansible.builtin.template:
+        src: "../files/kan-bn/kan-web.container"
+        dest: "{{ quadlet_dir }}/kan-web.container"
+        comment_start_string: "# BEGIN_OF_COMMENT"
+        comment_end_string: "# END_OF_COMMENT"
+        owner: "{{ file_owner }}"
+        group: "{{ file_group }}"
+        mode: "0640"
+      become: "{{ calculated_become }}"
+      register: systemd_podman_web_output
+      notify: Restart service
+
+  handlers:
+    - name: Restart service
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: "{{ item }}"
+        state: restarted
+        enabled: true
+        scope: "{{ systemd_scope }}"
+      loop:
+        - kan-pod.service
+        - kan-postgres.service
+        - kan-migrate.service
+        - kan-web.service
+      become: "{{ calculated_become }}"

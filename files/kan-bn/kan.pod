@@ -1,0 +1,9 @@
+[Unit]
+Description=Kan Application Pod
+
+[Pod]
+PodName=kan
+PublishPort=5698:3000
+
+[Install]
+WantedBy=default.target

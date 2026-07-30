@@ -1,0 +1,15 @@
+[Unit]
+Description=Kan Database Migration Task
+After=network-online.target kan-postgres.service
+Wants=network-online.target
+Requires=kan-postgres.service
+
+[Container]
+ContainerName=kan-migrate
+Image=ghcr.io/kanbn/kan-migrate:latest
+Pod=kan.pod
+EnvironmentFile={{ kan_dir }}/kan.env
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
