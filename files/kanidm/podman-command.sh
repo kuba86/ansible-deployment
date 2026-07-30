@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+podman pull docker.io/kanidm/tools:latest
+
 podman run --rm -it --name kanidm-tools \
   --network=host \
   --workdir /root \
