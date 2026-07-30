@@ -2,7 +2,7 @@
 Description=%N
 
 [Container]
-Image=docker.io/kanidm/server:1.9.3
+Image=docker.io/kanidm/server:1.10.4
 ContainerName=%N
 HostName={{ host_name }}
 {{ kanidm_ports }}
