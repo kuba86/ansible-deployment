@@ -1,0 +1,19 @@
+[Unit]
+Description=%N
+
+[Container]
+Image=ghcr.io/alam00000/bentopdf-simple:latest
+ContainerName=%N
+HostName={{ host_name }}
+AutoUpdate=registry
+{{ bentopdf_ports }}
+Memory={{ bentopdf_memory }}
+PodmanArgs=--cpus={{ bentopdf_cpu }}
+NoNewPrivileges=true
+
+[Service]
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target default.target
