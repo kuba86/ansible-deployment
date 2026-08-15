@@ -76,7 +76,7 @@
         if ! command -v dra >/dev/null 2>&1; then
           echo "not found; installing..."
           curl --proto '=https' --tlsv1.2 -sSf \
-            https://raw.githubusercontent.com/devmatteini/dra/d3649805056fe4bf39365bcb19c2590a41d5a63b/install.sh | \
+            https://raw.githubusercontent.com/devmatteini/dra/2b1b7cfbc7d542cacc70fde24d441990d2b7e7e8/install.sh | \
             bash -s -- --to "/usr/local/bin"
         else
           echo "already in path"
