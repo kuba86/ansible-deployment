@@ -77,7 +77,7 @@ class RunSpec extends FunSuite {
   test("Run.execute should handle successful certificate issuance") {
     class RunSuccess(options: RunOptions) extends Run(options) {
       override protected def runCommand(command: Seq[String], env: Map[String, String]): os.CommandResult = {
-        os.CommandResult(0, Seq.empty, os.Source.fromString(""), os.Source.fromString("Server responded with a certificate."))
+        os.CommandResult(Seq.empty, 0, Seq(Right(geny.Bytes("Server responded with a certificate.".getBytes))))
       }
     }
 

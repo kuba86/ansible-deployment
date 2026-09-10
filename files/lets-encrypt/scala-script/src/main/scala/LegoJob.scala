@@ -72,31 +72,32 @@ abstract class LegoJob {
     val domains: List[String] = certDomains.trim.split(" ").filter(_.nonEmpty).toList
     if (domains.isEmpty) {
       error("No domains provided")
-      return Left(CertError.UnspecifiedError("", "No domains provided"))
-    }
-    debug(s"Domains: $domains")
+      Left(CertError.UnspecifiedError("", "No domains provided"))
+    } else {
+      debug(s"Domains: $domains")
 
-    val dnsResolverList: List[String] = dnsServers.trim.split(" ").filter(_.nonEmpty).toList
+      val dnsResolverList: List[String] = dnsServers.trim.split(" ").filter(_.nonEmpty).toList
 
-    val legoCommand: Seq[String] = buildLegoCommand(domains, dnsResolverList)
+      val legoCommand: Seq[String] = buildLegoCommand(domains, dnsResolverList)
 
-    debug(s"Executing command: ${legoCommand.mkString(" ")}")
+      debug(s"Executing command: ${legoCommand.mkString(" ")}")
 
-    val env: Map[String, String] = Map(
-      "CF_DNS_API_TOKEN"               -> cfApiToken,
-      "CLOUDFLARE_POLLING_INTERVAL"    -> cfPollingInterval,
-      "CLOUDFLARE_PROPAGATION_TIMEOUT" -> cfPropagationTimeout,
-      "CLOUDFLARE_TTL"                 -> cfTtl
-    )
+      val env: Map[String, String] = Map(
+        "CF_DNS_API_TOKEN"               -> cfApiToken,
+        "CLOUDFLARE_POLLING_INTERVAL"    -> cfPollingInterval,
+        "CLOUDFLARE_PROPAGATION_TIMEOUT" -> cfPropagationTimeout,
+        "CLOUDFLARE_TTL"                 -> cfTtl
+      )
 
-    Try {
-      runCommand(legoCommand, env)
-    } match {
-      case Success(result) =>
-        parseResult(result, domains.head)
-      case Failure(exception) =>
-        error(s"Lego $actionName command failed with exception: ${exception.getMessage}")
-        Left(CertError.UnspecifiedError(actionName, s"Exception: ${exception.getMessage}"))
+      Try {
+        runCommand(legoCommand, env)
+      } match {
+        case Success(result) =>
+          parseResult(result, domains.head)
+        case Failure(exception) =>
+          error(s"Lego $actionName command failed with exception: ${exception.getMessage}")
+          Left(CertError.UnspecifiedError(actionName, s"Exception: ${exception.getMessage}"))
+      }
     }
   }
 }
