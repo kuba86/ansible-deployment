@@ -159,8 +159,8 @@
         fi
         
         echo "tailscale needs to be up."
+        export TS_AUTHKEY="{{ tailscale_key }}"
         tailscale up \
-          --auth-key={{ tailscale_key }} \
           --advertise-exit-node=true \
           --accept-routes=true \
           --advertise-tags={{ tailscale_tags }}
