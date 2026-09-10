@@ -44,31 +44,26 @@ process_log() {
         return sprintf("%.2fM", m)
     }
 
+    !/Consumed .* CPU time, .* memory peak/ { next }
+
     {
         if (match($0, /([a-zA-Z0-9@\._-]+): Consumed (.*) CPU time, (.*) memory peak/, arr)) {
             unit = arr[1]
 
-            # --- FILTERING & GROUPING LOGIC START ---
-
-            # 1. Exclude libpod-*.scope
-            if (unit ~ /^libpod-.*\.scope$/) next
-
-            # 2. Exclude podman-*.scope
-            if (unit ~ /^podman-.*\.scope$/) next
-
-            # 3. Group session-*.scope
-            if (unit ~ /^session-.*\.scope$/) {
-                unit = "session-*.scope (grouped)"
+            # Cache unit classification result to avoid re-evaluating regexes on every log line
+            if (!(unit in unit_status)) {
+                if (unit ~ /^libpod-.*\.scope$/ || unit ~ /^podman-.*\.scope$/ || unit ~ /^systemd-coredump/ || unit ~ /^x2d/ || unit ~ /^app-/ || unit ~ /^drkonqi-coredump-/ || unit ~ /^plasma-/) {
+                    unit_status[unit] = 1 # Exclude
+                } else if (unit ~ /^session-.*\.scope$/) {
+                    unit_status[unit] = 2 # Group
+                } else {
+                    unit_status[unit] = 0 # Keep
+                }
             }
 
-            # 4. Exclude Other
-            if (unit ~ /^systemd-coredump/) next
-            if (unit ~ /^x2d/) next
-            if (unit ~ /^app-/) next
-            if (unit ~ /^drkonqi-coredump-/) next
-            if (unit ~ /^plasma-/) next
-
-            # --- FILTERING & GROUPING LOGIC END ---
+            status = unit_status[unit]
+            if (status == 1) next
+            if (status == 2) unit = "session-*.scope (grouped)"
 
             raw_cpu = arr[2]
             raw_mem = arr[3]
