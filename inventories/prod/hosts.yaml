@@ -1,35 +1,21 @@
 all:
   children:
-    wyse01:
-      hosts:
-        wyse01.tailnet-ba52.ts.net:
-    wyse02:
-      hosts:
-        wyse02.tailnet-ba52.ts.net:
-    wyse03:
-      hosts:
-        wyse03.tailnet-ba52.ts.net:
-    wyse:
-      hosts:
-        wyse01.tailnet-ba52.ts.net:
-        wyse02.tailnet-ba52.ts.net:
-        wyse03.tailnet-ba52.ts.net:
-    nuc02:
-      hosts:
-        nuc02.tailnet-ba52.ts.net:
     coreos:
+      children:
+        wyse:
+          hosts:
+            wyse01.tailnet-ba52.ts.net:
+            wyse02.tailnet-ba52.ts.net:
+            wyse03.tailnet-ba52.ts.net:
       hosts:
-        wyse01.tailnet-ba52.ts.net:
-        wyse02.tailnet-ba52.ts.net:
-        wyse03.tailnet-ba52.ts.net:
         nuc02.tailnet-ba52.ts.net:
     dnf:
       children:
         el9:
           hosts:
             marek246.tailnet-ba52.ts.net:
-        fedora:
-          hosts:
+            viktor209.mikrus.xyz:
+              ansible_port: 10209
     desktop:
       hosts:
         fedora-kde-xps.tailnet-ba52.ts.net:

@@ -1,5 +1,5 @@
 - name: Garage s3
-  hosts: coreos:dnf
+  hosts: wyse:marek246*
   gather_facts: true
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
@@ -25,7 +25,7 @@
         quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
         file_owner: "{{ 'root' if run_as_root else main_user }}"
         file_group: "{{ 'root' if run_as_root else main_user }}"
-        calculated_become: "{{ run_as_root }}"
+        calculated_become: "{{ run_as_root | bool }}"
         systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
 
     - name: Garage s3 | ensures garage main directory exists
@@ -75,7 +75,8 @@
           echo "Directory {{ garage_data_path }} is on {{ garage_fs_type.stdout }}, not on BTRFS, skipping disabling COW"
         fi
       register: chattr_result
-      changed_when: "'skipping' not in chattr_result.stdout"
+      changed_when:
+        - "'skipping' not in chattr_result.stdout"
       become: true
     
     - name: Garage s3 | Debug chattr result
@@ -105,7 +106,7 @@
         owner: "{{ file_owner }}"
         group: "{{ file_group }}"
         mode: "0600"
-      become: "{{ calculated_become }}"
+      become: "{{ calculated_become | bool }}"
       register: systemd_podman_quadlet_output
 
     - name: Garage s3 | Restart garage service when unit or config changed
@@ -115,7 +116,7 @@
         state: restarted
         enabled: true
         scope: "{{ systemd_scope }}"
-      become: "{{ calculated_become }}"
+      become: "{{ calculated_become | bool }}"
       when: >
         systemd_podman_quadlet_output.changed or
         garage_toml_output.changed

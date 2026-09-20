@@ -1,0 +1,12 @@
+server:
+  sources:
+    - path: "/srv"
+      config:
+        defaultEnabled: true
+
+auth:
+  adminUsername: admin
+  adminPassword: admin
+
+http:
+  port: 8080

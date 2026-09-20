@@ -1,5 +1,5 @@
 - name: cloudflared
-  hosts: coreos:dnf
+  hosts: wyse:marek246*
   gather_facts: true
   vars_files:
     - "../inventories/prod/secret_vars/all.yaml"
