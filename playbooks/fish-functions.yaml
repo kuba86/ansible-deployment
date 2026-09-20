@@ -5,6 +5,14 @@
     - "../inventories/prod/secret_vars/all.yaml"
 
   pre_tasks:
+    - name: Fish | update local functions
+      ansible.builtin.command:
+        cmd: ./update-fish-functions.fish
+        chdir: "{{ playbook_dir }}/.."
+      delegate_to: localhost
+      run_once: true
+      changed_when: false
+
     - name: Gather per-host secret files
       ansible.builtin.include_vars:
         file: "{{ item }}"
@@ -19,3 +27,8 @@
         src: "../files/functions/"
         dest: "/home/{{ main_user }}/.config/fish/functions/"
         delete: yes
+        checksum: yes
+        times: no
+        owner: no
+        group: no
+        perms: no
