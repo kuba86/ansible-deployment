@@ -1,0 +1,20 @@
+[Unit]
+Description=%N
+After=network-online.target tailscale.service
+Wants=network-online.target tailscale.service
+
+[Container]
+ContainerName=socat-ssh-forwards
+Image=docker.io/alpine/socat:latest
+AutoUpdate=registry
+Network=host
+Entrypoint=/bin/sh
+Exec=-c "socat tcp-listen:55502,fork,reuseaddr tcp-connect:100.88.112.30:22 & socat tcp-listen:55503,fork,reuseaddr tcp-connect:100.82.195.29:22 & exec socat tcp-listen:55504,fork,reuseaddr tcp-connect:100.74.85.97:22"
+NoNewPrivileges=true
+
+[Service]
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target default.target
