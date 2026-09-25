@@ -48,3 +48,8 @@ uv run --locked --group ansible ansible-navigator --ee false run playbooks/[serv
 uv run --locked --group ansible ansible-navigator --ee false run playbooks/all.yaml -i inventories/prod/hosts.yaml
 uv run --locked --group ansible ansible-navigator --ee false run playbooks/[service].yaml -i inventories/prod/hosts.yaml --limit wyse01.tailnet-ba52.ts.net
 ```
+
+## Ponytail skill
+
+ACTIVATE ON EVERY RESPONSE.
+Read and follow `.agents/skills/ponytail/SKILL.md` in full.
