@@ -1,38 +1,19 @@
-# Ansible Deployment Project
+# Ansible Deployment
 
-A comprehensive Ansible automation framework for managing home lab infrastructure, designed specifically for containerized environments using Fedora CoreOS, AlmaLinux, and Fedora systems.
+Ansible automation for a homelab running Podman Quadlet workloads on Fedora CoreOS, AlmaLinux, and Fedora.
 
-## Overview
+## Documentation
 
-This project automates the deployment and management of a home lab infrastructure using Ansible. It's optimized for immutable operating systems like Fedora CoreOS and supports containerized workloads with Podman (Quadlets) and systemd services.
+- [Agent guidelines](AGENTS.md) — conventions, tooling, and validation commands for all contributors and AI agents.
+- [Homelab context](HOMELAB_CONTEXT.md) — infrastructure, services, and project goals.
 
-## Quick Start
+## Usage
 
-### Configure Inventory
+Ansible tools are pinned in `pyproject.toml` and `uv.lock`. Run them with `uv run --locked --group ansible` to use the locked versions:
 
-Update `inventories/prod/hosts.yaml` with your infrastructure.
-
-### Run Playbooks
-
-```shell script
-# Full deployment
-ansible-navigator --ee false run playbooks/all.yaml -i inventories/prod/hosts.yaml
-
-# Specific service
-ansible-navigator --ee false run playbooks/tailscale.yaml -i inventories/prod/hosts.yaml
+```bash
+uv run --locked --group ansible ansible-navigator --ee false run playbooks/all.yaml -i inventories/prod/hosts.yaml
 ```
-
-## Supported Systems
-
-- **Fedora CoreOS** (Primary)
-- **AlmaLinux 9**
-- **Fedora 42+**
-
-## Development
-
-- Follow the template in `playbooks/001-setup.yaml` for new services.
-- Keep playbooks idempotent and use handlers for service restarts.
-- Refer to `.junie/guidelines.md` for detailed project overview and best practices.
 
 ## License
 

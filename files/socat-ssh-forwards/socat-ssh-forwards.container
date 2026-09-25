@@ -4,12 +4,18 @@ After=network-online.target tailscale.service
 Wants=network-online.target tailscale.service
 
 [Container]
-ContainerName=socat-ssh-forwards
 Image=docker.io/alpine/socat:latest
+ContainerName=%N
+HostName=socat-ssh-forwards
 AutoUpdate=registry
 Network=host
 Entrypoint=/bin/sh
-Exec=-c "socat tcp-listen:40001,fork,reuseaddr tcp-connect:100.99.35.69:22 & socat tcp-listen:40002,fork,reuseaddr tcp-connect:100.88.112.30:22 & socat tcp-listen:40003,fork,reuseaddr tcp-connect:100.82.195.29:22 & exec socat tcp-listen:40004,fork,reuseaddr tcp-connect:100.74.85.97:22"
+Exec=-c "socat tcp-listen:40001,fork,reuseaddr tcp-connect:100.99.35.69:22 & \
+socat tcp-listen:40002,fork,reuseaddr tcp-connect:100.88.112.30:22 & \
+socat tcp-listen:40003,fork,reuseaddr tcp-connect:100.82.195.29:22 & \
+exec socat tcp-listen:40004,fork,reuseaddr tcp-connect:100.74.85.97:22"
+Memory=512m
+PodmanArgs=--cpus=2
 NoNewPrivileges=true
 
 [Service]

@@ -13,30 +13,9 @@
   
   tasks:
     
-    - name: Rclone | variables (detect container)
-      ansible.builtin.set_fact:
-        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
-    
-    - name: Rclone | variables (compute once, reuse everywhere)
-      ansible.builtin.set_fact:
-        service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
-        quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
-        file_owner: "{{ 'root' if run_as_root else main_user }}"
-        file_group: "{{ 'root' if run_as_root else main_user }}"
-        calculated_become: "{{ run_as_root }}"
-        systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
+    - name: Rclone | Import common variables
+      ansible.builtin.import_tasks: common-variables.yaml
 
-    - name: Rclone | Info about running user
-      ansible.builtin.debug:
-        msg:
-          - "Run as root: {{ run_as_root }}"
-          - "Service dir: {{ service_dir }}"
-          - "Quadlet dir: {{ quadlet_dir }}"
-          - "User: {{ file_owner }}"
-          - "Group: {{ file_group }}"
-          - "Become: {{ calculated_become }}"
-          - "Scope: {{ systemd_scope }}"
-        
     - name: Rclone | rclone
       ansible.builtin.shell: |
         set -euo pipefail

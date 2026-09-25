@@ -14,17 +14,8 @@
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: oauth2 proxy | variables (detect container)
-      ansible.builtin.set_fact:
-        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
-
-    - name: oauth2 proxy | variables (compute once, reuse everywhere)
-      ansible.builtin.set_fact:
-        quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
-        file_owner: "{{ 'root' if run_as_root else main_user }}"
-        file_group: "{{ 'root' if run_as_root else main_user }}"
-        calculated_become: "{{ run_as_root }}"
-        systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
+    - name: oauth2 proxy | Import common variables
+      ansible.builtin.import_tasks: common-variables.yaml
     
     - name: oauth2 proxy | Ensure data directory exists
       ansible.builtin.file:

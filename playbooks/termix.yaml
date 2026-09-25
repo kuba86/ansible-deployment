@@ -16,18 +16,11 @@
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: Termix | variables (detect container)
+    - name: Termix | Import common variables
+      ansible.builtin.import_tasks: common-variables.yaml
+
+    - name: Termix | variables (service-specific)
       ansible.builtin.set_fact:
-        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
-    
-    - name: Termix | variables (compute once, reuse everywhere)
-      ansible.builtin.set_fact:
-        service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
-        quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
-        file_owner: "{{ 'root' if run_as_root else main_user }}"
-        file_group: "{{ 'root' if run_as_root else main_user }}"
-        calculated_become: "{{ run_as_root }}"
-        systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
         termix_quadlet_staging_dir: "{{ '/tmp/termix-quadlet' if run_as_root else '/home/' ~ main_user ~ '/.cache/termix-quadlet' }}"
         termix_quadlet_file: "{{ '/tmp/termix-quadlet' if run_as_root else '/home/' ~ main_user ~ '/.cache/termix-quadlet' }}/termix.quadlets"
         termix_quadlet_files:
@@ -38,13 +31,6 @@
     - name: Termix | Info about running user
       ansible.builtin.debug:
         msg:
-          - "Run as root: {{ run_as_root }}"
-          - "Service dir: {{ service_dir }}"
-          - "Quadlet dir: {{ quadlet_dir }}"
-          - "User: {{ file_owner }}"
-          - "Group: {{ file_group }}"
-          - "Become: {{ calculated_become }}"
-          - "Scope: {{ systemd_scope }}"
           - "Quadlet staging file: {{ termix_quadlet_file }}"
 
     - name: Termix | Disable deployment

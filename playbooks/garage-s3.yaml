@@ -15,18 +15,8 @@
       when: lookup('ansible.builtin.fileglob', item) | length > 0
 
   tasks:
-    - name: Garage s3 | variables (detect container)
-      ansible.builtin.set_fact:
-        run_as_root: "{{ ansible_facts['virtualization_tech_guest'] | default([]) | intersect(['lxc', 'container']) | length > 0 }}"
-
-    - name: Garage s3 | variables (compute once, reuse everywhere)
-      ansible.builtin.set_fact:
-        service_dir: "{{ '/etc/systemd/system' if run_as_root else '/home/' ~ main_user ~ '/.config/systemd/user' }}"
-        quadlet_dir: "{{ '/etc/containers/systemd' if run_as_root else '/home/' ~ main_user ~ '/.config/containers/systemd' }}"
-        file_owner: "{{ 'root' if run_as_root else main_user }}"
-        file_group: "{{ 'root' if run_as_root else main_user }}"
-        calculated_become: "{{ run_as_root | bool }}"
-        systemd_scope: "{{ 'system' if run_as_root else 'user' }}"
+    - name: Garage s3 | Import common variables
+      ansible.builtin.import_tasks: common-variables.yaml
 
     - name: Garage s3 | ensures garage main directory exists
       ansible.builtin.file:
