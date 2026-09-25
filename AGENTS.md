@@ -52,4 +52,4 @@ uv run --locked --group ansible ansible-navigator --ee false run playbooks/[serv
 ## Ponytail skill
 
 ACTIVATE ON EVERY RESPONSE.
-Read and follow `.agents/skills/ponytail/SKILL.md` in full.
+Read and follow `.agents/skills/ponytail/SKILL.md` in full
