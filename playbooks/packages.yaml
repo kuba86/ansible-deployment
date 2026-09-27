@@ -72,20 +72,28 @@
     - name: packages | dra
       ansible.builtin.shell: |
         set -euo pipefail
-        
-        if ! command -v dra >/dev/null 2>&1; then
-          echo "not found; installing..."
+
+        latest_version=$(curl --proto '=https' --tlsv1.2 -sSf \
+          https://api.github.com/repos/devmatteini/dra/releases/latest | \
+          grep '"tag_name"' | cut -d '"' -f4)
+        installed_version=""
+        if command -v dra >/dev/null 2>&1; then
+          installed_version=$(dra --version 2>/dev/null | cut -d ' ' -f2 || true)
+        fi
+
+        if [[ "${installed_version}" != "${latest_version#v}" ]]; then
+          echo "installing/updating..."
           curl --proto '=https' --tlsv1.2 -sSf \
-            https://raw.githubusercontent.com/devmatteini/dra/2b1b7cfbc7d542cacc70fde24d441990d2b7e7e8/install.sh | \
+            https://raw.githubusercontent.com/devmatteini/dra/refs/tags/0.10.3/install.sh | \
             bash -s -- --to "/usr/local/bin"
         else
-          echo "already in path"
+          echo "already up to date"
         fi
       args:
         executable: /usr/bin/bash
       register: dra
       failed_when: dra.rc != 0
-      changed_when: "'installing...' in dra.stdout"
+      changed_when: "'installing/updating...' in dra.stdout"
       become: true
     
     - name: packages | ensure-cmd
@@ -103,7 +111,7 @@
         
         ensure-cmd \
           --cmd dysk \
-          --select-archive dysk_3.6.1.zip \
+          --select-archive dysk_3.7.0.zip \
           --repo-url https://github.com/Canop/dysk \
           --dir /home/{{ main_user }}/.local/bin
       args:

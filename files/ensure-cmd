@@ -91,15 +91,4 @@ install_cmd() {
     "${url}"
 }
 
-if ! command -v "${cmd}" >/dev/null 2>&1; then
-  echo "'${cmd}' not found; installing..."
-  install_cmd "${cmd}" "${select_archive}" "${install_dir}" "${repo_url}"
-else
-  cmd_path=$(command -v "${cmd}")
-  if [[ "${cmd_path}" == "${install_dir}"/* ]]; then
-    echo "'${cmd}' found in install dir; reinstalling..."
-    install_cmd "${cmd}" "${select_archive}" "${install_dir}" "${repo_url}"
-  else
-    echo "command located in ${cmd_path}. NO INSTALL"
-  fi
-fi
+install_cmd "${cmd}" "${select_archive}" "${install_dir}" "${repo_url}"
