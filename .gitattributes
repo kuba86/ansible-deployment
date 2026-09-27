@@ -1,0 +1,6 @@
+inventories/prod/secret_vars/**/*.yaml diff=sopsdiffer
+inventories/prod/secret_vars/**/*.yml diff=sopsdiffer
+inventories/prod/secret_vars/**/*.env diff=sopsdiffer
+inventories/prod/secret_vars/**/*.conf diff=sopsdiffer
+inventories/prod/secret_vars/**/*.json diff=sopsdiffer
+inventories/prod/secret_vars/**/*.caddy diff=sopsdiffer
