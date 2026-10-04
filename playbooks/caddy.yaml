@@ -1,5 +1,5 @@
 - name: caddy
-  hosts: coreos:dnf
+  hosts: coreos:marek246*
   strategy: free
   gather_facts: true
   vars_files:
